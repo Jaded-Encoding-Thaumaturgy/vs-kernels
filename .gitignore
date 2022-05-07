@@ -1,0 +1,11 @@
+.mypy_cache/
+.vscode/
+.vspreview/
+*.glsl
+*.pyc
+*.vpy
+/tests/dependencies/*
+/tests/output/*
+build/
+dist/
+vskernels.egg-info/
