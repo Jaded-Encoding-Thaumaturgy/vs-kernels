@@ -17,7 +17,7 @@ setuptools.setup(
     version=release,
     author="LightArrowsEXE",
     author_email="lightarrowsreboot@gmail.com",
-    description="Kernel objects for VapourSynth",
+    description="Kernel objects for scaling and format conversion within VapourSynth",
     long_description=long_description,
     long_description_content_type="text/markdown",
     packages=["vskernels"],
