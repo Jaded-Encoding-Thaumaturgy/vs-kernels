@@ -1,5 +1,9 @@
-Installation Instructions
--------------------------
+Installation
+------------
+
+
+Instructions
+^^^^^^^^^^^^
 
 There are two common ways to install vs-kernels.
 
@@ -25,3 +29,12 @@ as well as accurately reflect the documentation.
 
 It's recommended you use a release version over building from git,
 unless you require new functionality only available upstream.
+
+
+Dependencies
+^^^^^^^^^^^^
+
+The following VapourSynth libraries are also required for full functionality:
+
+* `descale <https://github.com/Irrational-Encoding-Wizardry/descale>`_
+* `fmtconv <https://github.com/EleonoreMizo/fmtconv>`_

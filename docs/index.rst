@@ -33,13 +33,23 @@ About
     :caption: Installation
 
     installation/install
-    installation/dependencies
     installation/usage
 
 
 .. toctree::
     :maxdepth: 4
-    :caption: Kernels
+    :caption: Modules
     :titlesonly:
 
-    submodules/kernels
+    module/about
+    module/functions
+
+
+.. toctree::
+    :maxdepth: 4
+    :caption: Developer
+    :titlesonly:
+
+    development/adding
+    development/support
+
