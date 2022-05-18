@@ -1,7 +1,7 @@
 # vs-kernels
 
 <p align="center">
-    <a href="https://vs-kernels.encode.moe"><img alt="Read the Docs" src="https://img.shields.io/readthedocs/vs-kernels"></a>
+    <a href="https://vskernels.encode.moe"><img alt="Read the Docs" src="https://img.shields.io/readthedocs/vs-kernels"></a>
     <img alt="PyPI - Python Version" src="https://img.shields.io/pypi/pyversions/vs-kernels">
     <a href="https://pypi.org/project/vs-kernels/"><img alt="PyPI" src="https://img.shields.io/pypi/v/vs-kernels"></a>
     <a href="https://github.com/Irrational-Encoding-Wizardry/vs-kernels/commits/master"><img alt="GitHub commits since tagged version" src="https://img.shields.io/github/commits-since/Irrational-Encoding-Wizardry/vs-kernels/latest"></a>
@@ -20,7 +20,7 @@ even across different plugins with their own settings and expected behavior.
 
 Full information on how every function/wrapper works,
 as well as a list of dependencies and links,
-can be found in the [documentation](https://vs-kernels.encode.moe/en/latest/).
+can be found in the [documentation](https://vskernels.encode.moe/en/latest/).
 For further support,
 drop by `#kernels` in the [IEW Discord server](https://discord.gg/qxTxVJGtst).
 

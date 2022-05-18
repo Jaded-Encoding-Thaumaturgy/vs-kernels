@@ -27,7 +27,7 @@ setuptools.setup(
     install_requires=install_requires,
     project_urls={
         "Source Code": 'https://github.com/Irrational-Encoding-Wizardry/vs-kernels',
-        "Documentation": 'https://vs-kernels.encode.moe/en/latest/',
+        "Documentation": 'https://vskernels.encode.moe/en/latest/',
         "Contact": 'https://discord.gg/qxTxVJGtst',
     },
     classifiers=[
