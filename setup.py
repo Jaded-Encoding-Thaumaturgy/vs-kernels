@@ -9,8 +9,8 @@ with open("requirements.txt") as fh:
     install_requires = fh.read()
 
 name = "vs-kernels"
-version = "1.0.1"
-release = "1.0.1"
+version = "1.0.2"
+release = "1.0.2"
 
 setuptools.setup(
     name=name,
