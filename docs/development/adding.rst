@@ -8,7 +8,7 @@ In your `requirements.txt`, simply add the following line:
 
 .. code-block:: rst
 
-    vskernels>=1.0.0
+    vskernels>=1.0.1
 
 You can then easily import vskernels as you would normally
 without having to worry whether your users have vskernels installed.
