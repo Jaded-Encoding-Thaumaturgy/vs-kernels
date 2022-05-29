@@ -1,5 +1,5 @@
-Kernels a Function
-------------------
+Kernels in a Function
+---------------------
 
 Kernels are very flexible, making it easy to implement in your own functions and methods.
 
