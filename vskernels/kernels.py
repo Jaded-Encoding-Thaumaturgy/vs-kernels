@@ -18,7 +18,7 @@ __all__: List[str] = [
     'BlackNuttall', 'Bohman', 'Box', 'BSpline', 'Catrom', 'Cosine', 'FlatTop', 'Gaussian', 'Ginseng', 'Hamming',
     'Hann', 'Hermite', 'Impulse', 'Kaiser', 'MinSide', 'Mitchell', 'NearestNeighbour', 'Parzen', 'Point', 'Quadratic',
     'Robidoux', 'RobidouxSharp', 'RobidouxSoft', 'Sinc', 'Welch', 'Wiener',
-    'get_all_kernels', 'get_kernel'
+    'get_all_kernels', 'get_kernel', 'Kernel'
 ]
 
 
