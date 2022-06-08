@@ -6,7 +6,7 @@ in order to have access to every common convolution or formats.
 `kernels` help solve this age-old problem by uniting multiple of these libraries under a single interface.
 This allows for developers to support many libraries at once
 without having to worry about implementing all of them themselves;
-vskernels handles that for you.
+vs-kernels handles that for you.
 
 Kernels are fairly extensive.
 For example, say you want to downscale a video clip to 1280x720 using *bicubic*.

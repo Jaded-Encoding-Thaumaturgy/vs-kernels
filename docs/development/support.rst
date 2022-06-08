@@ -47,12 +47,12 @@ to get the specific kernels they're looking for.
 
 However, that doesn't mean we should neglect regular users.
 It has been common for a very, very long time to use strings to select a kernel.
-Fortunately, vskernels offers support for that as well through the use of :py:class:`vskernels.kernels.get_kernel`.
+Fortunately, vs-kernels offers support for that as well through the use of :py:class:`vskernels.kernels.get_kernel`.
 Allowing users to pass either a string or a `Kernel` object is simple enough,
 and takes significantly less code than doing a big if/else chain.
 
 Below is the previous example `descale` function,
-but outfitted to use vskernels instead:
+but outfitted to use vs-kernels instead:
 
 .. code-block:: py
 
@@ -96,7 +96,7 @@ The following will return the same thing for regular users...
     example4 = yem.descale(clip, 1280, 720, kernels.Cosine())
     example5 = yem.descale(clip, 1280, 720, kernels.Sinc())
 
-But should powerusers want to be more specific, they can easily set their own settings by using `vskernels`:
+But should powerusers want to be more specific, they can easily set their own settings by using `kernels`:
 
 .. code-block:: py
 

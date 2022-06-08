@@ -7,13 +7,13 @@ Instructions
 
 There are two common ways to install vs-kernels.
 
-The first is to install the latest release build through `pypi <https://pypi.org/project/vskernels/>`_.
+The first is to install the latest release build through `pypi <https://pypi.org/project/vs-kernels/>`_.
 You can use pip to do this, as demonstrated below:
 
 
 .. code-block:: console
 
-    pip3 install vskernels --no-cache-dir -U
+    pip3 install vs-kernels --no-cache-dir -U
 
 This ensures that any previous versions will be overwritten
 and vs-kernels will be upgraded if you had already previously installed it.

@@ -29,7 +29,7 @@ drop by `#kernels` in the [IEW Discord server](https://discord.gg/qxTxVJGtst).
 Install `vs-kernels` with the following command:
 
 ```sh
-$ pip3 install vskernels --no-cache-dir -U
+$ pip3 install vs-kernels --no-cache-dir -U
 ```
 
 Or if you want the latest git version, install it with this command:
