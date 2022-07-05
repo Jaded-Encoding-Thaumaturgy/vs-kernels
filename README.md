@@ -1,11 +1,11 @@
 # vs-kernels
 
 <p align="center">
-    <a href="https://vskernels.encode.moe"><img alt="Read the Docs" src="https://img.shields.io/readthedocs/vs-kernels"></a>
-    <img alt="PyPI - Python Version" src="https://img.shields.io/pypi/pyversions/vs-kernels">
-    <a href="https://pypi.org/project/vs-kernels/"><img alt="PyPI" src="https://img.shields.io/pypi/v/vs-kernels"></a>
+    <a href="https://vskernels.encode.moe"><img alt="Read the Docs" src="https://img.shields.io/readthedocs/vskernels"></a>
+    <img alt="PyPI - Python Version" src="https://img.shields.io/pypi/pyversions/vskernels">
+    <a href="https://pypi.org/project/vskernels/"><img alt="PyPI" src="https://img.shields.io/pypi/v/vskernels"></a>
     <a href="https://github.com/Irrational-Encoding-Wizardry/vs-kernels/commits/master"><img alt="GitHub commits since tagged version" src="https://img.shields.io/github/commits-since/Irrational-Encoding-Wizardry/vs-kernels/latest"></a>
-    <a href="https://github.com/Irrational-Encoding-Wizardry/vs-kernels/blob/master/LICENSE"><img alt="PyPI - License" src="https://img.shields.io/pypi/l/vs-kernels"></a>
+    <a href="https://github.com/Irrational-Encoding-Wizardry/vs-kernels/blob/master/LICENSE"><img alt="PyPI - License" src="https://img.shields.io/pypi/l/vskernels"></a>
     <a href="https://discord.gg/qxTxVJGtst"><img alt="Discord" src="https://img.shields.io/discord/856381934052704266?label=discord"></a>
 </p>
 
@@ -26,10 +26,10 @@ drop by `#kernels` in the [IEW Discord server](https://discord.gg/qxTxVJGtst).
 
 ## How to install
 
-Install `vs-kernels` with the following command:
+Install `vskernels` with the following command:
 
 ```sh
-$ pip3 install vs-kernels --no-cache-dir -U
+$ pip3 install vskernels --no-cache-dir -U
 ```
 
 Or if you want the latest git version, install it with this command:
