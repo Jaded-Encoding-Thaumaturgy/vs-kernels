@@ -41,6 +41,8 @@ def _get_prop(frame: vs.VideoFrame, key: str, t: Type[T]) -> T:
     """
     Get FrameProp ``prop`` from frame ``frame`` with expected type ``t`` to satisfy the type checker.
 
+    Taken from `lvsfunc`.
+
     :param frame:               Frame containing props.
     :param key:                 Prop to get.
     :param t:                   Type of prop.
