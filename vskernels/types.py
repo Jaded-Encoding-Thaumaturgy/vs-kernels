@@ -3,7 +3,8 @@ from typing import NoReturn
 
 
 class Matrix(IntEnum):
-    """Matrix coefficients (ITU-T H.265 Table E.5)"""
+    """Matrix coefficients (ITU-T H.265 Table E.5)."""
+
     RGB = 0
     GBR = 0
     BT709 = 1
@@ -23,4 +24,5 @@ class Matrix(IntEnum):
 
     @property
     def RESERVED(self) -> NoReturn:
+        """Disallow matrix, as it is reserved."""
         raise PermissionError

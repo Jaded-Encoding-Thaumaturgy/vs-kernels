@@ -7,6 +7,7 @@ from typing import Any, Dict, Generator, List, Sequence, Tuple, Type
 
 import vapoursynth as vs
 
+from .exceptions import UnknownKernelError
 from .types import Matrix
 
 core = vs.core
@@ -58,7 +59,8 @@ class Kernel(ABC):
 
 
 class Point(Kernel):
-    """ Built-in point resizer. """
+    """Built-in point resizer."""
+
     def scale(self, clip: vs.VideoNode, width: int, height: int,
               shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
         return core.resize.Point(clip, width, height, src_top=shift[0],
@@ -81,7 +83,8 @@ class Point(Kernel):
 
 
 class Bilinear(Kernel):
-    """ Built-in bilinear resizer. """
+    """Built-in bilinear resizer."""
+
     def scale(self, clip: vs.VideoNode, width: int, height: int,
               shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
         return core.resize.Bilinear(clip, width, height, src_top=shift[0],
@@ -106,7 +109,8 @@ class Bilinear(Kernel):
 class Bicubic(Kernel):
     """
     Built-in bicubic resizer.
-    b=0, c=0.5
+
+    Default: b=0, c=0.5
 
     Dependencies:
 
@@ -115,6 +119,7 @@ class Bicubic(Kernel):
     :param b: B-param for bicubic kernel
     :param c: C-param for bicubic kernel
     """
+
     def __init__(self, b: float = 0, c: float = 1/2, **kwargs: Any) -> None:
         self.b = b
         self.c = c
@@ -157,6 +162,7 @@ class Lanczos(Kernel):
 
     :param taps: taps param for lanczos kernel
     """
+
     def __init__(self, taps: int = 3, **kwargs: Any) -> None:
         self.taps = taps
         super().__init__(**kwargs)
@@ -192,6 +198,7 @@ class Spline16(Kernel):
 
     * VapourSynth-descale
     """
+
     def scale(self, clip: vs.VideoNode, width: int, height: int,
               shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
         return core.resize.Spline16(clip, width, height, src_top=shift[0],
@@ -221,6 +228,7 @@ class Spline36(Kernel):
 
     * VapourSynth-descale
     """
+
     def scale(self, clip: vs.VideoNode, width: int, height: int,
               shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
         return core.resize.Spline36(clip, width, height, src_top=shift[0],
@@ -250,6 +258,7 @@ class Spline64(Kernel):
 
     * VapourSynth-descale
     """
+
     def scale(self, clip: vs.VideoNode, width: int, height: int,
               shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
         return core.resize.Spline64(clip, width, height, src_top=shift[0],
@@ -272,9 +281,8 @@ class Spline64(Kernel):
 
 
 class Example(Kernel):
-    """
-    Example Kernel class for documentation purposes.
-    """
+    """Example Kernel class for documentation purposes."""
+
     def __init__(self, b: float = 0, c: float = 1/2, **kwargs: Any) -> None:
         self.b = b
         self.c = c
@@ -283,13 +291,15 @@ class Example(Kernel):
     def scale(self, clip: vs.VideoNode, width: int, height: int,
               shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
         """
-        Perform a regular scaling operation
+        Perform a regular scaling operation.
 
         :param clip:        Input clip
         :param width:       Output width
         :param height:      Output height
         :param shift:       Shift clip during the operation.
                             Expects a tuple of (src_top, src_left).
+
+        :rtype:             ``VideoNode``
         """
         return core.resize.Bicubic(clip, width, height,
                                    src_top=shift[0], src_left=shift[1],
@@ -299,13 +309,15 @@ class Example(Kernel):
     def descale(self, clip: vs.VideoNode, width: int, height: int,
                 shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
         """
-        Perform a regular descaling operation
+        Perform a regular descaling operation.
 
         :param clip:        Input clip
         :param width:       Output width
         :param height:      Output height
         :param shift:       Shift clip during the operation.
                             Expects a tuple of (src_top, src_left).
+
+        :rtype:             ``VideoNode``
         """
         return core.descale.Debicubic(clip, width, height, b=self.b,
                                       c=self.c, src_top=shift[0],
@@ -315,7 +327,7 @@ class Example(Kernel):
                  matrix: vs.MatrixCoefficients | Matrix | None = None,
                  matrix_in: vs.MatrixCoefficients | Matrix | None = None) -> vs.VideoNode:
         """
-        Perform a regular resampling operation
+        Perform a regular resampling operation.
 
         :param clip:        Input clip
         :param format:      Output format
@@ -331,11 +343,13 @@ class Example(Kernel):
 
     def shift(self, clip: vs.VideoNode, shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
         """
-        Perform a regular shifting operation
+        Perform a regular shifting operation.
 
         :param clip:        Input clip
         :param shift:       Shift clip during the operation.
                             Expects a tuple of (src_top, src_left).
+
+        :rtype:             ``VideoNode``
         """
         return core.resize.Bicubic(clip, src_top=shift[0], src_left=shift[1],
                                    filter_param_a=self.b, filter_param_b=self.c,
@@ -343,49 +357,43 @@ class Example(Kernel):
 
 
 class BSpline(Bicubic):
-    """
-    Bicubic b=1, c=0
-    """
+    """Bicubic b=1, c=0"""
+
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(b=1, c=0, **kwargs)
 
 
 class Hermite(Bicubic):
-    """
-    Bicubic b=0, c=0
-    """
+    """Bicubic b=0, c=0"""
+
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(b=0, c=0, **kwargs)
 
 
 class Mitchell(Bicubic):
-    """
-    Bicubic b=1/3, c=1/3
-    """
+    """Bicubic b=1/3, c=1/3"""
+
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(b=1/3, c=1/3, **kwargs)
 
 
 class Catrom(Bicubic):
-    """
-    Bicubic b=0, c=0.5
-    """
+    """Bicubic b=0, c=0.5"""
+
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(b=0, c=1/2, **kwargs)
 
 
 class BicubicSharp(Bicubic):
-    """
-    Bicubic b=0, c=1
-    """
+    """Bicubic b=0, c=1"""
+
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(b=0, c=1, **kwargs)
 
 
 class RobidouxSoft(Bicubic):
-    """
-    Bicubic b=0.67962, c=0.16019
-    """
+    """Bicubic b=0.67962, c=0.16019"""
+
     def __init__(self, **kwargs: Any) -> None:
         b = (9 - 3 * sqrt(2)) / 7
         c = (1 - b) / 2
@@ -393,9 +401,8 @@ class RobidouxSoft(Bicubic):
 
 
 class Robidoux(Bicubic):
-    """
-    Bicubic b=0.37822, c=0.31089
-    """
+    """Bicubic b=0.37822, c=0.31089"""
+
     def __init__(self, **kwargs: Any) -> None:
         b = 12 / (19 + 9 * sqrt(2))
         c = 113 / (58 + 216 * sqrt(2))
@@ -403,9 +410,8 @@ class Robidoux(Bicubic):
 
 
 class RobidouxSharp(Bicubic):
-    """
-    Bicubic b=0.26201, c=0.36899
-    """
+    """Bicubic b=0.26201, c=0.36899"""
+
     def __init__(self, **kwargs: Any) -> None:
         b = 6 / (13 + 7 * sqrt(2))
         c = 7 / (2 + 12 * sqrt(2))
@@ -414,13 +420,15 @@ class RobidouxSharp(Bicubic):
 
 class BicubicDidee(Bicubic):
     """
-    | Kernel inspired by a Didée post.
-    | `See this doom9 post for more information <https://forum.doom9.org/showthread.php?p=1748922#post1748922>`_.
+    Kernel inspired by a Didée post.
+
+    `See this doom9 post for further information <https://forum.doom9.org/showthread.php?p=1748922#post1748922>`_.
 
     Bicubic b=-0.5, c=0.25
 
     This is useful for downscaling content, but might not help much with upscaling.
     """
+
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(b=-1/2, c=1/4, **kwargs)
 
@@ -433,6 +441,7 @@ class BicubicDogWay(Bicubic):
 
     This is useful for downscaling content with ringing.
     """
+
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(b=-0.6, c=0.4, **kwargs)
 
@@ -474,37 +483,32 @@ class FmtConv(Kernel):
 
 
 class Box(FmtConv):
-    """
-    fmtconv's box resizer.
-    """
+    """fmtconv's box resizer."""
+
     kernel = 'box'
 
 
 class BlackMan(FmtConv):
-    """
-    fmtconv's blackman resizer.
-    """
+    """fmtconv's blackman resizer."""
+
     kernel = 'blackman'
 
 
 class BlackManMinLobe(FmtConv):
-    """
-    fmtconv's blackmanminlobe resizer.
-    """
+    """fmtconv's blackmanminlobe resizer."""
+
     kernel = 'blackmanminlobe'
 
 
 class Sinc(FmtConv):
-    """
-    fmtconv's sinc resizer.
-    """
+    """fmtconv's sinc resizer."""
+
     kernel = 'sinc'
 
 
 class Gaussian(FmtConv):
-    """
-    fmtconv's gaussian resizer.
-    """
+    """fmtconv's gaussian resizer."""
+
     kernel = 'gaussian'
 
     def __init__(self, curve: int = 30, **kwargs: Any) -> None:
@@ -512,17 +516,15 @@ class Gaussian(FmtConv):
 
 
 class NearestNeighbour(Gaussian):
-    """
-    Nearest Neighbour kernel.
-    """
+    """Nearest Neighbour kernel."""
+
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(100, **kwargs)
 
 
 class Impulse(FmtConv):
-    """
-    fmtconv's impulse resizer.
-    """
+    """fmtconv's impulse resizer."""
+
     kernel = 'impulse'
 
     def __init__(self, impulse: Sequence[float], oversample: int = 8, taps: int = 1, **kwargs: Any) -> None:
@@ -545,9 +547,7 @@ class Impulse(FmtConv):
 
 
 class Quadratic(Impulse):
-    """
-    Quadratic kernel.
-    """
+    """Quadratic kernel."""
 
     def __init__(self, oversample: int, **kwargs: Any) -> None:
         super().__init__([
@@ -560,9 +560,7 @@ class Quadratic(Impulse):
 
 
 class Wiener(Impulse):
-    """
-    Wiener kernel.
-    """
+    """Wiener kernel."""
 
     def __init__(self, oversample: int, **kwargs: Any) -> None:
         super().__init__([
@@ -575,9 +573,7 @@ class Wiener(Impulse):
 
 
 class Hann(Impulse):
-    """
-    Hann kernel.
-    """
+    """Hann kernel."""
 
     def __init__(self, oversample: int, **kwargs: Any) -> None:
         super().__init__([
@@ -595,9 +591,7 @@ class Hann(Impulse):
 
 
 class Hamming(Impulse):
-    """
-    Hamming kernel.
-    """
+    """Hamming kernel."""
 
     def __init__(self, oversample: int, **kwargs: Any) -> None:
         super().__init__([
@@ -615,9 +609,7 @@ class Hamming(Impulse):
 
 
 class BlackHarris(Impulse):
-    """
-    Black-Harris kernel.
-    """
+    """Black-Harris kernel."""
 
     def __init__(self, oversample: int, **kwargs: Any) -> None:
         super().__init__([
@@ -635,9 +627,7 @@ class BlackHarris(Impulse):
 
 
 class BlackNuttall(Impulse):
-    """
-    BlackNuttall kernel.
-    """
+    """BlackNuttall kernel."""
 
     def __init__(self, oversample: int, **kwargs: Any) -> None:
         super().__init__([
@@ -655,9 +645,7 @@ class BlackNuttall(Impulse):
 
 
 class FlatTop(Impulse):
-    """
-    FlatTop kernel.
-    """
+    """FlatTop kernel."""
 
     def __init__(self, oversample: int, **kwargs: Any) -> None:
         super().__init__([
@@ -675,9 +663,7 @@ class FlatTop(Impulse):
 
 
 class MinSide(Impulse):
-    """
-    MinSide kernel.
-    """
+    """MinSide kernel."""
 
     def __init__(self, oversample: int, **kwargs: Any) -> None:
         super().__init__([
@@ -695,9 +681,7 @@ class MinSide(Impulse):
 
 
 class Ginseng(Impulse):
-    """
-    Ginseng kernel.
-    """
+    """Ginseng kernel."""
 
     def __init__(self, oversample: int, **kwargs: Any) -> None:
         super().__init__([
@@ -712,9 +696,7 @@ class Ginseng(Impulse):
 
 
 class Welch(Impulse):
-    """
-    Welch kernel.
-    """
+    """Welch kernel."""
 
     def __init__(self, oversample: int, **kwargs: Any) -> None:
         super().__init__([
@@ -726,9 +708,7 @@ class Welch(Impulse):
 
 
 class Cosine(Impulse):
-    """
-    Cosine kernel.
-    """
+    """Cosine kernel."""
 
     def __init__(self, oversample: int, **kwargs: Any) -> None:
         super().__init__([
@@ -740,9 +720,7 @@ class Cosine(Impulse):
 
 
 class Bessel(Impulse):
-    """
-    Bessel kernel.
-    """
+    """Bessel kernel."""
 
     def __init__(self, oversample: int, **kwargs: Any) -> None:
         super().__init__([
@@ -754,9 +732,7 @@ class Bessel(Impulse):
 
 
 class Parzen(Impulse):
-    """
-    Parzen kernel.
-    """
+    """Parzen kernel."""
 
     def __init__(self, oversample: int, **kwargs: Any) -> None:
         super().__init__([
@@ -774,9 +750,7 @@ class Parzen(Impulse):
 
 
 class Kaiser(Impulse):
-    """
-    Kaiser kernel.
-    """
+    """Kaiser kernel."""
 
     def __init__(self, oversample: int, **kwargs: Any) -> None:
         super().__init__([
@@ -792,9 +766,7 @@ class Kaiser(Impulse):
 
 
 class Bohman(Impulse):
-    """
-    Bohman kernel.
-    """
+    """Bohman kernel."""
 
     def __init__(self, oversample: int, **kwargs: Any) -> None:
         super().__init__([
@@ -810,9 +782,7 @@ class Bohman(Impulse):
 
 @lru_cache
 def get_all_kernels() -> List[Type[Kernel]]:
-    """
-    Get all kernels as a list.
-    """
+    """Get all kernels as a list."""
     def _subclasses(cls: Type[Kernel]) -> Generator[Type[Kernel], None, None]:
         for subclass in cls.__subclasses__():
             yield from _subclasses(subclass)
@@ -827,8 +797,11 @@ def get_kernel(name: str) -> Type[Kernel]:
     """
     Get a kernel by name.
 
-    :param name: Kernel name.
-    :return: Kernel class.
+    :param name:            Kernel name.
+
+    :return:                    Kernel class.
+
+    :raise UnknownKernelError:  Some kind of unknown error occured.
     """
     all_kernels = get_all_kernels()
     search_str = name.lower().strip()
@@ -837,4 +810,4 @@ def get_kernel(name: str) -> Type[Kernel]:
         if kernel.__name__.lower() == search_str:
             return kernel
 
-    raise ValueError(f"get_kernel: 'Unknown kernel: {name}!'")
+    raise UnknownKernelError(f"get_kernel: 'Unknown kernel: {name}!'")
