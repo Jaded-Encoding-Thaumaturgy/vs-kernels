@@ -2,7 +2,7 @@
 
 __version__ = '1.0.3'
 
-__author__ = 'LightArrowsEXE <LightArrowsReboot@gmail.com">'
+__author__ = 'LightArrowsEXE <LightArrowsReboot@gmail.com>'
 __maintainer__ = __author__
 
 __author_name__, __author_email__ = [x[:-1] for x in __author__.split('<')]
