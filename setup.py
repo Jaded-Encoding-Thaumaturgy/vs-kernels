@@ -1,34 +1,39 @@
 #!/usr/bin/env python3
 
 import setuptools
+from pathlib import Path
+from typing import cast, Dict
 
-with open("README.md") as fh:
-    long_description = fh.read()
+package_name = 'vskernels'
 
-with open("requirements.txt") as fh:
-    install_requires = fh.read()
+exec(Path(f'{package_name}/_metadata.py').read_text(), meta := cast(Dict[str, str], {}))
 
-name = "vs-kernels"
-version = "1.0.2"
-release = "1.0.2"
+readme = Path('README.md').read_text()
+requirements = Path('requirements.txt').read_text()
+
 
 setuptools.setup(
-    name=name,
-    version=release,
-    author="LightArrowsEXE",
-    author_email="lightarrowsreboot@gmail.com",
-    description="Kernel objects for scaling and format conversion within VapourSynth",
-    long_description=long_description,
-    long_description_content_type="text/markdown",
-    packages=["vskernels"],
-    package_data={
-        'vskernels': ['py.typed'],
-    },
-    install_requires=install_requires,
+    name=package_name,
+    version=meta['__version__'],
+    author=meta['__author_name__'],
+    author_email=meta['__author_email__'],
+    maintainer=meta['__maintainer_name__'],
+    maintainer_email=meta['__maintainer_email__'],
+    description=meta['__doc__'],
+    long_description=readme,
+    long_description_content_type='text/markdown',
     project_urls={
-        "Source Code": 'https://github.com/Irrational-Encoding-Wizardry/vs-kernels',
-        "Documentation": 'https://vskernels.encode.moe/en/latest/',
-        "Contact": 'https://discord.gg/qxTxVJGtst',
+        'Source Code': 'https://github.com/Irrational-Encoding-Wizardry/vs-kernels',
+        'Documentation': 'https://vskernels.encode.moe/en/latest/',
+        'Contact': 'https://discord.gg/qxTxVJGtst',
+    },
+    install_requires=requirements,
+    python_requires='>=3.8',
+    packages=[
+        package_name
+    ],
+    package_data={
+        package_name: ['py.typed']
     },
     classifiers=[
         "Natural Language :: English",
@@ -44,12 +49,11 @@ setuptools.setup(
         "Topic :: Multimedia :: Video",
         "Topic :: Multimedia :: Video :: Display",
     ],
-    python_requires='>=3.9',
     command_options={
         "build_sphinx": {
-            "project": ("setup.py", name),
-            "version": ("setup.py", version),
-            "release": ("setup.py", release),
+            "project": ("setup.py", package_name),
+            "version": ("setup.py", meta['__version__']),
+            "release": ("setup.py", meta['__version__']),
             "source_dir": ("setup.py", "docs")
         }
     }
