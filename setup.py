@@ -41,7 +41,7 @@ setuptools.setup(
         "Intended Audience :: Developers",
         "Intended Audience :: Other Audience",
 
-        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.8",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
         "Typing :: Typed",

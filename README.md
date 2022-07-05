@@ -1,7 +1,7 @@
 # vs-kernels
 
 <p align="center">
-    <a href="https://vskernels.encode.moe"><img alt="Read the Docs" src="https://img.shields.io/readthedocs/vskernels"></a>
+    <a href="https://vskernels.encode.moe"><img alt="Read the Docs" src="https://img.shields.io/readthedocs/vs-kernels"></a>
     <img alt="PyPI - Python Version" src="https://img.shields.io/pypi/pyversions/vskernels">
     <a href="https://pypi.org/project/vskernels/"><img alt="PyPI" src="https://img.shields.io/pypi/v/vskernels"></a>
     <a href="https://github.com/Irrational-Encoding-Wizardry/vs-kernels/commits/master"><img alt="GitHub commits since tagged version" src="https://img.shields.io/github/commits-since/Irrational-Encoding-Wizardry/vs-kernels/latest"></a>
