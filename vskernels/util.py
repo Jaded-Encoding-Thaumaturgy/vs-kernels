@@ -17,7 +17,7 @@ __all__: List[str] = [
 
 def get_matrix(frame: vs.VideoNode | vs.VideoFrame, strict: bool = False) -> Matrix:
     """
-    Get the matrix of a clip or frame.
+    Get the matrix of a clip or VideoFrame.
 
     By default this function will first check the `_Matrix` prop for a valid matrix.
     If the matrix is not set, it will guess based on the resolution.
@@ -33,10 +33,10 @@ def get_matrix(frame: vs.VideoNode | vs.VideoFrame, strict: bool = False) -> Mat
 
     :return:                            Value representing a matrix.
 
-    :raise UndefinedMatrixError:        The matrix was undefined and strict was set.
-    :raise ReservedMatrixError:         The matrix is reserved.
-    :raise UnsupportedMatrixError:      VapourSynth no longer supports the matrix.
-    :raise UnsupportedMatrixError:      The matrix is unsupported.
+    :raise UndefinedMatrixError:        This matrix was undefined and strict was enabled.
+    :raise ReservedMatrixError:         This matrix is reserved.
+    :raise UnsupportedMatrixError:      VapourSynth no longer supports this matrix.
+    :raise UnsupportedMatrixError:      This matrix is unsupported.
     """
     if isinstance(frame, vs.VideoNode):
         frame = frame.get_frame(0)
