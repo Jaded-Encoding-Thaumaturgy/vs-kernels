@@ -38,11 +38,13 @@ About
 
 .. toctree::
     :maxdepth: 4
-    :caption: Modules
+    :caption: Module
     :titlesonly:
 
     module/about
     module/functions
+    module/util
+    module/exceptions
 
 
 .. toctree::

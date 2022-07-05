@@ -67,7 +67,7 @@ html_static_path = ['_static']
 
 autosummary_generate = True
 
-autodoc_mock_imports = [ "vapoursynth"]
+autodoc_mock_imports = ["vapoursynth"]
 
 # -- Extension configuration -------------------------------------------------
 
