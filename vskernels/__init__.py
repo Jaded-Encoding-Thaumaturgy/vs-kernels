@@ -12,5 +12,7 @@
 
 # flake8: noqa
 
-from . import kernels
+from . import exceptions, kernels, util
+from .exceptions import *
 from .kernels import *
+from .util import *
