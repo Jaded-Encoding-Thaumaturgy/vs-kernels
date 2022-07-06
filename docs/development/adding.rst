@@ -8,7 +8,7 @@ In your `requirements.txt`, simply add the following line:
 
 .. code-block:: rst
 
-    vs-kernels>=1.0.2
+    vskernels>=1.0.4
 
 You can then easily import vs-kernels as you would normally
 without having to worry whether your users have vs-kernels installed.
