@@ -14,12 +14,11 @@ core = vs.core
 
 
 __all__: List[str] = [
-    'Bicubic', 'Bilinear', 'FmtConv', 'Lanczos', 'Point', 'Spline16', 'Spline36', 'Spline64',
-    'Bessel', 'BicubicDidee', 'BicubicZopti', 'BicubicZoptiNeutral', 'BicubicSharp', 'BlackHarris', 'BlackMan', 'BlackManMinLobe',
-    'BlackNuttall', 'Bohman', 'Box', 'BSpline', 'Catrom', 'Cosine', 'FlatTop', 'Gaussian', 'Ginseng', 'Hamming',
-    'Hann', 'Hermite', 'Impulse', 'Kaiser', 'MinSide', 'Mitchell', 'NearestNeighbour', 'Parzen', 'Point', 'Quadratic',
-    'Robidoux', 'RobidouxSharp', 'RobidouxSoft', 'Sinc', 'Welch', 'Wiener',
-    'get_all_kernels', 'get_kernel', 'Kernel'
+    'Bicubic', 'Bilinear', 'FmtConv', 'Lanczos', 'Point', 'Spline16', 'Spline36', 'Spline64', 'Bessel', 'BicubicDidee',
+    'BicubicZopti', 'BicubicZoptiNeutral', 'BicubicSharp', 'BlackHarris', 'BlackMan', 'BlackManMinLobe', 'BlackNuttall',
+    'Bohman', 'Box', 'BSpline', 'Catrom', 'Cosine', 'FlatTop', 'Gaussian', 'Ginseng', 'Hamming', 'Hann', 'Hermite',
+    'Impulse', 'Kaiser', 'MinSide', 'Mitchell', 'NearestNeighbour', 'Parzen', 'Point', 'Quadratic', 'Robidoux',
+    'RobidouxSharp', 'RobidouxSoft', 'Sinc', 'Welch', 'Wiener', 'get_all_kernels', 'get_kernel', 'Kernel'
 ]
 
 
