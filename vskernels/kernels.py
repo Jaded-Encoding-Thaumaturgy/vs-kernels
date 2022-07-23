@@ -780,12 +780,17 @@ class Bohman(Impulse):
         ], oversample, **kwargs)
 
 
+excluded_kernels = [Kernel, FmtConv, Example]
+
+
 @lru_cache
 def get_all_kernels() -> List[Type[Kernel]]:
     """Get all kernels as a list."""
     def _subclasses(cls: Type[Kernel]) -> Generator[Type[Kernel], None, None]:
         for subclass in cls.__subclasses__():
             yield from _subclasses(subclass)
+            if subclass in excluded_kernels:
+                continue
             yield subclass
 
     # https://github.com/python/mypy/issues/5374
