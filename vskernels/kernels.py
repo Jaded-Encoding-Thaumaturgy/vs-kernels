@@ -529,7 +529,7 @@ class Impulse(FmtConv):
 
     def __init__(self, impulse: Sequence[float], oversample: int = 8, taps: int = 1, **kwargs: Any) -> None:
         super().__init__(
-            taps, impulse=[*impulse[:-1], *impulse[::-1]],
+            taps, impulse=[*impulse[::-1], *impulse[:-1]],
             kovrspl=oversample, **kwargs)
 
     def scale(self, clip: vs.VideoNode, width: int, height: int,
@@ -556,7 +556,7 @@ class Quadratic(Impulse):
             0.382813, 0.330078, 0.28125, 0.236328, 0.195313,
             0.158203, 0.125, 0.095703, 0.070313, 0.048828,
             0.03125, 0.017578, 0.007813, 0.001953
-        ], 16, **kwargs)
+        ], oversample, **kwargs)
 
 
 class Wiener(Impulse):
