@@ -15,10 +15,10 @@ core = vs.core
 
 __all__: List[str] = [
     'Bicubic', 'Bilinear', 'FmtConv', 'Lanczos', 'Point', 'Spline16', 'Spline36', 'Spline64',
-    'Bessel', 'BicubicDidee', 'BicubicDogWay', 'BicubicSharp', 'BlackHarris', 'BlackMan', 'BlackManMinLobe',
-    'BlackNuttall', 'Bohman', 'Box', 'BSpline', 'Catrom', 'Cosine', 'FlatTop', 'Gaussian', 'Ginseng', 'Hamming',
-    'Hann', 'Hermite', 'Impulse', 'Kaiser', 'MinSide', 'Mitchell', 'NearestNeighbour', 'Parzen', 'Point', 'Quadratic',
-    'Robidoux', 'RobidouxSharp', 'RobidouxSoft', 'Sinc', 'Welch', 'Wiener',
+    'Bessel', 'BicubicAuto', 'BicubicDidee', 'BicubicDogWay', 'BicubicSharp', 'BlackHarris', 'BlackMan',
+    'BlackManMinLobe', 'BlackNuttall', 'Bohman', 'Box', 'BSpline', 'Catrom', 'Cosine', 'FlatTop', 'Gaussian',
+    'Ginseng', 'Hamming', 'Hann', 'Hermite', 'Impulse', 'Kaiser', 'MinSide', 'Mitchell', 'NearestNeighbour',
+    'Parzen', 'Point', 'Quadratic', 'Robidoux', 'RobidouxSharp', 'RobidouxSoft', 'Sinc', 'Welch', 'Wiener',
     'get_all_kernels', 'get_kernel', 'Kernel'
 ]
 
@@ -416,6 +416,55 @@ class RobidouxSharp(Bicubic):
         b = 6 / (13 + 7 * sqrt(2))
         c = 7 / (2 + 12 * sqrt(2))
         super().__init__(b=b, c=c, **kwargs)
+
+
+class BicubicAuto(Bicubic):
+    """
+    Kernel that follows the rule of:
+    b + 2c = target for upsizing
+    b + 2c = target - 1 for downsizing
+    """
+
+    def __init__(self, b: float | None = None, c: float | None = None, target: float = 1.0, **kwargs: Any) -> None:
+        if None not in {b, c}:
+            raise ValueError("BicubicAuto: You can't specify both b and c!")
+
+        self._b, self._c = b, c
+        self._target = target
+
+        super().__init__(*self._get_bc_args(), **kwargs)
+
+    def scale(self, clip: vs.VideoNode, width: int, height: int,
+              shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
+        self.b, self.c = self._get_bc_args((width * height) > (clip.width * clip.height))
+        print(self.b, self.c)
+        return super().scale(clip, width, height, shift)
+
+    def descale(self, clip: vs.VideoNode, width: int, height: int,
+                shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
+        self.b, self.c = self._get_bc_args((width * height) > (clip.width * clip.height))
+        return super().descale(clip, width, height, shift)
+
+    def resample(self, clip: vs.VideoNode, format: vs.PresetFormat | vs.VideoFormat,
+                 matrix: vs.MatrixCoefficients | Matrix | None = None,
+                 matrix_in: vs.MatrixCoefficients | Matrix | None = None) -> vs.VideoNode:
+        self.b, self.c = self._get_bc_args()
+        return super().resample(clip, format, matrix, matrix_in)
+
+    def shift(self, clip: vs.VideoNode, shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
+        self.b, self.c = self._get_bc_args()
+        return super().shift(clip, shift)
+
+    def _get_bc_args(self, upsize: bool = True) -> Tuple[float, float]:
+        autob = 0.0 if self._b is None else self._b
+        autoc = 0.5 if self._c is None else self._c
+        target = self._target - int(not upsize)
+        if self._c is not None and self._b is None:
+            autob = target - 2 * self._c
+        elif self._c is None and self._b is not None:
+            autoc = (target - self._b) / 2
+
+        return autob, autoc
 
 
 class BicubicDidee(Bicubic):
