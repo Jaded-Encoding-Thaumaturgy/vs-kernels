@@ -14,12 +14,11 @@ core = vs.core
 
 
 __all__: List[str] = [
-    'Bicubic', 'Bilinear', 'FmtConv', 'Lanczos', 'Point', 'Spline16', 'Spline36', 'Spline64',
-    'Bessel', 'BicubicAuto', 'BicubicDidee', 'BicubicDogWay', 'BicubicSharp', 'BlackHarris', 'BlackMan',
-    'BlackManMinLobe', 'BlackNuttall', 'Bohman', 'Box', 'BSpline', 'Catrom', 'Cosine', 'FlatTop', 'Gaussian',
-    'Ginseng', 'Hamming', 'Hann', 'Hermite', 'Impulse', 'Kaiser', 'MinSide', 'Mitchell', 'NearestNeighbour',
-    'Parzen', 'Point', 'Quadratic', 'Robidoux', 'RobidouxSharp', 'RobidouxSoft', 'Sinc', 'Welch', 'Wiener',
-    'get_all_kernels', 'get_kernel', 'Kernel'
+    'Bicubic', 'Bilinear', 'FmtConv', 'Lanczos', 'Point', 'Spline16', 'Spline36', 'Spline64', 'Bessel', 'BicubicAuto',
+    'BicubicDidee', 'BicubicZopti', 'BicubicZoptiNeutral', 'BicubicSharp', 'BlackHarris', 'BlackMan', 'BlackManMinLobe',
+    'BlackNuttall', 'Bohman', 'Box', 'BSpline', 'Catrom', 'Cosine', 'FlatTop', 'Gaussian', 'Ginseng', 'Hamming', 'Hann',
+    'Hermite', 'Impulse', 'Kaiser', 'MinSide', 'Mitchell', 'NearestNeighbour', 'Parzen', 'Point', 'Quadratic',
+    'Robidoux', 'RobidouxSharp', 'RobidouxSoft', 'Sinc', 'Welch', 'Wiener', 'get_all_kernels', 'get_kernel', 'Kernel'
 ]
 
 
@@ -469,30 +468,44 @@ class BicubicAuto(Bicubic):
 
 class BicubicDidee(Bicubic):
     """
-    Kernel inspired by a Didée post.
-
-    `See this doom9 post for further information <https://forum.doom9.org/showthread.php?p=1748922#post1748922>`_.
+    Kernel inspired by a Didée post.\n
+    `See this doom9 post for further information
+    <https://web.archive.org/web/20220713044016/https://forum.doom9.org/showpost.php?p=1579385&postcount=25>`_.
 
     Bicubic b=-0.5, c=0.25
-
     This is useful for downscaling content, but might not help much with upscaling.
+
+    Follows `b + 2c = 0` for downscaling opposed to `b + 2c = 1` for upscaling.
     """
 
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(b=-1/2, c=1/4, **kwargs)
 
 
-class BicubicDogWay(Bicubic):
+class BicubicZopti(Bicubic):
     """
-    Kernel inspired by DogWay.
-
+    Kernel optimized by Zopti.
+    `See this doom9 post for further information <https://forum.doom9.org/showthread.php?p=1865218#post1865218>`_.
     Bicubic b=-0.6, c=0.4
-
-    This is useful for downscaling content with ringing.
+    Optimized for 2160p to 720p (by Boulder). Beware, not neutral. Adds some local contrast.
     """
 
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(b=-0.6, c=0.4, **kwargs)
+
+
+class BicubicZoptiNeutral(Bicubic):
+    """
+    Kernel inspired by Zopti.
+    Bicubic b=-0.6, c=0.3
+
+    Slightly more netural than BicubicZopti
+
+    Follows `b + 2c = 0` for downscaling opposed to `b + 2c = 1` for upscaling.
+    """
+
+    def __init__(self, **kwargs: Any) -> None:
+        super().__init__(b=-0.6, c=0.3, **kwargs)
 
 
 class FmtConv(Kernel):
