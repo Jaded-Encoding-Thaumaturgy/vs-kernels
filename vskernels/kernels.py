@@ -57,7 +57,7 @@ class Kernel(ABC):
         width: int | None = None, height: int | None = None
     ) -> Dict[str, Any]:
         return dict(
-            src_left=shift[1], **self.kwargs, **self._params_args(False, clip, width, height)
+            src_top=shift[0], src_left=shift[1], **self.kwargs, **self._params_args(False, clip, width, height)
         )
 
     def _get_descale_args(
