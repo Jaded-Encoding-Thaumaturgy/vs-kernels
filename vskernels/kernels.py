@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from abc import ABC
+from abc import ABC, abstractmethod
 from functools import lru_cache
 from math import sqrt
 from typing import Any, Callable, Dict, Generator, List, Sequence, Tuple, Type
@@ -22,7 +22,29 @@ __all__: List[str] = [
 ]
 
 
-class Kernel(ABC):
+class Scaler(ABC):
+    """
+    Abstract scaling interface.
+    """
+
+    kwargs: Dict[str, Any]
+    """Arguments passed to the internal scale function"""
+
+    def __init__(self, **kwargs: Any) -> None:
+        self.kwargs = kwargs
+
+    @abstractmethod
+    def scale(self, clip: vs.VideoNode, width: int, height: int, shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
+        pass
+
+
+class Descaler(ABC):
+    @abstractmethod
+    def scale(self, clip: vs.VideoNode, width: int, height: int, shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
+        pass
+
+
+class Kernel(Scaler, Descaler):
     """
     Abstract scaling kernel interface.
 
@@ -34,11 +56,6 @@ class Kernel(ABC):
     """Scale function called internally when scaling/resampling/shifting"""
     descale_function: Callable[..., vs.VideoNode]
     """Descale function called internally when descaling"""
-    kwargs: Dict[str, Any]
-    """Arguments passed to the kernel filter"""
-
-    def __init__(self, **kwargs: Any) -> None:
-        self.kwargs = kwargs
 
     def scale(self, clip: vs.VideoNode, width: int, height: int, shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
         return self.scale_function(clip, **self.get_scale_args(clip, shift, width, height))
