@@ -56,29 +56,43 @@ class Kernel(ABC):
     def shift(self, clip: vs.VideoNode, shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
         pass
 
+    def _get_args(self, shift: Tuple[float, float] = (0, 0)) -> Dict[str, Any]:
+        return dict(src_top=shift[0], src_left=shift[1], **self.kwargs, **self._params_args(False))
+
+    def _get_descale_args(self, shift: Tuple[float, float] = (0, 0)) -> Dict[str, Any]:
+        return dict(src_top=shift[0], src_left=shift[1], **self._params_args(True))
+
+    def _get_matrix_args(
+        self, format: vs.PresetFormat | vs.VideoFormat,
+        matrix: vs.MatrixCoefficients | Matrix | None,
+        matrix_in: vs.MatrixCoefficients | Matrix | None
+    ) -> Dict[str, Any]:
+        return dict(
+            format=int(format), matrix=matrix, matrix_in=matrix_in, **self.kwargs, **self._params_args(False)
+        )
+
+    def _params_args(self, is_descale: bool) -> Dict[str, Any]:
+        return {}
+
 
 class Point(Kernel):
     """Built-in point resizer."""
 
     def scale(self, clip: vs.VideoNode, width: int, height: int,
               shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
-        return core.resize.Point(clip, width, height, src_top=shift[0],
-                                 src_left=shift[1], **self.kwargs)
+        return core.resize.Point(clip, width, height, **self._get_args(shift))
 
     def descale(self, clip: vs.VideoNode, width: int, height: int,
                 shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
-        return core.resize.Point(clip, width, height, src_top=shift[0],
-                                 src_left=shift[1])
+        return core.resize.Point(clip, width, height, **self._get_descale_args(shift))
 
     def resample(self, clip: vs.VideoNode, format: vs.PresetFormat | vs.VideoFormat,
                  matrix: vs.MatrixCoefficients | Matrix | None = None,
                  matrix_in: vs.MatrixCoefficients | Matrix | None = None) -> vs.VideoNode:
-        return core.resize.Point(clip, format=int(format),
-                                 matrix=matrix, matrix_in=matrix_in,
-                                 **self.kwargs)
+        return core.resize.Point(clip, **self._get_matrix_args(format, matrix, matrix_in))
 
     def shift(self, clip: vs.VideoNode, shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
-        return core.resize.Point(clip, src_top=shift[0], src_left=shift[1], **self.kwargs)
+        return core.resize.Point(clip, **self._get_args(shift))
 
 
 class Bilinear(Kernel):
@@ -86,23 +100,19 @@ class Bilinear(Kernel):
 
     def scale(self, clip: vs.VideoNode, width: int, height: int,
               shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
-        return core.resize.Bilinear(clip, width, height, src_top=shift[0],
-                                    src_left=shift[1], **self.kwargs)
+        return core.resize.Bilinear(clip, width, height, **self._get_args(shift))
 
     def descale(self, clip: vs.VideoNode, width: int, height: int,
                 shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
-        return core.descale.Debilinear(clip, width, height, src_top=shift[0],
-                                       src_left=shift[1])
+        return core.descale.Debilinear(clip, width, height, **self._get_descale_args(shift))
 
     def resample(self, clip: vs.VideoNode, format: vs.PresetFormat | vs.VideoFormat,
                  matrix: vs.MatrixCoefficients | Matrix | None = None,
                  matrix_in: vs.MatrixCoefficients | Matrix | None = None) -> vs.VideoNode:
-        return core.resize.Bilinear(clip, format=int(format),
-                                    matrix=matrix, matrix_in=matrix_in,
-                                    **self.kwargs)
+        return core.resize.Bilinear(clip, **self._get_matrix_args(format, matrix, matrix_in))
 
     def shift(self, clip: vs.VideoNode, shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
-        return core.resize.Bilinear(clip, src_top=shift[0], src_left=shift[1], **self.kwargs)
+        return core.resize.Bilinear(clip, **self._get_args(shift), **self.kwargs)
 
 
 class Bicubic(Kernel):
@@ -124,31 +134,26 @@ class Bicubic(Kernel):
         self.c = c
         super().__init__(**kwargs)
 
+    def _params_args(self, is_descale: bool) -> Dict[str, Any]:
+        if is_descale:
+            return dict(b=self.b, c=self.c)
+        return dict(filter_param_a=self.b, filter_param_b=self.c)
+
     def scale(self, clip: vs.VideoNode, width: int, height: int,
               shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
-        return core.resize.Bicubic(clip, width, height,
-                                   src_top=shift[0], src_left=shift[1],
-                                   filter_param_a=self.b, filter_param_b=self.c,
-                                   **self.kwargs)
+        return core.resize.Bicubic(clip, width, height, **self._get_args(shift))
 
     def descale(self, clip: vs.VideoNode, width: int, height: int,
                 shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
-        return core.descale.Debicubic(clip, width, height, b=self.b,
-                                      c=self.c, src_top=shift[0],
-                                      src_left=shift[1])
+        return core.descale.Debicubic(clip, width, height, **self._get_descale_args(shift))
 
     def resample(self, clip: vs.VideoNode, format: vs.PresetFormat | vs.VideoFormat,
                  matrix: vs.MatrixCoefficients | Matrix | None = None,
                  matrix_in: vs.MatrixCoefficients | Matrix | None = None) -> vs.VideoNode:
-        return core.resize.Bicubic(clip, format=int(format),
-                                   filter_param_a=self.b, filter_param_b=self.c,
-                                   matrix=matrix, matrix_in=matrix_in,
-                                   **self.kwargs)
+        return core.resize.Bicubic(clip, **self._get_matrix_args(format, matrix, matrix_in))
 
     def shift(self, clip: vs.VideoNode, shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
-        return core.resize.Bicubic(clip, src_top=shift[0], src_left=shift[1],
-                                   filter_param_a=self.b, filter_param_b=self.c,
-                                   **self.kwargs)
+        return core.resize.Bicubic(clip, **self._get_args(shift))
 
 
 class Lanczos(Kernel):
@@ -166,27 +171,26 @@ class Lanczos(Kernel):
         self.taps = taps
         super().__init__(**kwargs)
 
+    def _params_args(self, is_descale: bool) -> Dict[str, Any]:
+        if is_descale:
+            return dict(taps=self.taps)
+        return dict(filter_param_a=self.taps)
+
     def scale(self, clip: vs.VideoNode, width: int, height: int,
               shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
-        return core.resize.Lanczos(clip, width, height, src_top=shift[0],
-                                   src_left=shift[1], filter_param_a=self.taps,
-                                   **self.kwargs)
+        return core.resize.Lanczos(clip, width, height, **self._get_args(shift))
 
     def descale(self, clip: vs.VideoNode, width: int, height: int,
                 shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
-        return core.descale.Delanczos(clip, width, height, taps=self.taps,
-                                      src_top=shift[0], src_left=shift[1])
+        return core.descale.Delanczos(clip, width, height, **self._get_descale_args(shift))
 
     def resample(self, clip: vs.VideoNode, format: vs.PresetFormat | vs.VideoFormat,
                  matrix: vs.MatrixCoefficients | Matrix | None = None,
                  matrix_in: vs.MatrixCoefficients | Matrix | None = None) -> vs.VideoNode:
-        return core.resize.Lanczos(clip, format=int(format),
-                                   matrix=matrix, matrix_in=matrix_in,
-                                   filter_param_a=self.taps, **self.kwargs)
+        return core.resize.Lanczos(clip, **self._get_matrix_args(format, matrix, matrix_in))
 
     def shift(self, clip: vs.VideoNode, shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
-        return core.resize.Lanczos(clip, src_top=shift[0], src_left=shift[1],
-                                   filter_param_a=self.taps, **self.kwargs)
+        return core.resize.Lanczos(clip, **self._get_args(shift))
 
 
 class Spline16(Kernel):
@@ -200,23 +204,19 @@ class Spline16(Kernel):
 
     def scale(self, clip: vs.VideoNode, width: int, height: int,
               shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
-        return core.resize.Spline16(clip, width, height, src_top=shift[0],
-                                    src_left=shift[1], **self.kwargs)
+        return core.resize.Spline16(clip, width, height, **self._get_args(shift))
 
     def descale(self, clip: vs.VideoNode, width: int, height: int,
                 shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
-        return core.descale.Despline16(clip, width, height, src_top=shift[0],
-                                       src_left=shift[1])
+        return core.descale.Despline16(clip, width, height, **self._get_descale_args(shift))
 
     def resample(self, clip: vs.VideoNode, format: vs.PresetFormat | vs.VideoFormat,
                  matrix: vs.MatrixCoefficients | Matrix | None = None,
                  matrix_in: vs.MatrixCoefficients | Matrix | None = None) -> vs.VideoNode:
-        return core.resize.Spline16(clip, format=int(format),
-                                    matrix=matrix, matrix_in=matrix_in, **self.kwargs)
+        return core.resize.Spline16(clip, **self._get_matrix_args(format, matrix, matrix_in))
 
     def shift(self, clip: vs.VideoNode, shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
-        return core.resize.Spline16(clip, src_top=shift[0], src_left=shift[1],
-                                    **self.kwargs)
+        return core.resize.Spline16(clip, **self._get_args(shift))
 
 
 class Spline36(Kernel):
@@ -230,23 +230,19 @@ class Spline36(Kernel):
 
     def scale(self, clip: vs.VideoNode, width: int, height: int,
               shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
-        return core.resize.Spline36(clip, width, height, src_top=shift[0],
-                                    src_left=shift[1], **self.kwargs)
+        return core.resize.Spline36(clip, width, height, **self._get_args(shift))
 
     def descale(self, clip: vs.VideoNode, width: int, height: int,
                 shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
-        return core.descale.Despline36(clip, width, height, src_top=shift[0],
-                                       src_left=shift[1])
+        return core.descale.Despline36(clip, width, height, **self._get_descale_args(shift))
 
     def resample(self, clip: vs.VideoNode, format: vs.PresetFormat | vs.VideoFormat,
                  matrix: vs.MatrixCoefficients | Matrix | None = None,
                  matrix_in: vs.MatrixCoefficients | Matrix | None = None) -> vs.VideoNode:
-        return core.resize.Spline36(clip, format=int(format),
-                                    matrix=matrix, matrix_in=matrix_in, **self.kwargs)
+        return core.resize.Spline36(clip, **self._get_matrix_args(format, matrix, matrix_in))
 
     def shift(self, clip: vs.VideoNode, shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
-        return core.resize.Spline36(clip, src_top=shift[0], src_left=shift[1],
-                                    **self.kwargs)
+        return core.resize.Spline36(clip, **self._get_args(shift))
 
 
 class Spline64(Kernel):
@@ -260,23 +256,19 @@ class Spline64(Kernel):
 
     def scale(self, clip: vs.VideoNode, width: int, height: int,
               shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
-        return core.resize.Spline64(clip, width, height, src_top=shift[0],
-                                    src_left=shift[1], **self.kwargs)
+        return core.resize.Spline64(clip, width, height, **self._get_args(shift))
 
     def descale(self, clip: vs.VideoNode, width: int, height: int,
                 shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
-        return core.descale.Despline64(clip, width, height, src_top=shift[0],
-                                       src_left=shift[1])
+        return core.descale.Despline64(clip, width, height, **self._get_descale_args(shift))
 
     def resample(self, clip: vs.VideoNode, format: vs.PresetFormat | vs.VideoFormat,
                  matrix: vs.MatrixCoefficients | Matrix | None = None,
                  matrix_in: vs.MatrixCoefficients | Matrix | None = None) -> vs.VideoNode:
-        return core.resize.Spline64(clip, format=int(format),
-                                    matrix=matrix, matrix_in=matrix_in, **self.kwargs)
+        return core.resize.Spline64(clip, **self._get_matrix_args(format, matrix, matrix_in))
 
     def shift(self, clip: vs.VideoNode, shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
-        return core.resize.Spline64(clip, src_top=shift[0], src_left=shift[1],
-                                    **self.kwargs)
+        return core.resize.Spline64(clip, **self._get_args(shift))
 
 
 class Example(Kernel):
@@ -523,25 +515,30 @@ class FmtConv(Kernel):
         self.taps = taps
         super().__init__(**kwargs)
 
+    def _get_args(self, shift: Tuple[float, float] = (0, 0)) -> Dict[str, Any]:
+        return dict(sx=shift[1], sy=shift[0], kernel=self.kernel, **self.kwargs)
+
+    def _get_descale_args(self, shift: Tuple[float, float] = (0, 0)) -> Dict[str, Any]:
+        return dict(**self._get_args(shift), invks=True, invkstaps=self.taps)
+
+    def _get_matrix_args(self, *args: Any, **kwargs: Any) -> Dict[str, Any]:
+        raise NotImplementedError
+
     def scale(self, clip: vs.VideoNode, width: int, height: int,
               shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
-        return core.fmtc.resample(clip, width, height, shift[1], shift[0],
-                                  kernel=self.kernel, **self.kwargs)
+        return core.fmtc.resample(clip, width, height, **self._get_args(shift))
 
     def descale(self, clip: vs.VideoNode, width: int, height: int,
                 shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
-        return core.fmtc.resample(clip, width, height, shift[1], shift[0],
-                                  kernel=self.kernel, invks=True,
-                                  invkstaps=self.taps, **self.kwargs)
+        return core.fmtc.resample(clip, width, height, **self._get_descale_args(shift))
 
     def resample(self, clip: vs.VideoNode, format: vs.PresetFormat | vs.VideoFormat,
                  matrix: vs.MatrixCoefficients | Matrix | None = None,
                  matrix_in: vs.MatrixCoefficients | Matrix | None = None) -> vs.VideoNode:
-        raise NotImplementedError()
+        raise NotImplementedError
 
     def shift(self, clip: vs.VideoNode, shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
-        return core.fmtc.resample(clip, sw=shift[1], sy=shift[0], kernel=self.kernel,
-                                  **self.kwargs)
+        return core.fmtc.resample(clip, **self._get_args(shift))
 
 
 class Box(FmtConv):
@@ -596,16 +593,15 @@ class Impulse(FmtConv):
 
     def scale(self, clip: vs.VideoNode, width: int, height: int,
               shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
-        return core.fmtc.resample(clip, width, height, shift[1], shift[0],
-                                  kernel=self.kernel, sw=clip.width,
-                                  sh=clip.height, **self.kwargs)
+        return core.fmtc.resample(
+            clip, width, height, sw=clip.width, sh=clip.height, **self._get_args(shift)
+        )
 
     def descale(self, clip: vs.VideoNode, width: int, height: int,
                 shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
-        return core.fmtc.resample(clip, width, height, shift[1], shift[0],
-                                  kernel=self.kernel, invks=True,
-                                  invkstaps=self.taps, sw=clip.width,
-                                  sh=clip.height, **self.kwargs)
+        return core.fmtc.resample(
+            clip, width, height, sw=clip.width, sh=clip.height, **self._get_descale_args(shift)
+        )
 
 
 class Quadratic(Impulse):
