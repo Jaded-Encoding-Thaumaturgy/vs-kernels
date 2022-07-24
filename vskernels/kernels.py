@@ -41,43 +41,43 @@ class Kernel(ABC):
         self.kwargs = kwargs
 
     def scale(self, clip: vs.VideoNode, width: int, height: int, shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
-        return self.scale_function(**self._get_scale_args(clip, shift, width, height))
+        return self.scale_function(**self.get_scale_args(clip, shift, width, height))
 
     def descale(self, clip: vs.VideoNode, width: int, height: int, shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
-        return self.descale_function(**self._get_descale_args(clip, shift, width, height))
+        return self.descale_function(**self.get_descale_args(clip, shift, width, height))
 
     def resample(
         self, clip: vs.VideoNode, format: VideoFormatT, matrix: MatrixT = None, matrix_in: MatrixT = None
     ) -> vs.VideoNode:
-        return self.scale_function(**self._get_matrix_args(clip, format, matrix, matrix_in))
+        return self.scale_function(**self.get_matrix_args(clip, format, matrix, matrix_in))
 
     def shift(self, clip: vs.VideoNode, shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
-        return self.scale_function(**self._get_scale_args(clip, shift))
+        return self.scale_function(**self.get_scale_args(clip, shift))
 
-    def _get_scale_args(
+    def get_scale_args(
         self, clip: vs.VideoNode, shift: Tuple[float, float] = (0, 0),
         width: int | None = None, height: int | None = None
     ) -> Dict[str, Any]:
         return dict(
-            src_top=shift[0], src_left=shift[1], **self.kwargs, **self._params_args(False, clip, width, height)
+            src_top=shift[0], src_left=shift[1], **self.kwargs, **self.get_params_args(False, clip, width, height)
         )
 
-    def _get_descale_args(
+    def get_descale_args(
         self, clip: vs.VideoNode, shift: Tuple[float, float] = (0, 0),
         width: int | None = None, height: int | None = None
     ) -> Dict[str, Any]:
         return dict(
-            src_top=shift[0], src_left=shift[1], **self._params_args(True, clip, width, height)
+            src_top=shift[0], src_left=shift[1], **self.get_params_args(True, clip, width, height)
         )
 
-    def _get_matrix_args(
+    def get_matrix_args(
         self, clip: vs.VideoNode, format: VideoFormatT, matrix: MatrixT, matrix_in: MatrixT
     ) -> Dict[str, Any]:
         return dict(
-            format=int(format), matrix=matrix, matrix_in=matrix_in, **self.kwargs, **self._params_args(False, clip)
+            format=int(format), matrix=matrix, matrix_in=matrix_in, **self.kwargs, **self.get_params_args(False, clip)
         )
 
-    def _params_args(
+    def get_params_args(
         self, is_descale: bool, clip: vs.VideoNode, width: int | None = None, height: int | None = None
     ) -> Dict[str, Any]:
         return dict(clip=clip, width=width, height=height)
@@ -91,12 +91,12 @@ class Point(Kernel):
 
 
 class _DescalePlugin(Kernel):
-    def _params_args(
+    def get_params_args(
         self, is_descale: bool, clip: vs.VideoNode, width: int | None = None, height: int | None = None
     ) -> Dict[str, Any]:
         if is_descale:
             return dict(src=clip, width=width, height=height)
-        return super()._params_args(is_descale, clip, width, height)
+        return super().get_params_args(is_descale, clip, width, height)
 
 
 class Bilinear(_DescalePlugin):
@@ -128,10 +128,10 @@ class Bicubic(_DescalePlugin):
         self.c = c
         super().__init__(**kwargs)
 
-    def _params_args(
+    def get_params_args(
         self, is_descale: bool, clip: vs.VideoNode, width: int | None = None, height: int | None = None
     ) -> Dict[str, Any]:
-        args = super()._params_args(is_descale, clip, width, height)
+        args = super().get_params_args(is_descale, clip, width, height)
         if is_descale:
             return dict(**args, b=self.b, c=self.c)
         return dict(**args, filter_param_a=self.b, filter_param_b=self.c)
@@ -155,10 +155,10 @@ class Lanczos(_DescalePlugin):
         self.taps = taps
         super().__init__(**kwargs)
 
-    def _params_args(
+    def get_params_args(
         self, is_descale: bool, clip: vs.VideoNode, width: int | None = None, height: int | None = None
     ) -> Dict[str, Any]:
-        args = super()._params_args(is_descale, clip, width, height)
+        args = super().get_params_args(is_descale, clip, width, height)
         if is_descale:
             return dict(**args, taps=self.taps)
         return dict(**args, filter_param_a=self.taps)
@@ -285,10 +285,10 @@ class BicubicAuto(_DescalePlugin):
 
         super().__init__(**kwargs)
 
-    def _params_args(
+    def get_params_args(
         self, is_descale: bool, clip: vs.VideoNode, width: int | None = None, height: int | None = None
     ) -> Dict[str, Any]:
-        args = super()._params_args(is_descale, clip, width, height)
+        args = super().get_params_args(is_descale, clip, width, height)
 
         if width and height:
             b, c = self._get_bc_args((width * height) > (clip.width * clip.height))
@@ -372,19 +372,19 @@ class FmtConv(Kernel):
         self.taps = taps
         super().__init__(**kwargs)
 
-    def _get_scale_args(
+    def get_scale_args(
         self, clip: vs.VideoNode, shift: Tuple[float, float] = (0, 0),
         width: int | None = None, height: int | None = None,
     ) -> Dict[str, Any]:
         return dict(sx=shift[1], sy=shift[0], kernel=self.kernel, **self.kwargs)
 
-    def _get_descale_args(
+    def get_descale_args(
         self, clip: vs.VideoNode, shift: Tuple[float, float] = (0, 0),
         width: int | None = None, height: int | None = None,
     ) -> Dict[str, Any]:
-        return dict(**self._get_scale_args(clip, shift, width, height), invks=True, invkstaps=self.taps)
+        return dict(**self.get_scale_args(clip, shift, width, height), invks=True, invkstaps=self.taps)
 
-    def _get_matrix_args(self, *args: Any, **kwargs: Any) -> Dict[str, Any]:
+    def get_matrix_args(self, *args: Any, **kwargs: Any) -> Dict[str, Any]:
         raise NotImplementedError
 
     def resample(
@@ -438,7 +438,7 @@ class Impulse(FmtConv):
 
     kernel = 'impulse'
 
-    def _params_args(
+    def get_params_args(
         self, is_descale: bool, clip: vs.VideoNode, width: int | None = None, height: int | None = None
     ) -> Dict[str, Any]:
         return dict(clip=clip, w=width, h=height, sw=clip.width, sh=clip.height)
