@@ -408,7 +408,6 @@ class BicubicAuto(Bicubic):
 
     def scale(self, clip: vs.VideoNode, width: int, height: int, shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
         self.b, self.c = self._get_bc_args((width * height) > (clip.width * clip.height))
-        print(self.b, self.c)
         return super().scale(clip, width, height, shift)
 
     def descale(self, clip: vs.VideoNode, width: int, height: int, shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
