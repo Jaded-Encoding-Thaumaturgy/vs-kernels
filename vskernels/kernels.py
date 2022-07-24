@@ -3,7 +3,7 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from functools import lru_cache
 from math import sqrt
-from typing import Any, Callable, Dict, Generator, List, Sequence, Tuple, Type
+from typing import Any, Callable, Dict, Generator, List, Sequence, Tuple, Type, cast, overload
 
 import vapoursynth as vs
 
@@ -68,8 +68,69 @@ class Kernel(Scaler, Descaler):
     ) -> vs.VideoNode:
         return self.scale_function(clip, **self.get_matrix_args(clip, format, matrix, matrix_in))
 
+    @overload
     def shift(self, clip: vs.VideoNode, shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
-        return self.scale_function(clip, **self.get_scale_args(clip, shift))
+        ...
+
+    @overload
+    def shift(
+        self, clip: vs.VideoNode,
+        shift_top: float | List[float] = 0.0, shift_left: float | List[float] = 0.0
+    ) -> vs.VideoNode:
+        ...
+
+    def shift(  # type: ignore
+        self, clip: vs.VideoNode,
+        shifts_or_top: float | Tuple[float, float] | List[float] | None = None,
+        shift_left: float | List[float] | None = None
+    ) -> vs.VideoNode:
+        assert clip.format
+
+        n_planes = clip.format.num_planes
+
+        def _shift(src: vs.VideoNode, shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
+            return self.scale_function(src, **self.get_scale_args(src, shift))
+
+        if not shifts_or_top and not shift_left:
+            return _shift(clip)
+        elif isinstance(shifts_or_top, tuple):
+            return _shift(clip, shifts_or_top)
+        elif isinstance(shifts_or_top, float) and isinstance(shift_left, float):
+            return _shift(clip, (shifts_or_top, shift_left))
+
+        if shifts_or_top is None:
+            shifts_or_top = 0.0
+        if shift_left is None:
+            shift_left = 0.0
+
+        shifts_top = shifts_or_top if isinstance(shifts_or_top, List) else [shifts_or_top]
+        shifts_left = shift_left if isinstance(shift_left, list) else [shift_left]
+
+        if not shifts_top:
+            shifts_top = [0.0] * n_planes
+        elif (ltop := len(shifts_top)) > n_planes:
+            shifts_top = shifts_top[:n_planes]
+        else:
+            shifts_top += shifts_top[-1:] * (n_planes - ltop)
+
+        if not shifts_left:
+            shifts_left = [0.0] * n_planes
+        elif (lleft := len(shifts_left)) > n_planes:
+            shifts_left = shifts_left[:n_planes]
+        else:
+            shifts_left += shifts_left[-1:] * (n_planes - lleft)
+
+        if len(set(shifts_top)) == len(set(shifts_left)) == 1 or n_planes == 1:
+            return _shift(clip, (shifts_top[0], shifts_left[0]))
+
+        planes = cast(List[vs.VideoNode], clip.std.SplitPlanes())
+
+        shifted_planes = [
+            plane if top == left == 0 else _shift(plane, (top, left))
+            for plane, top, left in zip(planes, shifts_top, shifts_left)
+        ]
+
+        return core.std.ShufflePlanes(shifted_planes, [0, 0, 0], clip.format.color_family)
 
     def get_params_args(
         self, is_descale: bool, clip: vs.VideoNode, width: int | None = None, height: int | None = None
@@ -396,6 +457,54 @@ class FmtConv(Kernel):
         width: int | None = None, height: int | None = None,
     ) -> Dict[str, Any]:
         return dict(**self.get_scale_args(clip, shift, width, height), invks=True, invkstaps=self.taps)
+
+    @overload
+    def shift(self, clip: vs.VideoNode, shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
+        ...
+
+    @overload
+    def shift(
+        self, clip: vs.VideoNode,
+        shift_top: float | List[float] = 0.0, shift_left: float | List[float] = 0.0
+    ) -> vs.VideoNode:
+        ...
+
+    def shift(  # type: ignore
+        self, clip: vs.VideoNode,
+        shifts_or_top: float | Tuple[float, float] | List[float] | None = None,
+        shift_left: float | List[float] | None = None
+    ) -> vs.VideoNode:
+        assert clip.format
+
+        n_planes = clip.format.num_planes
+
+        def _shift(shift_top: float | List[float] = 0.0, shift_left: float | List[float] = 0.0) -> vs.VideoNode:
+            return self.scale_function(  # type: ignore
+                clip, sy=shift_top, sx=shift_left, kernel=self.kernel, **self.kwargs  # type: ignore
+            )
+
+        if not shifts_or_top and not shift_left:
+            return _shift()
+        elif isinstance(shifts_or_top, tuple):
+            return _shift(*shifts_or_top)
+        elif isinstance(shifts_or_top, float) and isinstance(shift_left, float):
+            return _shift(shifts_or_top, shift_left)
+
+        shifts_top = shifts_or_top or 0.0
+        if isinstance(shifts_top, list):
+            if not shifts_top:
+                shifts_top = [0.0] * n_planes
+            elif len(shifts_top) > n_planes:
+                shifts_top[:n_planes]
+
+        shifts_left = shift_left or 0.0
+        if isinstance(shifts_left, list):
+            if not shifts_left:
+                shifts_left = [0.0] * n_planes
+            elif len(shifts_left) > n_planes:
+                shifts_left = shifts_left[:n_planes]
+
+        return _shift(shifts_top, shifts_left)
 
     def get_matrix_args(self, *args: Any, **kwargs: Any) -> Dict[str, Any]:
         raise NotImplementedError
@@ -754,7 +863,7 @@ class Example(Kernel):
             matrix=matrix, matrix_in=matrix_in, **self.kwargs
         )
 
-    def shift(self, clip: vs.VideoNode, shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
+    def shift(self, clip: vs.VideoNode, shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:  # type: ignore
         """
         Perform a regular shifting operation.
 
