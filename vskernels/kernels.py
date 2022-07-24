@@ -8,7 +8,7 @@ from typing import Any, Callable, Dict, Generator, List, Sequence, Tuple, Type
 import vapoursynth as vs
 
 from .exceptions import UnknownKernelError
-from .types import MatrixT, VideoFormatT
+from .types import Matrix, VideoFormatT
 
 core = vs.core
 
@@ -64,7 +64,7 @@ class Kernel(Scaler, Descaler):
         return self.descale_function(clip, **self.get_descale_args(clip, shift, width, height))
 
     def resample(
-        self, clip: vs.VideoNode, format: VideoFormatT, matrix: MatrixT = None, matrix_in: MatrixT = None
+        self, clip: vs.VideoNode, format: VideoFormatT, matrix: Matrix | None = None, matrix_in: Matrix | None = None
     ) -> vs.VideoNode:
         return self.scale_function(clip, **self.get_matrix_args(clip, format, matrix, matrix_in))
 
@@ -93,7 +93,7 @@ class Kernel(Scaler, Descaler):
         )
 
     def get_matrix_args(
-        self, clip: vs.VideoNode, format: VideoFormatT, matrix: MatrixT, matrix_in: MatrixT
+        self, clip: vs.VideoNode, format: VideoFormatT, matrix: Matrix | None, matrix_in: Matrix | None
     ) -> Dict[str, Any]:
         return dict(
             format=int(format), matrix=matrix, matrix_in=matrix_in, **self.kwargs, **self.get_params_args(False, clip)
@@ -401,7 +401,7 @@ class FmtConv(Kernel):
         raise NotImplementedError
 
     def resample(
-        self, clip: vs.VideoNode, format: VideoFormatT, matrix: MatrixT = None, matrix_in: MatrixT = None
+        self, clip: vs.VideoNode, format: VideoFormatT, matrix: Matrix | None = None, matrix_in: Matrix | None = None
     ) -> vs.VideoNode:
         raise NotImplementedError
 
@@ -736,7 +736,7 @@ class Example(Kernel):
         )
 
     def resample(
-        self, clip: vs.VideoNode, format: VideoFormatT, matrix: MatrixT = None, matrix_in: MatrixT = None
+        self, clip: vs.VideoNode, format: VideoFormatT, matrix: Matrix | None = None, matrix_in: Matrix | None = None
     ) -> vs.VideoNode:
         """
         Perform a regular resampling operation.
