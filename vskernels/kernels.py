@@ -31,7 +31,9 @@ class Kernel(ABC):
     """
 
     scale_function: Callable[..., vs.VideoNode]
+    """Scale function called internally when scaling/resampling/shifting"""
     descale_function: Callable[..., vs.VideoNode]
+    """Descale function called internally when descaling"""
     kwargs: Dict[str, Any]
     """Arguments passed to the kernel filter"""
 
@@ -364,6 +366,7 @@ class FmtConv(Kernel):
     descale_function = core.fmtc.resample
 
     kernel: str
+    """Name of the fmtconv kernel"""
 
     def __init__(self, taps: int = 4, **kwargs: Any) -> None:
         self.taps = taps
