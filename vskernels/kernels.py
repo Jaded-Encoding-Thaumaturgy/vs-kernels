@@ -340,48 +340,48 @@ class RobidouxSharp(Bicubic):
         super().__init__(b=b, c=c, **kwargs)
 
 
-class BicubicAuto(Bicubic):
+class BicubicAuto(_DescalePlugin):
     """
     Kernel that follows the rule of:
     b + 2c = target for upsizing
     b + 2c = target - 1 for downsizing
     """
 
+    scale_function = core.resize.Bicubic
+    descale_function = core.descale.Debicubic
+
     def __init__(self, b: float | None = None, c: float | None = None, target: float = 1.0, **kwargs: Any) -> None:
         if None not in {b, c}:
             raise ValueError("BicubicAuto: You can't specify both b and c!")
 
-        self._b, self._c = b, c
-        self._target = target
+        self.b = b
+        self.c = c
+        self.target = target
 
-        super().__init__(*self._get_bc_args(), **kwargs)
+        super().__init__(**kwargs)
 
-    def scale(self, clip: vs.VideoNode, width: int, height: int, shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
-        self.b, self.c = self._get_bc_args((width * height) > (clip.width * clip.height))
-        return super().scale(clip, width, height, shift)
+    def _params_args(
+        self, is_descale: bool, clip: vs.VideoNode, width: int | None = None, height: int | None = None
+    ) -> Dict[str, Any]:
+        args = super()._params_args(is_descale, clip, width, height)
 
-    def descale(self, clip: vs.VideoNode, width: int, height: int, shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
-        self.b, self.c = self._get_bc_args((width * height) > (clip.width * clip.height))
-        return super().descale(clip, width, height, shift)
+        if width and height:
+            b, c = self._get_bc_args((width * height) > (clip.width * clip.height))
+        else:
+            b, c = self._get_bc_args()
 
-    def resample(
-        self, clip: vs.VideoNode, format: VideoFormatT, matrix: MatrixT = None, matrix_in: MatrixT = None
-    ) -> vs.VideoNode:
-        self.b, self.c = self._get_bc_args()
-        return super().resample(clip, format, matrix, matrix_in)
-
-    def shift(self, clip: vs.VideoNode, shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
-        self.b, self.c = self._get_bc_args()
-        return super().shift(clip, shift)
+        if is_descale:
+            return dict(**args, b=b, c=c)
+        return dict(**args, filter_param_a=b, filter_param_b=c)
 
     def _get_bc_args(self, upsize: bool = True) -> Tuple[float, float]:
-        autob = 0.0 if self._b is None else self._b
-        autoc = 0.5 if self._c is None else self._c
-        target = self._target - int(not upsize)
-        if self._c is not None and self._b is None:
-            autob = target - 2 * self._c
-        elif self._c is None and self._b is not None:
-            autoc = (target - self._b) / 2
+        autob = 0.0 if self.b is None else self.b
+        autoc = 0.5 if self.c is None else self.c
+        target = self.target - int(not upsize)
+        if self.c is not None and self.b is None:
+            autob = target - 2 * self.c
+        elif self.c is None and self.b is not None:
+            autoc = (target - self.b) / 2
 
         return autob, autoc
 
