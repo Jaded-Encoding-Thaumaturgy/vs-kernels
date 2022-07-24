@@ -468,14 +468,16 @@ class BicubicAuto(Bicubic):
 
 class BicubicDidee(Bicubic):
     """
-    Kernel inspired by a Didée post.\n
+    Kernel inspired by a Didée post.
+
+
     `See this doom9 post for further information
-    <https://web.archive.org/web/20220713044016/https://forum.doom9.org/showpost.php?p=1579385&postcount=25>`_.
+    <https://web.archive.org/web/20220713044016/https://forum.doom9.org/showpost.php?p=1579385>`_.
 
     Bicubic b=-0.5, c=0.25
     This is useful for downscaling content, but might not help much with upscaling.
 
-    Follows `b + 2c = 0` for downscaling opposed to `b + 2c = 1` for upscaling.
+    Follows `b + 2c = 0` for downscaling as opposed to `b + 2c = 1` for upscaling.
     """
 
     def __init__(self, **kwargs: Any) -> None:
@@ -485,7 +487,10 @@ class BicubicDidee(Bicubic):
 class BicubicZopti(Bicubic):
     """
     Kernel optimized by Zopti.
-    `See this doom9 post for further information <https://forum.doom9.org/showthread.php?p=1865218#post1865218>`_.
+
+    `See this doom9 post for further information
+    <https://web.archive.org/web/20220713052137/https://forum.doom9.org/showthread.php?p=1865218>`_.
+
     Bicubic b=-0.6, c=0.4
     Optimized for 2160p to 720p (by Boulder). Beware, not neutral. Adds some local contrast.
     """
@@ -499,9 +504,9 @@ class BicubicZoptiNeutral(Bicubic):
     Kernel inspired by Zopti.
     Bicubic b=-0.6, c=0.3
 
-    Slightly more netural than BicubicZopti
+    A slightly more neutral alternative to BicubicZopti.
 
-    Follows `b + 2c = 0` for downscaling opposed to `b + 2c = 1` for upscaling.
+    Follows `b + 2c = 0` for downscaling as opposed to `b + 2c = 1` for upscaling.
     """
 
     def __init__(self, **kwargs: Any) -> None:
