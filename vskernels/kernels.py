@@ -492,15 +492,15 @@ class BicubicZopti(Bicubic):
 
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(b=-0.6, c=0.4, **kwargs)
-        
+
 
 class BicubicZoptiNeutral(Bicubic):
     """
     Kernel inspired by Zopti.
     Bicubic b=-0.6, c=0.3
-    
+
     Slightly more netural than BicubicZopti
-    
+
     Follows `b + 2c = 0` for downscaling opposed to `b + 2c = 1` for upscaling.
     """
 
