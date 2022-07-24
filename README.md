@@ -22,7 +22,7 @@ Full information on how every function/wrapper works,
 as well as a list of dependencies and links,
 can be found in the [documentation](https://vskernels.encode.moe/en/latest/).
 For further support,
-drop by `#kernels` in the [IEW Discord server](https://discord.gg/qxTxVJGtst).
+drop by `#vs-kernels` in the [IEW Discord server](https://discord.gg/qxTxVJGtst).
 
 ## How to install
 
