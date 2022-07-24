@@ -7,7 +7,7 @@
     If you spot any issues, please do not hesitate to send in a Pull Request
     or reach out to me on Discord (LightArrowsEXE#0476)!
 
-    For further support, drop by `#kernels` in the `IEW Discord server <https://discord.gg/qxTxVJGtst>`_.
+    For further support, drop by `#vs-kernels` in the `IEW Discord server <https://discord.gg/qxTxVJGtst>`_.
 """
 
 # flake8: noqa
