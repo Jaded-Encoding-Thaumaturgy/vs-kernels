@@ -792,9 +792,9 @@ def get_kernel(name: str) -> Type[Kernel]:
     """
     Get a kernel by name.
 
-    :param name:            Kernel name.
+    :param name:    Kernel name.
 
-    :return:                    Kernel class.
+    :return:        Kernel class.
 
     :raise UnknownKernelError:  Some kind of unknown error occured.
     """
