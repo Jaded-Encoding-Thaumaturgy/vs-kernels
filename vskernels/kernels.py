@@ -41,18 +41,23 @@ class Kernel(ABC):
         self.kwargs = kwargs
 
     def scale(self, clip: vs.VideoNode, width: int, height: int, shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
-        return self.scale_function(**self.get_scale_args(clip, shift, width, height))
+        return self.scale_function(clip, **self.get_scale_args(clip, shift, width, height))
 
     def descale(self, clip: vs.VideoNode, width: int, height: int, shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
-        return self.descale_function(**self.get_descale_args(clip, shift, width, height))
+        return self.descale_function(clip, **self.get_descale_args(clip, shift, width, height))
 
     def resample(
         self, clip: vs.VideoNode, format: VideoFormatT, matrix: MatrixT = None, matrix_in: MatrixT = None
     ) -> vs.VideoNode:
-        return self.scale_function(**self.get_matrix_args(clip, format, matrix, matrix_in))
+        return self.scale_function(clip, **self.get_matrix_args(clip, format, matrix, matrix_in))
 
     def shift(self, clip: vs.VideoNode, shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
-        return self.scale_function(**self.get_scale_args(clip, shift))
+        return self.scale_function(clip, **self.get_scale_args(clip, shift))
+
+    def get_params_args(
+        self, is_descale: bool, clip: vs.VideoNode, width: int | None = None, height: int | None = None
+    ) -> Dict[str, Any]:
+        return dict(width=width, height=height)
 
     def get_scale_args(
         self, clip: vs.VideoNode, shift: Tuple[float, float] = (0, 0),
@@ -77,11 +82,6 @@ class Kernel(ABC):
             format=int(format), matrix=matrix, matrix_in=matrix_in, **self.kwargs, **self.get_params_args(False, clip)
         )
 
-    def get_params_args(
-        self, is_descale: bool, clip: vs.VideoNode, width: int | None = None, height: int | None = None
-    ) -> Dict[str, Any]:
-        return dict(clip=clip, width=width, height=height)
-
 
 class Point(Kernel):
     """Built-in point resizer."""
@@ -90,23 +90,14 @@ class Point(Kernel):
     descale_function = core.resize.Point
 
 
-class _DescalePlugin(Kernel):
-    def get_params_args(
-        self, is_descale: bool, clip: vs.VideoNode, width: int | None = None, height: int | None = None
-    ) -> Dict[str, Any]:
-        if is_descale:
-            return dict(src=clip, width=width, height=height)
-        return super().get_params_args(is_descale, clip, width, height)
-
-
-class Bilinear(_DescalePlugin):
+class Bilinear(Kernel):
     """Built-in bilinear resizer."""
 
     scale_function = core.resize.Bilinear
     descale_function = core.descale.Debilinear
 
 
-class Bicubic(_DescalePlugin):
+class Bicubic(Kernel):
     """
     Built-in bicubic resizer.
 
@@ -137,7 +128,7 @@ class Bicubic(_DescalePlugin):
         return dict(**args, filter_param_a=self.b, filter_param_b=self.c)
 
 
-class Lanczos(_DescalePlugin):
+class Lanczos(Kernel):
     """
     Built-in lanczos resizer.
 
@@ -164,7 +155,7 @@ class Lanczos(_DescalePlugin):
         return dict(**args, filter_param_a=self.taps)
 
 
-class Spline16(_DescalePlugin):
+class Spline16(Kernel):
     """
     Built-in spline16 resizer.
 
@@ -177,7 +168,7 @@ class Spline16(_DescalePlugin):
     descale_function = core.descale.Despline16
 
 
-class Spline36(_DescalePlugin):
+class Spline36(Kernel):
     """
     Built-in spline36 resizer.
 
@@ -190,7 +181,7 @@ class Spline36(_DescalePlugin):
     descale_function = core.descale.Despline36
 
 
-class Spline64(_DescalePlugin):
+class Spline64(Kernel):
     """
     Built-in spline64 resizer.
 
@@ -265,7 +256,7 @@ class RobidouxSharp(Bicubic):
         super().__init__(b=b, c=c, **kwargs)
 
 
-class BicubicAuto(_DescalePlugin):
+class BicubicAuto(Kernel):
     """
     Kernel that follows the rule of:
     b + 2c = target for upsizing
@@ -441,7 +432,7 @@ class Impulse(FmtConv):
     def get_params_args(
         self, is_descale: bool, clip: vs.VideoNode, width: int | None = None, height: int | None = None
     ) -> Dict[str, Any]:
-        return dict(clip=clip, w=width, h=height, sw=clip.width, sh=clip.height)
+        return dict(w=width, h=height, sw=clip.width, sh=clip.height)
 
     def __init__(self, impulse: Sequence[float], oversample: int = 8, taps: int = 1, **kwargs: Any) -> None:
         super().__init__(taps, impulse=[*impulse[::-1], *impulse[:-1]], kovrspl=oversample, **kwargs)
