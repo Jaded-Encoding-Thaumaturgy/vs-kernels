@@ -1,5 +1,7 @@
 from enum import IntEnum
-from typing import NoReturn
+from typing import NoReturn, Union
+
+import vapoursynth as vs
 
 
 class Matrix(IntEnum):
@@ -26,3 +28,7 @@ class Matrix(IntEnum):
     def RESERVED(self) -> NoReturn:
         """Disallow matrix, as it is reserved."""
         raise PermissionError
+
+
+MatrixT = Union[vs.MatrixCoefficients, Matrix, None]
+VideoFormatT = Union[vs.PresetFormat, vs.VideoFormat]
