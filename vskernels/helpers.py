@@ -1,10 +1,13 @@
 from __future__ import annotations
 
-from typing import Any, Callable, List, Sequence, Type, TypeVar, Union
+from functools import lru_cache
+from typing import Any, Callable, Generator, List, Sequence, Type, TypeVar, Union
 
 import vapoursynth as vs
 
-from .exceptions import VideoPropError
+from .exceptions import UnknownKernelError, VideoPropError
+from .kernels import Kernel, fmtconv
+from .kernels.docs import Example
 from .types import Matrix
 
 __all__: List[str] = []
@@ -62,3 +65,40 @@ def _get_prop(frame: vs.VideoFrame, key: str, t: Type[T]) -> T:
                              f"Expected {t} got {type(prop)}!'")
 
     return prop
+
+
+excluded_kernels = [Kernel, fmtconv, Example]
+
+
+@lru_cache
+def get_all_kernels() -> List[Type[Kernel]]:
+    """Get all kernels as a list."""
+    def _subclasses(cls: Type[Kernel]) -> Generator[Type[Kernel], None, None]:
+        for subclass in cls.__subclasses__():
+            yield from _subclasses(subclass)
+            if subclass in excluded_kernels:
+                continue
+            yield subclass
+
+    return list(set(_subclasses(Kernel)))
+
+
+@lru_cache
+def get_kernel(name: str) -> Type[Kernel]:
+    """
+    Get a kernel by name.
+
+    :param name:    Kernel name.
+
+    :return:        Kernel class.
+
+    :raise UnknownKernelError:  Some kind of unknown error occured.
+    """
+    all_kernels = get_all_kernels()
+    search_str = name.lower().strip()
+
+    for kernel in all_kernels:
+        if kernel.__name__.lower() == search_str:
+            return kernel
+
+    raise UnknownKernelError(f"get_kernel: 'Unknown kernel: {name}!'")
