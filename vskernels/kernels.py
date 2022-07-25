@@ -450,13 +450,27 @@ class FmtConv(Kernel):
         self, clip: vs.VideoNode, shift: Tuple[float, float] = (0, 0),
         width: int | None = None, height: int | None = None,
     ) -> Dict[str, Any]:
-        return dict(sx=shift[1], sy=shift[0], kernel=self.kernel, **self.kwargs)
+        return dict(
+            sx=shift[1], sy=shift[0], kernel=self.kernel,
+            **self.kwargs, **self.get_params_args(False, clip, width, height)
+        )
 
     def get_descale_args(
         self, clip: vs.VideoNode, shift: Tuple[float, float] = (0, 0),
         width: int | None = None, height: int | None = None,
     ) -> Dict[str, Any]:
-        return dict(**self.get_scale_args(clip, shift, width, height), invks=True, invkstaps=self.taps)
+        return dict(
+            **self.get_scale_args(clip, shift, width, height),
+            invks=True, invkstaps=self.taps,
+            **self.get_params_args(True, clip, width, height)
+        )
+
+    def get_params_args(
+        self, is_descale: bool, clip: vs.VideoNode, width: int | None = None, height: int | None = None
+    ) -> Dict[str, Any]:
+        if is_descale:
+            return dict(w=width, h=height, sw=width, sh=height)
+        return dict(w=width, h=height)
 
     @overload
     def shift(self, clip: vs.VideoNode, shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
@@ -563,7 +577,7 @@ class Impulse(FmtConv):
     def get_params_args(
         self, is_descale: bool, clip: vs.VideoNode, width: int | None = None, height: int | None = None
     ) -> Dict[str, Any]:
-        return dict(w=width, h=height, sw=clip.width, sh=clip.height)
+        return super().get_params_args(True, clip, width, height)
 
     def __init__(self, impulse: Sequence[float], oversample: int = 8, taps: int = 1, **kwargs: Any) -> None:
         super().__init__(taps, impulse=[*impulse[::-1], *impulse[:-1]], kovrspl=oversample, **kwargs)
