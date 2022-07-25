@@ -1,13 +1,19 @@
 from __future__ import annotations
+from functools import wraps
 
-from typing import Any, Dict, List, Tuple, overload
+from typing import Any, Callable, Dict, List, Tuple, TypeVar, cast, overload
 
 import vapoursynth as vs
 
-from ..types import Matrix, VideoFormatT
+from vskernels.kernels.bicubic import Bicubic
+
+from ..types import Matrix, VSFunction, VideoFormatT
 from .abstract import Kernel
 
 core = vs.core
+
+F = TypeVar('F', bound=Callable[..., Any])
+call_wrapT = Callable[..., VSFunction]
 
 
 class FmtConv(Kernel):
@@ -19,8 +25,69 @@ class FmtConv(Kernel):
     * fmtconv
     """
 
-    scale_function = core.fmtc.resample
-    descale_function = core.fmtc.resample
+    @staticmethod
+    def wrap_fmtc_func(function: F) -> VSFunction:
+        @wraps(function)
+        def _wrapper(self: FmtConv, clip: vs.VideoNode, **kwargs: Any) -> Any:
+            assert clip.format
+
+            bicubic = Bicubic()
+
+            def _check_fmt(fmt: int | vs.PresetFormat | vs.VideoFormat) -> Tuple[vs.VideoFormat, bool]:
+                if not isinstance(fmt, vs.VideoFormat):
+                    fmt = core.get_video_format(fmt)
+
+                return fmt, (
+                    fmt.bits_per_sample == 32 and fmt.sample_type == vs.FLOAT
+                ) or (
+                    fmt.bits_per_sample == 16 and fmt.sample_type == vs.INTEGER
+                )
+
+            in_fmt = clip.format
+            out_fmt = None
+
+            csp = kwargs.get('csp', None)
+            bits = kwargs.get('bits', None)
+            flt = kwargs.get('flt', 0)
+
+            if csp:
+                out_fmt, valid = _check_fmt(csp)
+
+                if not valid:
+                    kwargs.pop('csp')
+                else:
+                    out_fmt = None
+            else:
+                out_fmt = in_fmt
+
+            if bits:
+                if not out_fmt:
+                    out_fmt = in_fmt
+
+                out_fmt = out_fmt.replace(bits_per_sample=bits)
+
+            if not _check_fmt(in_fmt)[1]:
+                clip = bicubic.resample(
+                    clip, in_fmt.replace(bits_per_sample=16 * (1 + flt), sample_type=vs.SampleType(flt))
+                )
+            if out_fmt:
+                out_fmt, valid = _check_fmt(out_fmt)
+                if valid:
+                    kwargs['csp'] = out_fmt
+                    out_fmt = None
+
+            filtered = function(clip, **kwargs)
+
+            if not out_fmt:
+                return filtered
+
+            assert filtered.format
+            return bicubic.resample(filtered, out_fmt)
+
+        return cast(VSFunction, _wrapper)
+
+    scale_function = wrap_fmtc_func(core.fmtc.resample)
+    descale_function = wrap_fmtc_func(core.fmtc.resample)
 
     kernel: str
     """Name of the fmtconv kernel"""

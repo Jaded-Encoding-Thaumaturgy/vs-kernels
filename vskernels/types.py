@@ -1,9 +1,15 @@
 from __future__ import annotations
 
 from enum import IntEnum
-from typing import TYPE_CHECKING, Any, NoReturn, Type, Union
+from typing import TYPE_CHECKING, Any, NoReturn, Type, Union, Protocol
 
 import vapoursynth as vs
+
+
+class VSFunction(Protocol):
+    def __call__(self, clip: vs.VideoNode, *args: Any, **kwargs: Any) -> vs.VideoNode:
+        ...
+
 
 if TYPE_CHECKING:
     class Matrix(vs.MatrixCoefficients):
