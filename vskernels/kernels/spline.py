@@ -10,6 +10,15 @@ from .fmtconv import FmtConv
 core = vs.core
 
 
+class Spline(FmtConv):
+    """fmtconv's spline resizer."""
+
+    kernel = 'spline'
+
+    def __init__(self, taps: int = 2, **kwargs: Any) -> None:
+        super().__init__(taps=taps, **kwargs)
+
+
 class Spline16(Kernel):
     """
     Built-in spline16 resizer.
@@ -49,16 +58,29 @@ class Spline64(Kernel):
     descale_function = core.descale.Despline64
 
 
+class Spline100(FmtConv):
+    """fmtconv's spline kernel with taps=5."""
+
+    def __init__(self, **kwargs: Any) -> None:
+        super().__init__(taps=5, **kwargs)
+
+
 class Spline144(FmtConv):
-    """
-    fmtconv spline kernel with taps=6.
-
-    Dependencies:
-
-    * fmtconv
-    """
-
-    kernel = 'spline'
+    """fmtconv's spline kernel with taps=6."""
 
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(taps=6, **kwargs)
+
+
+class Spline196(FmtConv):
+    """fmtconv's spline kernel with taps=7."""
+
+    def __init__(self, **kwargs: Any) -> None:
+        super().__init__(taps=7, **kwargs)
+
+
+class Spline256(FmtConv):
+    """fmtconv's spline kernel with taps=8."""
+
+    def __init__(self, **kwargs: Any) -> None:
+        super().__init__(taps=8, **kwargs)

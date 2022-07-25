@@ -34,7 +34,7 @@ unless you require new functionality only available upstream.
 Dependencies
 ^^^^^^^^^^^^
 
-The following VapourSynth libraries are also required for full functionality:
+The following VapourSynth libraries are required:
 
 * `descale <https://github.com/Irrational-Encoding-Wizardry/descale>`_
 * `fmtconv <https://github.com/EleonoreMizo/fmtconv>`_

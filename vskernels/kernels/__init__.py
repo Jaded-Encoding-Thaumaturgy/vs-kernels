@@ -18,7 +18,7 @@ __all__: List[str] = [  # noqa: F405
     'Bessel', 'BlackHarris', 'BlackNuttall', 'Bohman', 'Cosine', 'FlatTop', 'Ginseng',
     'Hamming', 'Hann', 'Kaiser', 'MinSide', 'Parzen', 'Quadratic', 'Welch', 'Wiener',
     # Spline
-    'Spline16', 'Spline36', 'Spline64', 'Spline144',
+    'Spline', 'Spline16', 'Spline36', 'Spline64', 'Spline100', 'Spline144', 'Spline196', 'Spline256'
     # Various
     'Bilinear', 'Lanczos', 'Point'
 ]
