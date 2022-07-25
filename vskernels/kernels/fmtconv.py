@@ -76,8 +76,8 @@ class FmtConv(Kernel):
         n_planes = clip.format.num_planes
 
         def _shift(shift_top: float | List[float] = 0.0, shift_left: float | List[float] = 0.0) -> vs.VideoNode:
-            return self.scale_function(  # type: ignore
-                clip, sy=shift_top, sx=shift_left, kernel=self.kernel, **self.kwargs  # type: ignore
+            return self.scale_function(
+                clip, sy=shift_top, sx=shift_left, kernel=self.kernel, **self.kwargs
             )
 
         if not shifts_or_top and not shift_left:
