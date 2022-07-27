@@ -4,10 +4,10 @@ Functions and Methods
 Functions
 ^^^^^^^^^
 
-.. autoclass:: vskernels.kernels.get_kernel
+.. autoclass:: vskernels.util.get_kernel
     :members:
 
-.. autoclass:: vskernels.kernels.get_all_kernels
+.. autoclass:: vskernels.util.get_all_kernels
     :members:
 
 Methods
@@ -33,4 +33,3 @@ All Available Kernels
 .. automodule:: vskernels.kernels
     :members:
     :show-inheritance:
-    :exclude-members: Example, get_kernel, get_all_kernels
