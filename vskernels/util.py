@@ -44,8 +44,6 @@ def get_prop(frame: vs.VideoFrame, key: str, t: Type[T]) -> T:
     """
     Get FrameProp ``prop`` from frame ``frame`` with expected type ``t`` to satisfy the type checker.
 
-    Taken from `lvsfunc`.
-
     :param frame:               Frame containing props.
     :param key:                 Prop to get.
     :param t:                   Type of prop.
@@ -61,8 +59,7 @@ def get_prop(frame: vs.VideoFrame, key: str, t: Type[T]) -> T:
         raise VideoPropError(f"get_prop: 'Key {key} not present in props!'")
 
     if not isinstance(prop, t):
-        raise VideoPropError(f"get_prop: 'Key {key} did not contain expected type: "
-                             f"Expected {t} got {type(prop)}!'")
+        raise VideoPropError(f"get_prop: 'Key {key} did not contain expected type: Expected {t} got {type(prop)}!'")
 
     return prop
 
