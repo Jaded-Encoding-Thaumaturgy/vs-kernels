@@ -1,9 +1,22 @@
 from __future__ import annotations
 
 from enum import IntEnum
-from typing import TYPE_CHECKING, Any, NoReturn, Type, Union, Protocol
+from typing import TYPE_CHECKING, Any, Callable, NoReturn, Sequence, Type, Union, Protocol
 
 import vapoursynth as vs
+
+__all__ = [
+    'VideoProp', 'VSFunction', 'Matrix', 'VideoFormatT'
+]
+
+VideoProp = Union[
+    int, Sequence[int],
+    float, Sequence[float],
+    str, Sequence[str],
+    vs.VideoNode, Sequence[vs.VideoNode],
+    vs.VideoFrame, Sequence[vs.VideoFrame],
+    Callable[..., Any], Sequence[Callable[..., Any]]
+]
 
 
 class VSFunction(Protocol):

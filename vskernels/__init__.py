@@ -14,7 +14,6 @@
 
 from . import exceptions, kernels, types, util
 from .exceptions import *
-from .helpers import get_all_kernels, get_kernel
 from .kernels import *
 from .types import *
 from .util import *
