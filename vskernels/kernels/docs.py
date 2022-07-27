@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Tuple
+from typing import Any, List, Tuple, overload
 
 import vapoursynth as vs
 
@@ -70,18 +70,26 @@ class Example(Kernel):
             matrix=matrix, matrix_in=matrix_in, **self.kwargs
         )
 
-    def shift(self, clip: vs.VideoNode, shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:  # type: ignore
+    @overload  # type: ignore
+    def shift(self, clip: vs.VideoNode, shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
+        ...
+
+    def shift(  # type: ignore
+        self, clip: vs.VideoNode,
+        shift_top: float | List[float] = 0.0, shift_left: float | List[float] = 0.0
+    ) -> vs.VideoNode:
         """
         Perform a regular shifting operation.
 
         :param clip:        Input clip
-        :param shift:       Shift clip during the operation.
-                            Expects a tuple of (src_top, src_left).
+        :param shift:       Shift clip during the operation.\n
+                            Expects a tuple of (src_top, src_left)\n
+                            or two top, left arrays for shifting planes individually.
 
         :rtype:             ``VideoNode``
         """
         return core.resize.Bicubic(
-            clip, src_top=shift[0], src_left=shift[1],
+            clip, src_top=shift_top, src_left=shift_left,  # type: ignore
             filter_param_a=self.b, filter_param_b=self.c,
             **self.kwargs
         )

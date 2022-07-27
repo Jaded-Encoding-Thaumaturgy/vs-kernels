@@ -15,16 +15,16 @@ Methods
 
 Every `Kernel` class comes with a set of methods:
 
-.. autoclass:: vskernels.kernels.Example.scale
+.. autoclass:: vskernels.kernels.docs.Example.scale
     :members:
 
-.. autoclass:: vskernels.kernels.Example.descale
+.. autoclass:: vskernels.kernels.docs.Example.descale
     :members:
 
-.. autoclass:: vskernels.kernels.Example.shift
+.. autoclass:: vskernels.kernels.docs.Example.shift
     :members:
 
-.. autoclass:: vskernels.kernels.Example.resample
+.. autoclass:: vskernels.kernels.docs.Example.resample
     :members:
 
 All Available Kernels
