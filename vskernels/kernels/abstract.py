@@ -5,7 +5,7 @@ from typing import Any, Callable, Dict, List, Tuple, cast, overload
 
 import vapoursynth as vs
 
-from ..types import Matrix, MatrixT, VideoFormatT
+from ..types import MatrixT, VideoFormatT
 
 core = vs.core
 
@@ -146,6 +146,6 @@ class Kernel(Scaler, Descaler):
     ) -> Dict[str, Any]:
         return dict(
             format=int(format),
-            matrix=Matrix(matrix).value, matrix_in=Matrix(matrix_in).value,
+            matrix=matrix, matrix_in=matrix_in,
             **self.kwargs, **self.get_params_args(False, clip)
         )
