@@ -13,6 +13,22 @@ class VSFunction(Protocol):
 
 if TYPE_CHECKING:
     class Matrix(vs.MatrixCoefficients):
+        RGB = 0
+        GBR = 0
+        BT709 = 1
+        UNKNOWN = 2
+        FCC = 4
+        BT470BG = 5
+        SMPTE170M = 6
+        SMPTE240M = 7
+        YCGCO = 8
+        BT2020NC = 9
+        BT2020C = 10
+        SMPTE2085 = 11
+        CHROMA_DERIVED_NC = 12
+        CHROMA_DERIVED_C = 13
+        ICTCP = 14
+
         def __new__(cls: type[Matrix], value: int | Matrix | vs.MatrixCoefficients | None) -> Matrix:
             ...
 else:
