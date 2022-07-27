@@ -79,4 +79,5 @@ else:
             """Disallow matrix, as it is reserved."""
             raise PermissionError
 
-VideoFormatT = Union[vs.PresetFormat, vs.VideoFormat]
+MatrixT = Union[int, vs.MatrixCoefficients, Matrix]
+VideoFormatT = Union[int, vs.PresetFormat, vs.VideoFormat]

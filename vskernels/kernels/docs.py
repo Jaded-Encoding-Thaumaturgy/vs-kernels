@@ -4,7 +4,7 @@ from typing import Any, List, Tuple, overload
 
 import vapoursynth as vs
 
-from ..types import Matrix, VideoFormatT
+from ..types import MatrixT, VideoFormatT
 from .abstract import Kernel
 
 core = vs.core
@@ -52,7 +52,7 @@ class Example(Kernel):
         )
 
     def resample(
-        self, clip: vs.VideoNode, format: VideoFormatT, matrix: Matrix | None = None, matrix_in: Matrix | None = None
+        self, clip: vs.VideoNode, format: VideoFormatT, matrix: MatrixT | None = None, matrix_in: MatrixT | None = None
     ) -> vs.VideoNode:
         """
         Perform a regular resampling operation.

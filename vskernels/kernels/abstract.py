@@ -5,7 +5,7 @@ from typing import Any, Callable, Dict, List, Tuple, cast, overload
 
 import vapoursynth as vs
 
-from ..types import Matrix, VideoFormatT
+from ..types import Matrix, MatrixT, VideoFormatT
 
 core = vs.core
 
@@ -52,7 +52,7 @@ class Kernel(Scaler, Descaler):
         return self.descale_function(clip, **self.get_descale_args(clip, shift, width, height))
 
     def resample(
-        self, clip: vs.VideoNode, format: VideoFormatT, matrix: Matrix | None = None, matrix_in: Matrix | None = None
+        self, clip: vs.VideoNode, format: VideoFormatT, matrix: MatrixT | None = None, matrix_in: MatrixT | None = None
     ) -> vs.VideoNode:
         return self.scale_function(clip, **self.get_matrix_args(clip, format, matrix, matrix_in))
 
@@ -142,8 +142,10 @@ class Kernel(Scaler, Descaler):
         )
 
     def get_matrix_args(
-        self, clip: vs.VideoNode, format: VideoFormatT, matrix: Matrix | None, matrix_in: Matrix | None
+        self, clip: vs.VideoNode, format: VideoFormatT, matrix: MatrixT | None, matrix_in: MatrixT | None
     ) -> Dict[str, Any]:
         return dict(
-            format=int(format), matrix=matrix, matrix_in=matrix_in, **self.kwargs, **self.get_params_args(False, clip)
+            format=int(format),
+            matrix=Matrix(matrix).value, matrix_in=Matrix(matrix_in).value,
+            **self.kwargs, **self.get_params_args(False, clip)
         )
