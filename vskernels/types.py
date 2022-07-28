@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from enum import IntEnum
-from typing import TYPE_CHECKING, Any, Callable, Protocol, Sequence, Type, Union
+from typing import TYPE_CHECKING, Any, Callable, NamedTuple, Protocol, Sequence, Type, Union
 
 import vapoursynth as vs
 
@@ -191,12 +191,45 @@ else:
         ST432_1 = 12
         EBU3213E = 22
 
-MatrixT = Union[int, vs.MatrixCoefficients, Matrix]
-TransferT = Union[int, vs.TransferCharacteristics, Transfer]
-PrimariesT = Union[int, vs.ColorPrimaries, Primaries]
+
+class MatrixCoefficients(NamedTuple):
+    k0: float
+    phi: float
+    alpha: float
+    gamma: float
+
+    @classmethod
+    @property
+    def SRGB(cls) -> MatrixCoefficients:
+        return MatrixCoefficients(0.04045, 12.92, 0.055, 2.4)
+
+    @classmethod
+    @property
+    def BT709(cls) -> MatrixCoefficients:
+        return MatrixCoefficients(0.08145, 4.5, 0.0993, 2.22222)
+
+    @classmethod
+    @property
+    def SMPTE240M(cls) -> MatrixCoefficients:
+        return MatrixCoefficients(0.0912, 4.0, 0.1115, 2.22222)
+
+    @classmethod
+    @property
+    def BT2020(cls) -> MatrixCoefficients:
+        return MatrixCoefficients(0.08145, 4.5, 0.0993, 2.22222)
+
+    @classmethod
+    def from_curve(cls, curve: Transfer) -> MatrixCoefficients:
+        if curve not in _transfer_matrix_map:
+            raise KeyError(
+                'MatrixCoefficients.from_curve: curve is not supported!'
+            )
+
+        return _transfer_matrix_map[curve]  # type: ignore
 
 
 _matrix_transfer_map = {
+    Matrix.RGB: Transfer.SRGB,
     Matrix.BT709: Transfer.BT709,
     Matrix.BT470BG: Transfer.BT601,
     Matrix.SMPTE170M: Transfer.BT601,
@@ -204,3 +237,16 @@ _matrix_transfer_map = {
     Matrix.CHROMA_DERIVED_C: Transfer.SRGB,
     Matrix.ICTCP: Transfer.BT2020_10bits,
 }
+
+_transfer_matrix_map = {
+    Transfer.SRGB: MatrixCoefficients.SRGB,
+    Transfer.BT709: MatrixCoefficients.BT709,
+    Transfer.BT601: MatrixCoefficients.BT709,
+    Transfer.ST240M: MatrixCoefficients.SMPTE240M,
+    Transfer.BT2020_10bits: MatrixCoefficients.BT2020,
+    Transfer.BT2020_12bits: MatrixCoefficients.BT2020
+}
+
+MatrixT = Union[int, vs.MatrixCoefficients, Matrix]
+TransferT = Union[int, vs.TransferCharacteristics, Transfer]
+PrimariesT = Union[int, vs.ColorPrimaries, Primaries]
