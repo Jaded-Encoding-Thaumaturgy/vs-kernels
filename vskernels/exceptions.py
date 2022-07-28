@@ -21,6 +21,30 @@ class UnsupportedMatrixError(ValueError):
     """Raised when an unsupported matrix is passed."""
 
 
+class UndefinedTransferError(ValueError):
+    """Raised when an undefined transfer is passed."""
+
+
+class ReservedTransferError(PermissionError):
+    """Raised when a reserved transfer is requested."""
+
+
+class UnsupportedTransferError(ValueError):
+    """Raised when an unsupported transfer is passed."""
+
+
+class UndefinedPrimariesError(ValueError):
+    """Raised when an undefined primaries value is passed."""
+
+
+class ReservedPrimariesError(PermissionError):
+    """Raised when reserved primaries are requested."""
+
+
+class UnsupportedPrimariesError(ValueError):
+    """Raised when a unsupported primaries value is passed."""
+
+
 class UnknownKernelError(ValueError):
     """Raised when an unknown kernel is passed."""
 

@@ -5,7 +5,10 @@ from typing import TYPE_CHECKING, Any, Callable, NamedTuple, NoReturn, Protocol,
 
 import vapoursynth as vs
 
-from .exceptions import ReservedMatrixError, UndefinedMatrixError, UnsupportedMatrixError
+from .exceptions import (
+    ReservedMatrixError, ReservedPrimariesError, ReservedTransferError, UndefinedMatrixError, UnsupportedMatrixError,
+    UnsupportedPrimariesError, UnsupportedTransferError
+)
 
 __all__ = [
     'VideoProp', 'VideoFormatT', 'VSFunction',
@@ -59,21 +62,21 @@ class Matrix(_MatrixMeta):
 
     @classmethod
     def _missing_(cls: Type[Matrix], value: Any) -> Matrix | None:
+        if value is None:
+            return Matrix.UNKNOWN
+
         if value == 8:
             raise _MatrixYCGCOError
 
         if cls.RGB < value < cls.ICTCP:
-            raise ReservedMatrixError(f'Matrix: this matrix ({value}) is reserved.')
+            raise ReservedMatrixError(f'Matrix ({value}) is reserved.')
 
         if value > cls.ICTCP:
             raise UnsupportedMatrixError(
-                f'Matrix: this matrix ({value}) is current unsupported. '
+                f'Matrix ({value}) is current unsupported. '
                 'If you believe this to be in error, please leave an issue '
                 'in the vs-kernels GitHub repository.'
             )
-
-        if value is None:
-            return Matrix.UNKNOWN
 
         return None
 
@@ -168,11 +171,18 @@ class Transfer(_TransferMeta):
 
     @classmethod
     def _missing_(cls: Type[Transfer], value: Any) -> Transfer | None:
-        if cls.BT709 < value < cls.ARIB_B67:
-            raise PermissionError('Transfer: This transfer is reserved!')
-
         if value is None:
             return Transfer.UNKNOWN
+
+        if cls.BT709 < value < cls.ARIB_B67:
+            raise ReservedTransferError(f'Transfer ({value}) is reserved.')
+
+        if value > cls.ARIB_B67:
+            raise UnsupportedTransferError(
+                f'Transfer ({value}) is current unsupported. '
+                'If you believe this to be in error, please leave an issue '
+                'in the vs-kernels GitHub repository.'
+            )
 
         return None
 
@@ -209,11 +219,18 @@ class Primaries(_PrimariesMeta):
 
     @classmethod
     def _missing_(cls: Type[Primaries], value: Any) -> Primaries | None:
-        if cls.BT709 < value < cls.EBU3213E:
-            raise PermissionError('Primaries: These primaries are reserved!')
-
         if value is None:
             return Primaries.UNKNOWN
+
+        if cls.BT709 < value < cls.EBU3213E:
+            raise ReservedPrimariesError(f'Primaries ({value}) is reserved.')
+
+        if value > cls.EBU3213E:
+            raise UnsupportedPrimariesError(
+                f'Primaries ({value}) is current unsupported. '
+                'If you believe this to be in error, please leave an issue '
+                'in the vs-kernels GitHub repository.'
+            )
 
         return None
 
