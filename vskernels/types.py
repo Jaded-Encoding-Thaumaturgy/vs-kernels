@@ -1,12 +1,11 @@
 from __future__ import annotations
 
 from enum import IntEnum
-from typing import TYPE_CHECKING, Any, Callable, NamedTuple, Protocol, Sequence, Type, Union
+from typing import TYPE_CHECKING, Any, Callable, NamedTuple, Protocol, Sequence, Type, Union, NoReturn
 
 import vapoursynth as vs
 
 from .exceptions import ReservedMatrixError, UndefinedMatrixError, UnsupportedMatrixError
-from .util import get_prop
 
 __all__ = [
     'VideoProp', 'VideoFormatT', 'VSFunction',
@@ -85,6 +84,10 @@ if TYPE_CHECKING:
             """
             ...
 else:
+    _MatrixYCGCOError = UnsupportedMatrixError(
+        'Matrix: Matrix YCGCO is no longer supported by VapourSynth starting in R55 (APIv4).'
+    )
+
     class Matrix(IntEnum):
         """Matrix coefficients (ITU-T H.265 Table E.5)."""
 
@@ -92,8 +95,18 @@ else:
 
         @classmethod
         def _missing_(cls: Type[Matrix], value: Any) -> Matrix | None:
+            if value == 8:
+                raise _MatrixYCGCOError
+
             if cls.RGB < value < cls.ICTCP:
-                raise ReservedMatrixError('Matrix: This matrix is reserved!')
+                raise ReservedMatrixError(f'Matrix: this matrix ({value}) is reserved.')
+
+            if value > cls.ICTCP:
+                raise UnsupportedMatrixError(
+                    f'Matrix: this matrix ({value}) is current unsupported. '
+                    'If you believe this to be in error, please leave an issue '
+                    'in the vs-kernels GitHub repository.'
+                )
 
             if value is None:
                 return Matrix.UNKNOWN
@@ -108,7 +121,13 @@ else:
         BT470BG = 5
         SMPTE170M = 6
         SMPTE240M = 7
-        YCGCO = 8
+        if core.version_number() < 55:
+            YCGCO = 8
+        else:
+            @classmethod
+            @property
+            def YCGCO(cls) -> NoReturn:
+                raise _MatrixYCGCOError
         BT2020NC = 9
         BT2020C = 10
         SMPTE2085 = 11
@@ -138,6 +157,8 @@ else:
 
         @classmethod
         def from_video(cls, frame: vs.VideoNode | vs.VideoFrame, strict: bool = False) -> Matrix:
+            from .util import get_prop
+
             if isinstance(frame, vs.VideoNode):
                 frame = frame.get_frame(0)
 
@@ -147,21 +168,6 @@ else:
                 if strict:
                     raise UndefinedMatrixError(f'Matrix.from_video: Matrix ({matrix}) is undefined.')
                 return Matrix.from_res(frame)
-
-            if matrix == 3:
-                raise ReservedMatrixError(f'Matrix.from_video: Matrix ({matrix}) is reserved.')
-
-            if matrix == Matrix.YCGCO and core.version_number() >= 55:
-                raise UnsupportedMatrixError(
-                    f'Matrix.from_video: Matrix {matrix} is no longer supported by VapourSynth.'
-                )
-
-            if matrix > 14:
-                raise UnsupportedMatrixError(
-                    f'Matrix.from_video: Matrix ({matrix}) is current unsupported. '
-                    'If you believe this to be in error, please leave an issue '
-                    'in the vs-kernels GitHub repository.'
-                )
 
             return Matrix(matrix)
 
