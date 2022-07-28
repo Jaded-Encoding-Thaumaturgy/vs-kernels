@@ -100,6 +100,10 @@ if TYPE_CHECKING:
 
         def __new__(cls: type[Transfer], value: int | Transfer | vs.TransferCharacteristics | None) -> Transfer:
             ...
+
+        @classmethod
+        def from_matrix(cls, matrix: Matrix) -> Transfer:
+            ...
 else:
     class Transfer(IntEnum):
         """Transfer characteristics (ITU-T H.265)."""
@@ -132,6 +136,14 @@ else:
         ST2084 = 16
         ARIB_B67 = 18
 
+        @classmethod
+        def from_matrix(cls, matrix: Matrix) -> Transfer:
+            if matrix not in _matrix_transfer_map:
+                raise KeyError(
+                    'Transfer.from_matrix: matrix is not supported!'
+                )
+
+            return _matrix_transfer_map[matrix]
 
 if TYPE_CHECKING:
     class Primaries(vs.ColorPrimaries):
@@ -182,3 +194,13 @@ else:
 MatrixT = Union[int, vs.MatrixCoefficients, Matrix]
 TransferT = Union[int, vs.TransferCharacteristics, Transfer]
 PrimariesT = Union[int, vs.ColorPrimaries, Primaries]
+
+
+_matrix_transfer_map = {
+    Matrix.BT709: Transfer.BT709,
+    Matrix.BT470BG: Transfer.BT601,
+    Matrix.SMPTE170M: Transfer.BT601,
+    Matrix.SMPTE240M: Transfer.ST240M,
+    Matrix.CHROMA_DERIVED_C: Transfer.SRGB,
+    Matrix.ICTCP: Transfer.BT2020_10bits,
+}
