@@ -1,12 +1,15 @@
 from __future__ import annotations
 
 from enum import IntEnum
-from typing import TYPE_CHECKING, Any, Callable, NoReturn, Sequence, Type, Union, Protocol
+from typing import TYPE_CHECKING, Any, Callable, Protocol, Sequence, Type, Union
 
 import vapoursynth as vs
 
 __all__ = [
-    'VideoProp', 'VSFunction', 'Matrix', 'VideoFormatT'
+    'VideoProp', 'VideoFormatT', 'VSFunction',
+    'Matrix', 'MatrixT',
+    'Transfer', 'TransferT',
+    'Primaries', 'PrimariesT'
 ]
 
 VideoProp = Union[
@@ -17,6 +20,7 @@ VideoProp = Union[
     vs.VideoFrame, Sequence[vs.VideoFrame],
     Callable[..., Any], Sequence[Callable[..., Any]]
 ]
+VideoFormatT = Union[int, vs.PresetFormat, vs.VideoFormat]
 
 
 class VSFunction(Protocol):
@@ -52,6 +56,9 @@ else:
 
         @classmethod
         def _missing_(cls: Type[Matrix], value: Any) -> Matrix | None:
+            if cls.RGB < value < cls.ICTCP:
+                raise PermissionError('Matrix: This matrix is reserved!')
+
             if value is None:
                 return Matrix.UNKNOWN
 
@@ -61,7 +68,6 @@ else:
         GBR = 0
         BT709 = 1
         UNKNOWN = 2
-        _RESERVED = 3
         FCC = 4
         BT470BG = 5
         SMPTE170M = 6
@@ -74,10 +80,105 @@ else:
         CHROMA_DERIVED_C = 13
         ICTCP = 14
 
-        @property
-        def RESERVED(self) -> NoReturn:
-            """Disallow matrix, as it is reserved."""
-            raise PermissionError
+if TYPE_CHECKING:
+    class Transfer(vs.TransferCharacteristics):
+        BT709 = 1
+        UNKNOWN = 2
+        BT470M = 4
+        BT470BG = 5
+        BT601 = 6
+        ST240M = 7
+        LINEAR = 8
+        LOG_100 = 9
+        LOG_316 = 10
+        XVYCC = 11
+        SRGB = 13
+        BT2020_10bits = 14
+        BT2020_12bits = 15
+        ST2084 = 16
+        ARIB_B67 = 18
+
+        def __new__(cls: type[Transfer], value: int | Transfer | vs.TransferCharacteristics | None) -> Transfer:
+            ...
+else:
+    class Transfer(IntEnum):
+        """Transfer characteristics (ITU-T H.265)."""
+
+        _value_: int
+
+        @classmethod
+        def _missing_(cls: Type[Transfer], value: Any) -> Transfer | None:
+            if cls.BT709 < value < cls.ARIB_B67:
+                raise PermissionError('Transfer: This transfer is reserved!')
+
+            if value is None:
+                return Transfer.UNKNOWN
+
+            return None
+
+        BT709 = 1
+        UNKNOWN = 2
+        BT470M = 4
+        BT470BG = 5
+        BT601 = 6
+        ST240M = 7
+        LINEAR = 8
+        LOG_100 = 9
+        LOG_316 = 10
+        XVYCC = 11
+        SRGB = 13
+        BT2020_10bits = 14
+        BT2020_12bits = 15
+        ST2084 = 16
+        ARIB_B67 = 18
+
+
+if TYPE_CHECKING:
+    class Primaries(vs.ColorPrimaries):
+        BT709 = 1
+        UNKNOWN = 2
+        BT470_M = 4
+        BT470_BG = 5
+        ST170_M = 6
+        ST240_M = 7
+        FILM = 8
+        BT2020 = 9
+        ST428 = 10
+        ST431_2 = 11
+        ST432_1 = 12
+        EBU3213_E = 22
+
+        def __new__(cls: type[Primaries], value: int | Primaries | vs.ColorPrimaries | None) -> Primaries:
+            ...
+else:
+    class Primaries(IntEnum):
+        """Color primaries (ITU-T H.265)."""
+
+        _value_: int
+
+        @classmethod
+        def _missing_(cls: Type[Primaries], value: Any) -> Primaries | None:
+            if cls.BT709 < value < cls.EBU3213E:
+                raise PermissionError('Primaries: These primaries are reserved!')
+
+            if value is None:
+                return Primaries.UNKNOWN
+
+            return None
+
+        BT709 = 1
+        UNKNOWN = 2
+        BT470M = 4
+        BT470BG = 5
+        ST170M = 6
+        ST240M = 7
+        FILM = 8
+        BT2020 = 9
+        ST428 = 10
+        ST431_2 = 11
+        ST432_1 = 12
+        EBU3213E = 22
 
 MatrixT = Union[int, vs.MatrixCoefficients, Matrix]
-VideoFormatT = Union[int, vs.PresetFormat, vs.VideoFormat]
+TransferT = Union[int, vs.TransferCharacteristics, Transfer]
+PrimariesT = Union[int, vs.ColorPrimaries, Primaries]
