@@ -5,12 +5,17 @@ from typing import TYPE_CHECKING, Any, Callable, NamedTuple, Protocol, Sequence,
 
 import vapoursynth as vs
 
+from .exceptions import ReservedMatrixError, UndefinedMatrixError, UnsupportedMatrixError
+from .util import get_prop
+
 __all__ = [
     'VideoProp', 'VideoFormatT', 'VSFunction',
     'Matrix', 'MatrixT',
     'Transfer', 'TransferT',
     'Primaries', 'PrimariesT'
 ]
+
+core = vs.core
 
 VideoProp = Union[
     int, Sequence[int],
@@ -48,6 +53,37 @@ if TYPE_CHECKING:
 
         def __new__(cls: type[Matrix], value: int | Matrix | vs.MatrixCoefficients | None) -> Matrix:
             ...
+
+        @classmethod
+        def from_res(cls, frame: vs.VideoFrame | vs.VideoNode) -> Matrix:
+            """Return matrix based on the frame dimensions."""
+            ...
+
+        @classmethod
+        def from_video(cls, frame: vs.VideoNode | vs.VideoFrame, strict: bool = False) -> Matrix:
+            """
+            Get the matrix of a clip or VideoFrame.
+
+            By default this function will first check the `_Matrix` prop for a valid matrix.
+            If the matrix is not set, it will guess based on the resolution.
+
+            If you want it to be strict and raise an error if no matrix is set, set ``strict=True``.
+
+            :param clip:                        Clip or VideoFrame to process.
+            :param strict:                      Whether to be strict about the matrix.
+                                                If ``True``, checks just the `_Matrix` prop.
+                                                If ``False``, will check the `_Matrix` prop
+                                                and make a guess if `_Matrix=Matrix.UNKNOWN`.
+                                                Default: False.
+
+            :return:                            Value representing a matrix.
+
+            :raise UndefinedMatrixError:        This matrix was undefined and strict was enabled.
+            :raise ReservedMatrixError:         This matrix is reserved.
+            :raise UnsupportedMatrixError:      VapourSynth no longer supports this matrix.
+            :raise UnsupportedMatrixError:      This matrix is unsupported.
+            """
+            ...
 else:
     class Matrix(IntEnum):
         """Matrix coefficients (ITU-T H.265 Table E.5)."""
@@ -57,7 +93,7 @@ else:
         @classmethod
         def _missing_(cls: Type[Matrix], value: Any) -> Matrix | None:
             if cls.RGB < value < cls.ICTCP:
-                raise PermissionError('Matrix: This matrix is reserved!')
+                raise ReservedMatrixError('Matrix: This matrix is reserved!')
 
             if value is None:
                 return Matrix.UNKNOWN
@@ -79,6 +115,55 @@ else:
         CHROMA_DERIVED_NC = 12
         CHROMA_DERIVED_C = 13
         ICTCP = 14
+
+        @classmethod
+        def from_res(cls, frame: vs.VideoFrame | vs.VideoNode) -> Matrix:
+            if isinstance(frame, vs.VideoNode) and not (
+                frame.width and frame.height and frame.format
+            ):
+                frame = frame.get_frame(0)
+
+            if frame.format.color_family == vs.RGB:
+                return Matrix(0)
+
+            w, h = frame.width, frame.height
+
+            if w <= 1024 and h <= 576:
+                return Matrix(6)
+
+            if w <= 2048 and h <= 1536:
+                return Matrix(1)
+
+            return Matrix(9)
+
+        @classmethod
+        def from_video(cls, frame: vs.VideoNode | vs.VideoFrame, strict: bool = False) -> Matrix:
+            if isinstance(frame, vs.VideoNode):
+                frame = frame.get_frame(0)
+
+            matrix = get_prop(frame, '_Matrix', int)
+
+            if matrix == Matrix.UNKNOWN:
+                if strict:
+                    raise UndefinedMatrixError(f'Matrix.from_video: Matrix ({matrix}) is undefined.')
+                return Matrix.from_res(frame)
+
+            if matrix == 3:
+                raise ReservedMatrixError(f'Matrix.from_video: Matrix ({matrix}) is reserved.')
+
+            if matrix == Matrix.YCGCO and core.version_number() >= 55:
+                raise UnsupportedMatrixError(
+                    f'Matrix.from_video: Matrix {matrix} is no longer supported by VapourSynth.'
+                )
+
+            if matrix > 14:
+                raise UnsupportedMatrixError(
+                    f'Matrix.from_video: Matrix ({matrix}) is current unsupported. '
+                    'If you believe this to be in error, please leave an issue '
+                    'in the vs-kernels GitHub repository.'
+                )
+
+            return Matrix(matrix)
 
 if TYPE_CHECKING:
     class Transfer(vs.TransferCharacteristics):

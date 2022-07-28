@@ -5,9 +5,7 @@ from typing import Generator, List, Type, TypeVar
 
 import vapoursynth as vs
 
-from .exceptions import (
-    ReservedMatrixError, UndefinedMatrixError, UnknownKernelError, UnsupportedMatrixError, VideoPropError
-)
+from .exceptions import UnknownKernelError, VideoPropError
 from .kernels import Kernel, fmtconv
 from .kernels.docs import Example
 from .types import Matrix, VideoProp
@@ -26,18 +24,9 @@ T = TypeVar("T", bound=VideoProp)
 
 def get_matrix_from_res(frame: vs.VideoFrame | vs.VideoNode) -> Matrix:
     """Return matrix based on the frame dimensions."""
-    if isinstance(frame, vs.VideoNode):
-        frame = frame.get_frame(0)
+    print(DeprecationWarning('get_matrix_from_res: deprecated in favor of Matrix.from_res!'))
 
-    w, h = frame.width, frame.height
-
-    if frame.format.color_family == vs.RGB:
-        return Matrix(0)
-    elif w <= 1024 and h <= 576:
-        return Matrix(6)
-    elif w <= 2048 and h <= 1536:
-        return Matrix(1)
-    return Matrix(9)
+    return Matrix.from_res(frame)
 
 
 def get_prop(frame: vs.VideoFrame, key: str, t: Type[T]) -> T:
@@ -124,21 +113,7 @@ def get_matrix(frame: vs.VideoNode | vs.VideoFrame, strict: bool = False) -> Mat
     :raise UnsupportedMatrixError:      VapourSynth no longer supports this matrix.
     :raise UnsupportedMatrixError:      This matrix is unsupported.
     """
-    if isinstance(frame, vs.VideoNode):
-        frame = frame.get_frame(0)
 
-    matrix = get_prop(frame, "_Matrix", int)
+    print(DeprecationWarning('get_matrix: deprecated in favor of Matrix.from_video!'))
 
-    if matrix == 2 and strict:
-        raise UndefinedMatrixError(f"get_matrix: 'Matrix ({matrix}) is undefined.'")
-    elif matrix == 2:
-        return get_matrix_from_res(frame)
-    elif matrix == 3:
-        raise ReservedMatrixError(f"get_matrix: 'Matrix ({matrix}) is reserved.'")
-    elif matrix == 8 and core.version_number() >= 55:
-        raise UnsupportedMatrixError(f"get_matrix: 'Matrix {matrix} is no longer supported by VapourSynth.'")
-    elif matrix > 14:
-        raise UnsupportedMatrixError(f"get_matrix: 'Matrix ({matrix}) is current unsupported. "
-                                     "If you believe this to be in error, please leave an issue "
-                                     "in the vs-kernels GitHub repository.'")
-    return Matrix(matrix)
+    return Matrix.from_video(frame, strict)
