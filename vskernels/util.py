@@ -1,14 +1,14 @@
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import Generator, List, Type, TypeVar
+from typing import Generator, List, Type, TypeVar, overload
 
 import vapoursynth as vs
 
 from .exceptions import UnknownKernelError, VideoPropError
 from .kernels import Kernel, fmtconv
 from .kernels.docs import Example
-from .types import Matrix, VideoProp
+from .types import MISSING, HoldsPropValueT, Matrix, MissingT, VideoProp
 
 __all__: List[str] = [
     'get_matrix_from_res', 'get_prop',
@@ -19,7 +19,9 @@ __all__: List[str] = [
 core = vs.core
 
 
-T = TypeVar("T", bound=VideoProp)
+T = TypeVar('T', bound=VideoProp)
+DT = TypeVar('DT')
+CT = TypeVar('CT')
 
 
 def get_matrix_from_res(frame: vs.VideoFrame | vs.VideoNode) -> Matrix:
@@ -29,28 +31,73 @@ def get_matrix_from_res(frame: vs.VideoFrame | vs.VideoNode) -> Matrix:
     return Matrix.from_res(frame)
 
 
-def get_prop(frame: vs.VideoFrame, key: str, t: Type[T]) -> T:
+@overload
+def get_prop(obj: HoldsPropValueT, key: str, t: Type[T], cast: None = None, default: MissingT = MISSING) -> T:
+    ...
+
+
+@overload
+def get_prop(obj: HoldsPropValueT, key: str, t: Type[T], cast: Type[CT], default: MissingT = MISSING) -> CT:
+    ...
+
+
+@overload
+def get_prop(obj: HoldsPropValueT, key: str, t: Type[T], cast: None, default: DT) -> T | DT:
+    ...
+
+
+@overload
+def get_prop(obj: HoldsPropValueT, key: str, t: Type[T], cast: Type[CT], default: DT) -> CT | DT:
+    ...
+
+
+def get_prop(
+    obj: HoldsPropValueT, key: str, t: Type[T], cast: Type[CT] | None = None, default: DT | MissingT = MISSING
+) -> T | CT | DT:
     """
     Get FrameProp ``prop`` from frame ``frame`` with expected type ``t`` to satisfy the type checker.
 
     :param frame:               Frame containing props.
     :param key:                 Prop to get.
     :param t:                   Type of prop.
+    :param cast:                Cast value to this type, if specified.
+    :param default:             Fallback value.
 
     :return:                    frame.prop[key].
 
     :raises VideoPropError:     ``key`` is not found in props.
     :raises VideoPropError:     Returns a prop of the wrong type.
     """
+
+    if isinstance(obj, (vs.VideoNode, vs.AudioNode)):
+        props = obj.get_frame(0).props
+    elif isinstance(obj, (vs.VideoFrame, vs.AudioFrame)):
+        props = obj.props
+    else:
+        props = obj
+
     try:
-        prop = frame.props[key]
-    except KeyError:
-        raise VideoPropError(f"get_prop: 'Key {key} not present in props!'")
+        prop = props[key]
 
-    if not isinstance(prop, t):
-        raise VideoPropError(f"get_prop: 'Key {key} did not contain expected type: Expected {t} got {type(prop)}!'")
+        if not isinstance(prop, t):
+            raise TypeError
 
-    return prop
+        if cast is None:
+            return prop
+
+        return cast(prop)  # type: ignore
+    except BaseException as e:
+        if not isinstance(default, MissingT):
+            return default
+
+        if isinstance(e, KeyError):
+            raise VideoPropError(f"get_prop: 'Key {key} not present in props!'")
+        elif isinstance(e, TypeError):
+            raise VideoPropError(
+                f"get_prop: 'Key {key} did not contain expected type: Expected {t} got {type(prop)}!'"
+            )
+
+        raise e
 
 
 excluded_kernels = [Kernel, fmtconv, Example]

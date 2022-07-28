@@ -11,11 +11,13 @@ from .exceptions import (
 )
 
 __all__ = [
-    'VideoProp', 'VideoFormatT', 'VSFunction',
+    'VideoProp', 'HoldsPropValueT',
+    'VideoFormatT', 'VSFunction',
     'Matrix', 'MatrixT',
     'Transfer', 'TransferT',
     'Primaries', 'PrimariesT',
-    'MatrixCoefficients'
+    'MatrixCoefficients',
+    'MISSING', 'MissingT'
 ]
 
 core = vs.core
@@ -30,6 +32,8 @@ VideoProp = Union[
 ]
 VideoFormatT = Union[int, vs.PresetFormat, vs.VideoFormat]
 
+HoldsPropValueT = Union[vs.FrameProps, vs.VideoFrame, vs.AudioFrame, vs.VideoNode, vs.AudioNode]
+
 _MatrixYCGCOError = UnsupportedMatrixError(
     'Matrix: Matrix YCGCO is no longer supported by VapourSynth starting in R55 (APIv4).'
 )
@@ -39,6 +43,12 @@ class VSFunction(Protocol):
     def __call__(self, clip: vs.VideoNode, *args: Any, **kwargs: Any) -> vs.VideoNode:
         ...
 
+
+class MissingT:
+    pass
+
+
+MISSING = MissingT()
 
 if TYPE_CHECKING:
     class _MatrixMeta(vs.MatrixCoefficients):
