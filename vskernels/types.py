@@ -14,7 +14,8 @@ __all__ = [
     'VideoProp', 'VideoFormatT', 'VSFunction',
     'Matrix', 'MatrixT',
     'Transfer', 'TransferT',
-    'Primaries', 'PrimariesT'
+    'Primaries', 'PrimariesT',
+    'MatrixCoefficients'
 ]
 
 core = vs.core
