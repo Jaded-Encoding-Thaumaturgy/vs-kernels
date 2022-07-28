@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from enum import IntEnum
-from typing import TYPE_CHECKING, Any, Callable, NamedTuple, Protocol, Sequence, Type, Union, NoReturn
+from typing import TYPE_CHECKING, Any, Callable, NamedTuple, NoReturn, Protocol, Sequence, Type, Union
 
 import vapoursynth as vs
 
@@ -26,6 +26,10 @@ VideoProp = Union[
 ]
 VideoFormatT = Union[int, vs.PresetFormat, vs.VideoFormat]
 
+_MatrixYCGCOError = UnsupportedMatrixError(
+    'Matrix: Matrix YCGCO is no longer supported by VapourSynth starting in R55 (APIv4).'
+)
+
 
 class VSFunction(Protocol):
     def __call__(self, clip: vs.VideoNode, *args: Any, **kwargs: Any) -> vs.VideoNode:
@@ -33,254 +37,198 @@ class VSFunction(Protocol):
 
 
 if TYPE_CHECKING:
-    class Matrix(vs.MatrixCoefficients):
-        RGB = 0
-        GBR = 0
-        BT709 = 1
-        UNKNOWN = 2
-        FCC = 4
-        BT470BG = 5
-        SMPTE170M = 6
-        SMPTE240M = 7
+    class _MatrixMeta(vs.MatrixCoefficients):
+        def __new__(cls: type[Matrix], value: MatrixT) -> Matrix:  # type: ignore
+            ...
+
+    class _TransferMeta(vs.TransferCharacteristics):
+        def __new__(cls: type[Transfer], value: TransferT) -> Transfer:  # type: ignore
+            ...
+
+    class _PrimariesMeta(vs.ColorPrimaries):
+        def __new__(cls: type[Primaries], value: PrimariesT) -> Primaries:  # type: ignore
+            ...
+else:
+    _MatrixMeta = _TransferMeta = _PrimariesMeta = IntEnum
+
+
+class Matrix(_MatrixMeta):
+    """Matrix coefficients (ITU-T H.265 Table E.5)."""
+
+    _value_: int
+
+    @classmethod
+    def _missing_(cls: Type[Matrix], value: Any) -> Matrix | None:
+        if value == 8:
+            raise _MatrixYCGCOError
+
+        if cls.RGB < value < cls.ICTCP:
+            raise ReservedMatrixError(f'Matrix: this matrix ({value}) is reserved.')
+
+        if value > cls.ICTCP:
+            raise UnsupportedMatrixError(
+                f'Matrix: this matrix ({value}) is current unsupported. '
+                'If you believe this to be in error, please leave an issue '
+                'in the vs-kernels GitHub repository.'
+            )
+
+        if value is None:
+            return Matrix.UNKNOWN
+
+        return None
+
+    RGB = 0
+    GBR = 0
+    BT709 = 1
+    UNKNOWN = 2
+    FCC = 4
+    BT470BG = 5
+    SMPTE170M = 6
+    SMPTE240M = 7
+    if core.version_number() < 55:
         YCGCO = 8
-        BT2020NC = 9
-        BT2020C = 10
-        SMPTE2085 = 11
-        CHROMA_DERIVED_NC = 12
-        CHROMA_DERIVED_C = 13
-        ICTCP = 14
-
-        def __new__(cls: type[Matrix], value: int | Matrix | vs.MatrixCoefficients | None) -> Matrix:
-            ...
-
+    else:
         @classmethod
-        def from_res(cls, frame: vs.VideoFrame | vs.VideoNode) -> Matrix:
-            """Return matrix based on the frame dimensions."""
-            ...
+        @property
+        def YCGCO(cls) -> NoReturn:
+            raise _MatrixYCGCOError
+    BT2020NC = 9
+    BT2020C = 10
+    SMPTE2085 = 11
+    CHROMA_DERIVED_NC = 12
+    CHROMA_DERIVED_C = 13
+    ICTCP = 14
 
-        @classmethod
-        def from_video(cls, frame: vs.VideoNode | vs.VideoFrame, strict: bool = False) -> Matrix:
-            """
-            Get the matrix of a clip or VideoFrame.
+    @classmethod
+    def from_res(cls, frame: vs.VideoFrame | vs.VideoNode) -> Matrix:
+        """Return matrix based on the frame dimensions."""
+        if isinstance(frame, vs.VideoNode) and not (
+            frame.width and frame.height and frame.format
+        ):
+            frame = frame.get_frame(0)
 
-            By default this function will first check the `_Matrix` prop for a valid matrix.
-            If the matrix is not set, it will guess based on the resolution.
+        assert frame.format
 
-            If you want it to be strict and raise an error if no matrix is set, set ``strict=True``.
+        if frame.format.color_family == vs.RGB:
+            return Matrix(0)
 
-            :param clip:                        Clip or VideoFrame to process.
-            :param strict:                      Whether to be strict about the matrix.
-                                                If ``True``, checks just the `_Matrix` prop.
-                                                If ``False``, will check the `_Matrix` prop
-                                                and make a guess if `_Matrix=Matrix.UNKNOWN`.
-                                                Default: False.
+        w, h = frame.width, frame.height
 
-            :return:                            Value representing a matrix.
+        if w <= 1024 and h <= 576:
+            return Matrix(6)
 
-            :raise UndefinedMatrixError:        This matrix was undefined and strict was enabled.
-            :raise ReservedMatrixError:         This matrix is reserved.
-            :raise UnsupportedMatrixError:      VapourSynth no longer supports this matrix.
-            :raise UnsupportedMatrixError:      This matrix is unsupported.
-            """
-            ...
-else:
-    _MatrixYCGCOError = UnsupportedMatrixError(
-        'Matrix: Matrix YCGCO is no longer supported by VapourSynth starting in R55 (APIv4).'
-    )
+        if w <= 2048 and h <= 1536:
+            return Matrix(1)
 
-    class Matrix(IntEnum):
-        """Matrix coefficients (ITU-T H.265 Table E.5)."""
+        return Matrix(9)
 
-        _value_: int
+    @classmethod
+    def from_video(cls, frame: vs.VideoNode | vs.VideoFrame, strict: bool = False) -> Matrix:
+        """
+        Get the matrix of a clip or VideoFrame.
 
-        @classmethod
-        def _missing_(cls: Type[Matrix], value: Any) -> Matrix | None:
-            if value == 8:
-                raise _MatrixYCGCOError
+        By default this function will first check the `_Matrix` prop for a valid matrix.
+        If the matrix is not set, it will guess based on the resolution.
 
-            if cls.RGB < value < cls.ICTCP:
-                raise ReservedMatrixError(f'Matrix: this matrix ({value}) is reserved.')
+        If you want it to be strict and raise an error if no matrix is set, set ``strict=True``.
 
-            if value > cls.ICTCP:
-                raise UnsupportedMatrixError(
-                    f'Matrix: this matrix ({value}) is current unsupported. '
-                    'If you believe this to be in error, please leave an issue '
-                    'in the vs-kernels GitHub repository.'
-                )
+        :param clip:                        Clip or VideoFrame to process.
+        :param strict:                      Whether to be strict about the matrix.
+                                            If ``True``, checks just the `_Matrix` prop.
+                                            If ``False``, will check the `_Matrix` prop
+                                            and make a guess if `_Matrix=Matrix.UNKNOWN`.
+                                            Default: False.
 
-            if value is None:
-                return Matrix.UNKNOWN
+        :return:                            Value representing a matrix.
 
-            return None
+        :raise UndefinedMatrixError:        This matrix was undefined and strict was enabled.
+        :raise ReservedMatrixError:         This matrix is reserved.
+        :raise UnsupportedMatrixError:      VapourSynth no longer supports this matrix.
+        :raise UnsupportedMatrixError:      This matrix is unsupported.
+        """
+        from .util import get_prop
 
-        RGB = 0
-        GBR = 0
-        BT709 = 1
-        UNKNOWN = 2
-        FCC = 4
-        BT470BG = 5
-        SMPTE170M = 6
-        SMPTE240M = 7
-        if core.version_number() < 55:
-            YCGCO = 8
-        else:
-            @classmethod
-            @property
-            def YCGCO(cls) -> NoReturn:
-                raise _MatrixYCGCOError
-        BT2020NC = 9
-        BT2020C = 10
-        SMPTE2085 = 11
-        CHROMA_DERIVED_NC = 12
-        CHROMA_DERIVED_C = 13
-        ICTCP = 14
+        if isinstance(frame, vs.VideoNode):
+            frame = frame.get_frame(0)
 
-        @classmethod
-        def from_res(cls, frame: vs.VideoFrame | vs.VideoNode) -> Matrix:
-            if isinstance(frame, vs.VideoNode) and not (
-                frame.width and frame.height and frame.format
-            ):
-                frame = frame.get_frame(0)
+        matrix = get_prop(frame, '_Matrix', int)
 
-            if frame.format.color_family == vs.RGB:
-                return Matrix(0)
+        if matrix == Matrix.UNKNOWN:
+            if strict:
+                raise UndefinedMatrixError(f'Matrix.from_video: Matrix ({matrix}) is undefined.')
+            return Matrix.from_res(frame)
 
-            w, h = frame.width, frame.height
+        return Matrix(matrix)
 
-            if w <= 1024 and h <= 576:
-                return Matrix(6)
 
-            if w <= 2048 and h <= 1536:
-                return Matrix(1)
+class Transfer(_TransferMeta):
+    """Transfer characteristics (ITU-T H.265)."""
 
-            return Matrix(9)
+    _value_: int
 
-        @classmethod
-        def from_video(cls, frame: vs.VideoNode | vs.VideoFrame, strict: bool = False) -> Matrix:
-            from .util import get_prop
+    @classmethod
+    def _missing_(cls: Type[Transfer], value: Any) -> Transfer | None:
+        if cls.BT709 < value < cls.ARIB_B67:
+            raise PermissionError('Transfer: This transfer is reserved!')
 
-            if isinstance(frame, vs.VideoNode):
-                frame = frame.get_frame(0)
+        if value is None:
+            return Transfer.UNKNOWN
 
-            matrix = get_prop(frame, '_Matrix', int)
+        return None
 
-            if matrix == Matrix.UNKNOWN:
-                if strict:
-                    raise UndefinedMatrixError(f'Matrix.from_video: Matrix ({matrix}) is undefined.')
-                return Matrix.from_res(frame)
+    BT709 = 1
+    UNKNOWN = 2
+    BT470M = 4
+    BT470BG = 5
+    BT601 = 6
+    ST240M = 7
+    LINEAR = 8
+    LOG_100 = 9
+    LOG_316 = 10
+    XVYCC = 11
+    SRGB = 13
+    BT2020_10bits = 14
+    BT2020_12bits = 15
+    ST2084 = 16
+    ARIB_B67 = 18
 
-            return Matrix(matrix)
+    @classmethod
+    def from_matrix(cls, matrix: Matrix) -> Transfer:
+        if matrix not in _matrix_transfer_map:
+            raise KeyError(
+                'Transfer.from_matrix: matrix is not supported!'
+            )
 
-if TYPE_CHECKING:
-    class Transfer(vs.TransferCharacteristics):
-        BT709 = 1
-        UNKNOWN = 2
-        BT470M = 4
-        BT470BG = 5
-        BT601 = 6
-        ST240M = 7
-        LINEAR = 8
-        LOG_100 = 9
-        LOG_316 = 10
-        XVYCC = 11
-        SRGB = 13
-        BT2020_10bits = 14
-        BT2020_12bits = 15
-        ST2084 = 16
-        ARIB_B67 = 18
+        return _matrix_transfer_map[matrix]
 
-        def __new__(cls: type[Transfer], value: int | Transfer | vs.TransferCharacteristics | None) -> Transfer:
-            ...
 
-        @classmethod
-        def from_matrix(cls, matrix: Matrix) -> Transfer:
-            ...
-else:
-    class Transfer(IntEnum):
-        """Transfer characteristics (ITU-T H.265)."""
+class Primaries(_PrimariesMeta):
+    """Color primaries (ITU-T H.265)."""
 
-        _value_: int
+    _value_: int
 
-        @classmethod
-        def _missing_(cls: Type[Transfer], value: Any) -> Transfer | None:
-            if cls.BT709 < value < cls.ARIB_B67:
-                raise PermissionError('Transfer: This transfer is reserved!')
+    @classmethod
+    def _missing_(cls: Type[Primaries], value: Any) -> Primaries | None:
+        if cls.BT709 < value < cls.EBU3213E:
+            raise PermissionError('Primaries: These primaries are reserved!')
 
-            if value is None:
-                return Transfer.UNKNOWN
+        if value is None:
+            return Primaries.UNKNOWN
 
-            return None
+        return None
 
-        BT709 = 1
-        UNKNOWN = 2
-        BT470M = 4
-        BT470BG = 5
-        BT601 = 6
-        ST240M = 7
-        LINEAR = 8
-        LOG_100 = 9
-        LOG_316 = 10
-        XVYCC = 11
-        SRGB = 13
-        BT2020_10bits = 14
-        BT2020_12bits = 15
-        ST2084 = 16
-        ARIB_B67 = 18
-
-        @classmethod
-        def from_matrix(cls, matrix: Matrix) -> Transfer:
-            if matrix not in _matrix_transfer_map:
-                raise KeyError(
-                    'Transfer.from_matrix: matrix is not supported!'
-                )
-
-            return _matrix_transfer_map[matrix]
-
-if TYPE_CHECKING:
-    class Primaries(vs.ColorPrimaries):
-        BT709 = 1
-        UNKNOWN = 2
-        BT470_M = 4
-        BT470_BG = 5
-        ST170_M = 6
-        ST240_M = 7
-        FILM = 8
-        BT2020 = 9
-        ST428 = 10
-        ST431_2 = 11
-        ST432_1 = 12
-        EBU3213_E = 22
-
-        def __new__(cls: type[Primaries], value: int | Primaries | vs.ColorPrimaries | None) -> Primaries:
-            ...
-else:
-    class Primaries(IntEnum):
-        """Color primaries (ITU-T H.265)."""
-
-        _value_: int
-
-        @classmethod
-        def _missing_(cls: Type[Primaries], value: Any) -> Primaries | None:
-            if cls.BT709 < value < cls.EBU3213E:
-                raise PermissionError('Primaries: These primaries are reserved!')
-
-            if value is None:
-                return Primaries.UNKNOWN
-
-            return None
-
-        BT709 = 1
-        UNKNOWN = 2
-        BT470M = 4
-        BT470BG = 5
-        ST170M = 6
-        ST240M = 7
-        FILM = 8
-        BT2020 = 9
-        ST428 = 10
-        ST431_2 = 11
-        ST432_1 = 12
-        EBU3213E = 22
+    BT709 = 1
+    UNKNOWN = 2
+    BT470M = 4
+    BT470BG = 5
+    ST170M = 6
+    ST240M = 7
+    FILM = 8
+    BT2020 = 9
+    ST428 = 10
+    ST431_2 = 11
+    ST432_1 = 12
+    EBU3213E = 22
 
 
 class MatrixCoefficients(NamedTuple):
