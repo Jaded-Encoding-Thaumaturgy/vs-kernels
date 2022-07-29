@@ -28,7 +28,7 @@ class Scaler(ABC):
 
 class Descaler(ABC):
     @abstractmethod
-    def scale(self, clip: vs.VideoNode, width: int, height: int, shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
+    def descale(self, clip: vs.VideoNode, width: int, height: int, shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
         pass
 
 
