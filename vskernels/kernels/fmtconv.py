@@ -109,11 +109,12 @@ class FmtConv(Kernel):
         self, clip: vs.VideoNode, shift: Tuple[float, float] = (0, 0),
         width: int | None = None, height: int | None = None,
     ) -> Dict[str, Any]:
-        return dict(
-            **self.get_scale_args(clip, shift, width, height),
+        args = dict(
             invks=True, invkstaps=self.taps,
-            **self.get_params_args(True, clip, width, height)
+            **self.get_scale_args(clip, shift, width, height)
         )
+        args.update(self.get_params_args(True, clip, width, height))
+        return args
 
     def get_params_args(
         self, is_descale: bool, clip: vs.VideoNode, width: int | None = None, height: int | None = None
