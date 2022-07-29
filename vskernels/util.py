@@ -105,7 +105,7 @@ excluded_kernels = [Kernel, FmtConv, Example, Impulse]
 
 
 @lru_cache
-def get_all_kernels() -> List[Type[Kernel]]:
+def get_all_kernels(family: Type[Kernel] = Kernel) -> List[Type[Kernel]]:
     """Get all kernels as a list."""
     def _subclasses(cls: Type[Kernel]) -> Generator[Type[Kernel], None, None]:
         for subclass in cls.__subclasses__():
@@ -114,7 +114,7 @@ def get_all_kernels() -> List[Type[Kernel]]:
                 continue
             yield subclass
 
-    return list(set(_subclasses(Kernel)))
+    return list(set(_subclasses(family)))
 
 
 @lru_cache
