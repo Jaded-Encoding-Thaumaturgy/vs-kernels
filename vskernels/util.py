@@ -6,8 +6,9 @@ from typing import Generator, List, Type, TypeVar, overload
 import vapoursynth as vs
 
 from .exceptions import UnknownKernelError, VideoPropError
-from .kernels import Kernel, fmtconv
+from .kernels import Kernel, FmtConv
 from .kernels.docs import Example
+from .kernels.impulse import Impulse
 from .types import MISSING, HoldsPropValueT, Matrix, MissingT, VideoProp
 
 __all__: List[str] = [
@@ -100,7 +101,7 @@ def get_prop(
         raise e
 
 
-excluded_kernels = [Kernel, fmtconv, Example]
+excluded_kernels = [Kernel, FmtConv, Example, Impulse]
 
 
 @lru_cache
