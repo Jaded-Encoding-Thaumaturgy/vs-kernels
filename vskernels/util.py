@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from functools import lru_cache
-from typing import Generator, List, Type, TypeVar, overload
+from typing import Any, Generator, List, Type, TypeVar, overload
 
 import vapoursynth as vs
 
@@ -77,6 +77,8 @@ def get_prop(
     else:
         props = obj
 
+    prop: Any = MISSING
+
     try:
         prop = props[key]
 
@@ -91,7 +93,7 @@ def get_prop(
         if not isinstance(default, MissingT):
             return default
 
-        if isinstance(e, KeyError):
+        if isinstance(e, KeyError) or prop is MISSING:
             raise VideoPropError(f"get_prop: 'Key {key} not present in props!'")
         elif isinstance(e, TypeError):
             raise VideoPropError(
