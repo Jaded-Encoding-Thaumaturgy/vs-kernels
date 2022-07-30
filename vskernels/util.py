@@ -6,7 +6,7 @@ from typing import Any, Generator, List, Type, TypeVar, overload
 import vapoursynth as vs
 
 from .exceptions import UnknownKernelError, VideoPropError
-from .kernels import Kernel, FmtConv
+from .kernels import FmtConv, Kernel
 from .kernels.docs import Example
 from .kernels.impulse import Impulse
 from .types import MISSING, HoldsPropValueT, Matrix, MissingT, VideoProp

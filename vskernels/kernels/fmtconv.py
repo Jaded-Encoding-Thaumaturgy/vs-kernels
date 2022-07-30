@@ -1,13 +1,12 @@
 from __future__ import annotations
-from functools import wraps
 
+from functools import wraps
 from typing import Any, Callable, Dict, List, Tuple, TypeVar, cast, overload
 
 import vapoursynth as vs
-
 from vskernels.kernels.bicubic import Bicubic
 
-from ..types import MatrixT, VSFunction, VideoFormatT
+from ..types import MatrixT, VideoFormatT, VSFunction
 from .abstract import Kernel
 
 core = vs.core
