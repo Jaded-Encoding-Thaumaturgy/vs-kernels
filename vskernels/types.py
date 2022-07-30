@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from enum import IntEnum
-from typing import TYPE_CHECKING, Any, Callable, NamedTuple, NoReturn, Protocol, Sequence, Type, Union
+from typing import TYPE_CHECKING, Any, Callable, NamedTuple, NoReturn, Protocol, Sequence, Type, TypeVar, Union
 
 import vapoursynth as vs
 
@@ -12,7 +12,7 @@ from .exceptions import (
 
 __all__ = [
     'VideoProp', 'HoldsPropValueT',
-    'VideoFormatT', 'VSFunction',
+    'VideoFormatT', 'VSFunction', 'VNodeCallable',
     'Matrix', 'MatrixT',
     'Transfer', 'TransferT',
     'Primaries', 'PrimariesT',
@@ -37,6 +37,9 @@ HoldsPropValueT = Union[vs.FrameProps, vs.VideoFrame, vs.AudioFrame, vs.VideoNod
 _MatrixYCGCOError = UnsupportedMatrixError(
     'Matrix: Matrix YCGCO is no longer supported by VapourSynth starting in R55 (APIv4).'
 )
+
+
+VNodeCallable = TypeVar('VNodeCallable', bound=Callable[..., vs.VideoNode])
 
 
 class VSFunction(Protocol):
