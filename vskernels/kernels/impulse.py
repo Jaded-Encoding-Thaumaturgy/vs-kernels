@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Dict, Sequence
+from typing import Any, Dict, Sequence, Tuple
 
 import vapoursynth as vs
 
@@ -21,6 +21,11 @@ class Impulse(FmtConv):
 
     def __init__(self, impulse: Sequence[float], oversample: int = 8, taps: int = 1, **kwargs: Any) -> None:
         super().__init__(taps, impulse=[*impulse[::-1], *impulse[:-1]], kovrspl=oversample, **kwargs)
+
+    def scale(
+        self, clip: vs.VideoNode, width: int, height: int, shift: Tuple[float, float] = (-0.125, -0.125)
+    ) -> vs.VideoNode:
+        return super().scale(clip, width, height, shift)
 
 
 class Quadratic(Impulse):
