@@ -17,7 +17,7 @@ class Impulse(FmtConv):
     def get_params_args(
         self, is_descale: bool, clip: vs.VideoNode, width: int | None = None, height: int | None = None
     ) -> Dict[str, Any]:
-        return super().get_params_args(True, clip, width, height)
+        return super().get_params_args(is_descale, clip, width, height)
 
     def __init__(self, impulse: Sequence[float], oversample: int = 8, taps: int = 1, **kwargs: Any) -> None:
         super().__init__(taps, impulse=[*impulse[::-1], *impulse[:-1]], kovrspl=oversample, **kwargs)
