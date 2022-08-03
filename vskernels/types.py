@@ -216,6 +216,27 @@ class Transfer(_TransferMeta):
     ST2084 = 16
     ARIB_B67 = 18
 
+    """
+    Extra tranfer characterists from libplacebo
+    https://github.com/haasn/libplacebo/blob/master/src/include/libplacebo/colorspace.h#L193
+    """
+
+    # Standard gamut:
+    BT601_525 = 100
+    BT601_625 = 101
+    EBU_3213 = 102
+    # Wide gamut:
+    APPLE = 103
+    ADOBE = 104
+    PRO_PHOTO = 105
+    CIE_1931 = 106
+    DCI_P3 = 107
+    DISPLAY_P3 = 108
+    V_GAMUT = 109
+    S_GAMUT = 110
+    FILM_C = 111
+    COUNT = 112
+
     @classmethod
     def from_matrix(cls, matrix: Matrix) -> Transfer:
         if matrix not in _matrix_transfer_map:
@@ -224,6 +245,13 @@ class Transfer(_TransferMeta):
             )
 
         return _matrix_transfer_map[matrix]
+
+    def as_libplacebo(self) -> int:
+        return _transfer_placebo_map[self]
+
+    @classmethod
+    def from_libplacebo(self, val: int) -> int:
+        return _placebo_transfer_map[val]
 
 
 class Primaries(_PrimariesMeta):
@@ -315,6 +343,31 @@ _transfer_matrix_map = {
     Transfer.ST240M: MatrixCoefficients.SMPTE240M,
     Transfer.BT2020_10bits: MatrixCoefficients.BT2020,
     Transfer.BT2020_12bits: MatrixCoefficients.BT2020
+}
+
+_transfer_placebo_map = {
+    Transfer.UNKNOWN: 0,
+    Transfer.BT601_525: 1,
+    Transfer.BT601_625: 2,
+    Transfer.BT709: 3,
+    Transfer.BT470M: 4,
+    Transfer.EBU_3213: 5,
+    Transfer.BT2020_10bits: 6,
+    Transfer.BT2020_12bits: 6,
+    Transfer.APPLE: 7,
+    Transfer.ADOBE: 8,
+    Transfer.PRO_PHOTO: 9,
+    Transfer.CIE_1931: 10,
+    Transfer.DCI_P3: 11,
+    Transfer.DISPLAY_P3: 12,
+    Transfer.V_GAMUT: 13,
+    Transfer.S_GAMUT: 14,
+    Transfer.FILM_C: 15,
+    Transfer.COUNT: 16
+}
+
+_placebo_transfer_map = {
+    value: key for key, value in _transfer_placebo_map.items()
 }
 
 MatrixT = Union[int, vs.MatrixCoefficients, Matrix]
