@@ -20,7 +20,8 @@ __all__: List[str] = [  # noqa: F405
     # Spline
     'Spline', 'Spline16', 'Spline36', 'Spline64', 'Spline100', 'Spline144', 'Spline196', 'Spline256',
     # Various
-    'Bilinear', 'Lanczos', 'Point'
+    'Bilinear', 'Lanczos', 'Point',
+    'EwaJinc', 'EwaLanczos', 'EwaGinseng', 'EwaHann', 'EwaHannSoft', 'EwaRobidoux', 'EwaRobidouxSharp'
 ]
 
 from . import docs  # noqa: F401
