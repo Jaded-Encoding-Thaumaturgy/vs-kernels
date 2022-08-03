@@ -4,7 +4,7 @@ from typing import List
 
 __all__: List[str] = [  # noqa: F405
     # Abstracts
-    'Kernel', 'FmtConv', 'Impulse',
+    'Kernel', 'FmtConv', 'Impulse', 'Placebo',
     # Bicubic
     'Bicubic',
     'Catrom', 'Mitchell',
@@ -28,5 +28,6 @@ from .abstract import *  # noqa: F403
 from .bicubic import *  # noqa: F403
 from .fmtconv import *  # noqa: F403
 from .impulse import *  # noqa: F403
+from .placebo import *  # noqa: F403
 from .spline import *  # noqa: F403
 from .various import *  # noqa: F403
