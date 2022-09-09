@@ -120,7 +120,7 @@ def get_all_kernels(family: Type[Kernel] = Kernel) -> List[Type[Kernel]]:
 
 
 @lru_cache
-def get_kernel(name: str) -> Type[Kernel]:
+def get_kernel(kernel_name: str | type[Kernel] | Kernel) -> Type[Kernel]:
     """
     Get a kernel by name.
 
@@ -130,14 +130,19 @@ def get_kernel(name: str) -> Type[Kernel]:
 
     :raise UnknownKernelError:  Some kind of unknown error occured.
     """
-    all_kernels = get_all_kernels()
-    search_str = name.lower().strip()
+    if isinstance(kernel_name, str):
+        all_kernels = get_all_kernels()
+        search_str = kernel_name.lower().strip()
 
-    for kernel in all_kernels:
-        if kernel.__name__.lower() == search_str:
-            return kernel
+        for kernel in all_kernels:
+            if kernel.__name__.lower() == search_str:
+                return kernel
 
-    raise UnknownKernelError(f"get_kernel: 'Unknown kernel: {name}!'")
+        raise UnknownKernelError(f"get_kernel: 'Unknown kernel: {kernel_name}!'")
+    elif isinstance(kernel_name, Kernel):
+        return kernel_name.__class__
+
+    return kernel_name
 
 
 def get_matrix(frame: vs.VideoNode | vs.VideoFrame, strict: bool = False) -> Matrix:
