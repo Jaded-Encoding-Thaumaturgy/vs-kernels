@@ -110,17 +110,19 @@ class FmtConv(Kernel):
     ) -> Dict[str, Any]:
         args = dict(
             invks=True, invkstaps=self.taps,
-            **self.get_scale_args(clip, shift, width, height, **kwargs)
+        ) | self.get_scale_args(
+            clip, shift, width, height, **kwargs
+        ) | self.get_params_args(
+            True, clip, width, height, **kwargs
         )
-        args.update(self.get_params_args(True, clip, width, height, **kwargs))
         return args
 
     def get_params_args(
         self, is_descale: bool, clip: vs.VideoNode, width: int | None = None, height: int | None = None, **kwargs: Any
     ) -> Dict[str, Any]:
         if is_descale:
-            return dict(w=width, h=height, sw=width, sh=height, **kwargs)
-        return dict(w=width, h=height, **kwargs)
+            return kwargs | dict(w=width, h=height, sw=width, sh=height)
+        return kwargs | dict(w=width, h=height)
 
     @overload
     def shift(self, clip: vs.VideoNode, shift: Tuple[float, float] = (0, 0), **kwargs: Any) -> vs.VideoNode:

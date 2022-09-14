@@ -132,30 +132,25 @@ class Kernel(Scaler, Descaler):
     def get_params_args(
         self, is_descale: bool, clip: vs.VideoNode, width: int | None = None, height: int | None = None, **kwargs: Any
     ) -> Dict[str, Any]:
-        return dict(**kwargs, width=width, height=height)
+        return dict(width=width, height=height) | kwargs
 
     def get_scale_args(
         self, clip: vs.VideoNode, shift: Tuple[float, float] = (0, 0),
         width: int | None = None, height: int | None = None, **kwargs: Any
     ) -> Dict[str, Any]:
-        return dict(
-            src_top=shift[0], src_left=shift[1], **self.kwargs,
-            **self.get_params_args(False, clip, width, height, **kwargs)
+        return dict(src_top=shift[0], src_left=shift[1]) | self.kwargs | self.get_params_args(
+            False, clip, width, height, **kwargs
         )
 
     def get_descale_args(
         self, clip: vs.VideoNode, shift: Tuple[float, float] = (0, 0),
         width: int | None = None, height: int | None = None, **kwargs: Any
     ) -> Dict[str, Any]:
-        return dict(
-            src_top=shift[0], src_left=shift[1], **self.get_params_args(True, clip, width, height, **kwargs)
-        )
+        return dict(src_top=shift[0], src_left=shift[1]) | self.get_params_args(True, clip, width, height, **kwargs)
 
     def get_matrix_args(
         self, clip: vs.VideoNode, format: VideoFormatT, matrix: MatrixT | None, matrix_in: MatrixT | None, **kwargs: Any
     ) -> Dict[str, Any]:
         return dict(
-            format=int(format),
-            matrix=matrix, matrix_in=matrix_in,
-            **self.kwargs, **self.get_params_args(False, clip, **kwargs)
-        )
+            format=int(format), matrix=matrix, matrix_in=matrix_in
+        ) | self.kwargs | self.get_params_args(False, clip, **kwargs)

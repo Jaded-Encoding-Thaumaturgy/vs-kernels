@@ -37,8 +37,8 @@ class Bicubic(Kernel):
     ) -> Dict[str, Any]:
         args = super().get_params_args(is_descale, clip, width, height, **kwargs)
         if is_descale:
-            return dict(**args, b=self.b, c=self.c)
-        return dict(**args, filter_param_a=self.b, filter_param_b=self.c)
+            return args | dict(b=self.b, c=self.c)
+        return args | dict(filter_param_a=self.b, filter_param_b=self.c)
 
 
 class BSpline(Bicubic):
@@ -181,8 +181,8 @@ class BicubicAuto(Kernel):
             b, c = self._get_bc_args()
 
         if is_descale:
-            return dict(**args, b=b, c=c)
-        return dict(**args, filter_param_a=b, filter_param_b=c)
+            return args | dict(b=b, c=c)
+        return args | dict(filter_param_a=b, filter_param_b=c)
 
     def _get_bc_args(self, upsize: bool = True) -> Tuple[float, float]:
         autob = 0.0 if self.b is None else self.b

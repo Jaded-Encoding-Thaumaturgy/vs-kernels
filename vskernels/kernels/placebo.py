@@ -63,9 +63,8 @@ class Placebo(Kernel):
         self, clip: vs.VideoNode, shift: Tuple[float, float] = (0, 0),
         width: int | None = None, height: int | None = None, **kwargs: Any
     ) -> Dict[str, Any]:
-        return dict(
-            sx=shift[1], sy=shift[0],
-            **self.kwargs, **self.get_params_args(False, clip, width, height, **kwargs)
+        return dict(sx=shift[1], sy=shift[0]) | self.kwargs | self.get_params_args(
+            False, clip, width, height, **kwargs
         )
 
     def get_params_args(

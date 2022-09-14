@@ -48,8 +48,8 @@ class Lanczos(Kernel):
     ) -> Dict[str, Any]:
         args = super().get_params_args(is_descale, clip, width, height, **kwargs)
         if is_descale:
-            return dict(**args, taps=self.taps)
-        return dict(**args, filter_param_a=self.taps)
+            return args | dict(taps=self.taps)
+        return args | dict(filter_param_a=self.taps)
 
 
 class Box(FmtConv):
