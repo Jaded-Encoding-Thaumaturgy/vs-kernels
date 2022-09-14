@@ -1,10 +1,10 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any, Callable, cast, overload
+from typing import Any, cast, overload
 
 import vapoursynth as vs
-from vstools import Matrix, MatrixT, VideoFormatT, get_format
+from vstools import Matrix, MatrixT, VideoFormatT, get_format, GenericVSFunction
 
 core = vs.core
 
@@ -43,9 +43,9 @@ class Kernel(Scaler, Descaler):
     resizer, not the descale resizer.
     """
 
-    scale_function: Callable[..., vs.VideoNode]
+    scale_function: GenericVSFunction
     """Scale function called internally when scaling/resampling/shifting"""
-    descale_function: Callable[..., vs.VideoNode]
+    descale_function: GenericVSFunction
     """Descale function called internally when descaling"""
 
     def scale(
