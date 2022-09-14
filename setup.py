@@ -28,7 +28,7 @@ setuptools.setup(
         'Contact': 'https://discord.gg/qxTxVJGtst',
     },
     install_requires=requirements,
-    python_requires='>=3.8',
+    python_requires='>=3.10',
     packages=[
         package_name, f'{package_name}.kernels'
     ],
@@ -41,7 +41,7 @@ setuptools.setup(
         "Intended Audience :: Developers",
         "Intended Audience :: Other Audience",
 
-        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.10",
         "License :: OSI Approved :: MIT License",
         "Operating System :: OS Independent",
         "Typing :: Typed",
