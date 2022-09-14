@@ -3,8 +3,8 @@ from __future__ import annotations
 from typing import Any, Dict, Tuple
 
 import vapoursynth as vs
+from vstools import Transfer
 
-from ..types import Transfer
 from .abstract import Kernel
 
 core = vs.core
@@ -78,7 +78,7 @@ class Placebo(Kernel):
             lut_entries=self.lut_entries,
             sigmoidize=self.sigmoidize, linearize=self.linearize,
             sigmoid_center=self.sigmoid_center, sigmoid_slope=self.sigmoid_slope,
-            trc=self.curve.as_libplacebo(),
+            trc=self.curve.value_libplacebo,
         )
 
     def get_descale_args(self, *args: Any, **kwargs: Any) -> Dict[str, Any]:

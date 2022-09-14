@@ -3,8 +3,8 @@ from __future__ import annotations
 from typing import Any, List, Tuple, overload
 
 import vapoursynth as vs
+from vstools import MatrixT, VideoFormatT
 
-from ..types import MatrixT, VideoFormatT
 from .abstract import Kernel
 
 core = vs.core

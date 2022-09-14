@@ -4,8 +4,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Callable, Dict, List, Tuple, cast, overload
 
 import vapoursynth as vs
-
-from ..types import MatrixT, VideoFormatT
+from vstools import MatrixT, VideoFormatT
 
 core = vs.core
 
