@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any, cast, overload
+from typing import Any, Union, cast, overload
 
 import vapoursynth as vs
 from vstools import GenericVSFunction, HoldsVideoFormatT, Matrix, MatrixT, VideoFormatT, get_format, inject_self
@@ -9,7 +9,8 @@ from vstools import GenericVSFunction, HoldsVideoFormatT, Matrix, MatrixT, Video
 __all__ = [
     'Scaler',
     'Descaler',
-    'Kernel'
+    'Kernel',
+    'KernelT'
 ]
 
 core = vs.core
@@ -170,3 +171,6 @@ class Kernel(Scaler, Descaler):
             matrix=Matrix.from_param(matrix),
             matrix_in=Matrix.from_param(matrix_in)
         ) | self.kwargs | self.get_params_args(False, clip, **kwargs)
+
+
+KernelT = Union[str, type[Kernel], Kernel]
