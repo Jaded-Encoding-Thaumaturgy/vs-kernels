@@ -3,24 +3,23 @@ from __future__ import annotations
 from typing import Any
 
 import vapoursynth as vs
+from vstools import core
 
 from .abstract import Kernel
-
-core = vs.core
 
 
 class Point(Kernel):
     """Built-in point resizer."""
 
-    scale_function = core.resize.Point
-    descale_function = core.resize.Point
+    scale_function = core.proxied.resize.Point
+    descale_function = core.proxied.resize.Point
 
 
 class Bilinear(Kernel):
     """Built-in bilinear resizer."""
 
-    scale_function = core.resize.Bilinear
-    descale_function = core.descale.Debilinear
+    scale_function = core.proxied.resize.Bilinear
+    descale_function = core.proxied.descale.Debilinear
 
 
 class Lanczos(Kernel):
@@ -34,8 +33,8 @@ class Lanczos(Kernel):
     :param taps: taps param for lanczos kernel
     """
 
-    scale_function = core.resize.Lanczos
-    descale_function = core.descale.Delanczos
+    scale_function = core.proxied.resize.Lanczos
+    descale_function = core.proxied.descale.Delanczos
 
     def __init__(self, taps: int = 3, **kwargs: Any) -> None:
         self.taps = taps

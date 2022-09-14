@@ -4,10 +4,9 @@ from math import sqrt
 from typing import Any
 
 import vapoursynth as vs
+from vstools import core
 
 from .abstract import Kernel
-
-core = vs.core
 
 
 class Bicubic(Kernel):
@@ -24,8 +23,8 @@ class Bicubic(Kernel):
     :param c: C-param for bicubic kernel
     """
 
-    scale_function = core.resize.Bicubic
-    descale_function = core.descale.Debicubic
+    scale_function = core.proxied.resize.Bicubic
+    descale_function = core.proxied.descale.Debicubic
 
     def __init__(self, b: float = 0, c: float = 1/2, **kwargs: Any) -> None:
         self.b = b
@@ -157,8 +156,8 @@ class BicubicAuto(Kernel):
     b + 2c = target - 1 for downsizing
     """
 
-    scale_function = core.resize.Bicubic
-    descale_function = core.descale.Debicubic
+    scale_function = core.proxied.resize.Bicubic
+    descale_function = core.proxied.descale.Debicubic
 
     def __init__(self, b: float | None = None, c: float | None = None, target: float = 1.0, **kwargs: Any) -> None:
         if None not in {b, c}:

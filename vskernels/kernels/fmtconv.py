@@ -5,11 +5,9 @@ from typing import Any, Callable, TypeVar, cast, overload
 
 import vapoursynth as vs
 from vskernels.kernels.bicubic import Bicubic
-from vstools import MatrixT, VideoFormatT, VSFunction
+from vstools import MatrixT, VideoFormatT, VSFunction, core
 
 from .abstract import Kernel
-
-core = vs.core
 
 F = TypeVar('F', bound=Callable[..., Any])
 call_wrapT = Callable[..., VSFunction]
@@ -85,8 +83,8 @@ class FmtConv(Kernel):
 
         return cast(VSFunction, _wrapper)
 
-    scale_function = wrap_fmtc_func(core.fmtc.resample)
-    descale_function = wrap_fmtc_func(core.fmtc.resample)
+    scale_function = wrap_fmtc_func(core.proxied.fmtc.resample)
+    descale_function = wrap_fmtc_func(core.proxied.fmtc.resample)
 
     kernel: str
     """Name of the fmtconv kernel"""
