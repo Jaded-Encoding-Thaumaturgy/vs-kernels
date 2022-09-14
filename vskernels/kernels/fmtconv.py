@@ -9,6 +9,10 @@ from vstools import MatrixT, VideoFormatT, VSFunction, core
 
 from .abstract import Kernel
 
+__all__ = [
+    'FmtConv'
+]
+
 F = TypeVar('F', bound=Callable[..., Any])
 call_wrapT = Callable[..., VSFunction]
 

@@ -7,6 +7,22 @@ import vapoursynth as vs
 from .fmtconv import FmtConv
 from .placebo import Placebo
 
+__all__ = [
+    'Box',
+    'BlackMan',
+    'BlackManMinLobe',
+    'Sinc',
+    'Gaussian',
+    'NearestNeighbour',
+    'EwaJinc',
+    'EwaLanczos',
+    'EwaGinseng',
+    'EwaHann',
+    'EwaHannSoft',
+    'EwaRobidoux',
+    'EwaRobidouxSharp',
+]
+
 core = vs.core
 
 

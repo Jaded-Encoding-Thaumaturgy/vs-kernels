@@ -9,6 +9,10 @@ from .abstract import Kernel
 
 core = vs.core
 
+__all__ = [
+    'Placebo'
+]
+
 
 class Placebo(Kernel):
     kernel: str

@@ -7,6 +7,10 @@ from vstools import MatrixT, VideoFormatT
 
 from .abstract import Kernel
 
+__all__ = [
+    'Example'
+]
+
 core = vs.core
 
 

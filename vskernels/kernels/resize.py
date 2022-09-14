@@ -7,6 +7,12 @@ from vstools import core
 
 from .abstract import Kernel
 
+__all__ = [
+    'Point',
+    'Bilinear',
+    'Lanczos',
+]
+
 
 class Point(Kernel):
     """Built-in point resizer."""

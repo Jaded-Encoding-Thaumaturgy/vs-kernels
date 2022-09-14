@@ -6,6 +6,12 @@ from typing import Any, cast, overload
 import vapoursynth as vs
 from vstools import Matrix, MatrixT, VideoFormatT, get_format, GenericVSFunction
 
+__all__ = [
+    'Scaler',
+    'Descaler',
+    'Kernel'
+]
+
 core = vs.core
 
 

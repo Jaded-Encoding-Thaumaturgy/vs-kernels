@@ -8,6 +8,22 @@ from vstools import core
 
 from .abstract import Kernel
 
+__all__ = [
+    'Bicubic',
+    'BSpline',
+    'Hermite',
+    'Mitchell',
+    'Catrom',
+    'BicubicSharp',
+    'RobidouxSoft',
+    'Robidoux',
+    'RobidouxSharp',
+    'BicubicDidee',
+    'BicubicZopti',
+    'BicubicZoptiNeutral',
+    'BicubicAuto',
+]
+
 
 class Bicubic(Kernel):
     """

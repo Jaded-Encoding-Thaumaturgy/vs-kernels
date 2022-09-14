@@ -7,6 +7,17 @@ from vstools import core
 from .abstract import Kernel
 from .fmtconv import FmtConv
 
+__all__ = [
+    'Spline',
+    'Spline16',
+    'Spline36',
+    'Spline64',
+    'Spline100',
+    'Spline144',
+    'Spline196',
+    'Spline256',
+]
+
 
 class Spline(FmtConv):
     """fmtconv's spline resizer."""
