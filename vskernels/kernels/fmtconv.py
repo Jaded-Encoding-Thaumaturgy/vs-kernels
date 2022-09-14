@@ -178,7 +178,7 @@ class FmtConv(Kernel):
         raise NotImplementedError
 
     def resample(
-        self, clip: vs.VideoNode, format: VideoFormatT | HoldsVideoFormatT,
+        self, clip: vs.VideoNode, format: int | VideoFormatT | HoldsVideoFormatT,
         matrix: MatrixT | None = None, matrix_in: MatrixT | None = None, **kwargs: Any
     ) -> vs.VideoNode:
         raise NotImplementedError

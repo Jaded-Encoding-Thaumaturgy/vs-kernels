@@ -65,7 +65,7 @@ class Kernel(Scaler, Descaler):
         return self.descale_function(clip, **self.get_descale_args(clip, shift, width, height, **kwargs))
 
     def resample(
-        self, clip: vs.VideoNode, format: VideoFormatT | HoldsVideoFormatT,
+        self, clip: vs.VideoNode, format: int | VideoFormatT | HoldsVideoFormatT,
         matrix: MatrixT | None = None, matrix_in: MatrixT | None = None, **kwargs: Any
     ) -> vs.VideoNode:
         return self.scale_function(clip, **self.get_matrix_args(clip, format, matrix, matrix_in, **kwargs))
@@ -154,7 +154,7 @@ class Kernel(Scaler, Descaler):
         return dict(src_top=shift[0], src_left=shift[1]) | self.get_params_args(True, clip, width, height, **kwargs)
 
     def get_matrix_args(
-        self, clip: vs.VideoNode, format: VideoFormatT | HoldsVideoFormatT,
+        self, clip: vs.VideoNode, format: int | VideoFormatT | HoldsVideoFormatT,
         matrix: MatrixT | None, matrix_in: MatrixT | None, **kwargs: Any
     ) -> dict[str, Any]:
         return dict(
