@@ -4,7 +4,11 @@ from abc import ABC, abstractmethod
 from typing import Any, Union, cast, overload
 
 import vapoursynth as vs
-from vstools import GenericVSFunction, HoldsVideoFormatT, Matrix, MatrixT, VideoFormatT, get_format, inject_self
+from vstools import (
+    FuncExceptT, GenericVSFunction, HoldsVideoFormatT, Matrix, MatrixT, VideoFormatT, get_format, inject_self
+)
+
+from ..exceptions import UnknownKernelError
 
 __all__ = [
     'Scaler',
@@ -171,6 +175,34 @@ class Kernel(Scaler, Descaler):
             matrix=Matrix.from_param(matrix),
             matrix_in=Matrix.from_param(matrix_in)
         ) | self.kwargs | self.get_params_args(False, clip, **kwargs)
+
+    @classmethod
+    def from_param(cls: type[Kernel], kernel: KernelT, func_except: FuncExceptT | None = None) -> type[Kernel]:
+        """
+        Get a kernel by name.
+
+        :param name:    Kernel name.
+
+        :return:        Kernel class.
+
+        :raise UnknownKernelError:  Some kind of unknown error occured.
+        """
+        from ..util import get_all_kernels
+
+        if isinstance(kernel, str):
+            all_kernels = get_all_kernels()
+            search_str = kernel.lower().strip()
+
+            for kernel_cls in all_kernels:
+                if kernel_cls.__name__.lower() == search_str:
+                    return kernel_cls
+
+            raise UnknownKernelError(func_except or Kernel.from_param, kernel)
+
+        if isinstance(kernel, Kernel):
+            return kernel.__class__
+
+        return kernel
 
 
 KernelT = Union[str, type[Kernel], Kernel]
