@@ -42,7 +42,7 @@ class Bicubic(Kernel):
     scale_function = core.proxied.resize.Bicubic
     descale_function = core.proxied.descale.Debicubic
 
-    def __init__(self, b: float = 0, c: float = 1/2, **kwargs: Any) -> None:
+    def __init__(self, b: float = 0, c: float = 1 / 2, **kwargs: Any) -> None:
         self.b = b
         self.c = c
         super().__init__(**kwargs)
@@ -74,14 +74,14 @@ class Mitchell(Bicubic):
     """Bicubic b=1/3, c=1/3"""
 
     def __init__(self, **kwargs: Any) -> None:
-        super().__init__(b=1/3, c=1/3, **kwargs)
+        super().__init__(b=1 / 3, c=1 / 3, **kwargs)
 
 
 class Catrom(Bicubic):
     """Bicubic b=0, c=0.5"""
 
     def __init__(self, **kwargs: Any) -> None:
-        super().__init__(b=0, c=1/2, **kwargs)
+        super().__init__(b=0, c=1 / 2, **kwargs)
 
 
 class BicubicSharp(Bicubic):
@@ -133,7 +133,7 @@ class BicubicDidee(Bicubic):
     """
 
     def __init__(self, **kwargs: Any) -> None:
-        super().__init__(b=-1/2, c=1/4, **kwargs)
+        super().__init__(b=-1 / 2, c=1 / 4, **kwargs)
 
 
 class BicubicZopti(Bicubic):
