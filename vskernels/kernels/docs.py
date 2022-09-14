@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any, overload
 
 import vapoursynth as vs
-from vstools import HoldsVideoFormatT, MatrixT, VideoFormatT, get_format
+from vstools import HoldsVideoFormatT, MatrixT, VideoFormatT, get_format, inject_self
 
 from .abstract import Kernel
 
@@ -22,7 +22,8 @@ class Example(Kernel):
         self.c = c
         super().__init__(**kwargs)
 
-    def scale(
+    @inject_self.cached
+    def scale(  # type: ignore[override]
         self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (0, 0), **kwargs: Any
     ) -> vs.VideoNode:
         """
@@ -41,7 +42,8 @@ class Example(Kernel):
             filter_param_a=self.b, filter_param_b=self.c, **self.kwargs, **kwargs
         )
 
-    def descale(
+    @inject_self.cached
+    def descale(  # type: ignore[override]
         self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (0, 0), **kwargs: Any
     ) -> vs.VideoNode:
         """
@@ -59,7 +61,8 @@ class Example(Kernel):
             clip, width, height, b=self.b, c=self.c, src_top=shift[0], src_left=shift[1], **kwargs
         )
 
-    def resample(
+    @inject_self.cached
+    def resample(  # type: ignore[override]
         self, clip: vs.VideoNode, format: int | VideoFormatT | HoldsVideoFormatT,
         matrix: MatrixT | None = None, matrix_in: MatrixT | None = None, **kwargs: Any
     ) -> vs.VideoNode:

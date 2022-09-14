@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from typing import Any, cast, overload
 
 import vapoursynth as vs
-from vstools import GenericVSFunction, HoldsVideoFormatT, Matrix, MatrixT, VideoFormatT, get_format
+from vstools import GenericVSFunction, HoldsVideoFormatT, Matrix, MatrixT, VideoFormatT, get_format, inject_self
 
 __all__ = [
     'Scaler',
@@ -27,6 +27,7 @@ class Scaler(ABC):
         self.kwargs = kwargs
 
     @abstractmethod
+    @inject_self.cached
     def scale(
         self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (0, 0), **kwargs: Any
     ) -> vs.VideoNode:
@@ -35,6 +36,7 @@ class Scaler(ABC):
 
 class Descaler(ABC):
     @abstractmethod
+    @inject_self.cached
     def descale(
         self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (0, 0), **kwargs: Any
     ) -> vs.VideoNode:
@@ -54,16 +56,19 @@ class Kernel(Scaler, Descaler):
     descale_function: GenericVSFunction
     """Descale function called internally when descaling"""
 
-    def scale(
+    @inject_self.cached
+    def scale(  # type: ignore[override]
         self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (0, 0), **kwargs: Any
     ) -> vs.VideoNode:
         return self.scale_function(clip, **self.get_scale_args(clip, shift, width, height, **kwargs))
 
-    def descale(
+    @inject_self.cached
+    def descale(  # type: ignore[override]
         self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (0, 0), **kwargs: Any
     ) -> vs.VideoNode:
         return self.descale_function(clip, **self.get_descale_args(clip, shift, width, height, **kwargs))
 
+    @inject_self.cached
     def resample(
         self, clip: vs.VideoNode, format: int | VideoFormatT | HoldsVideoFormatT,
         matrix: MatrixT | None = None, matrix_in: MatrixT | None = None, **kwargs: Any
@@ -71,17 +76,20 @@ class Kernel(Scaler, Descaler):
         return self.scale_function(clip, **self.get_matrix_args(clip, format, matrix, matrix_in, **kwargs))
 
     @overload
+    @inject_self.cached
     def shift(self, clip: vs.VideoNode, shift: tuple[float, float] = (0, 0), **kwargs: Any) -> vs.VideoNode:
         ...
 
     @overload
+    @inject_self.cached
     def shift(
         self, clip: vs.VideoNode,
         shift_top: float | list[float] = 0.0, shift_left: float | list[float] = 0.0, **kwargs: Any
     ) -> vs.VideoNode:
         ...
 
-    def shift(  # type: ignore
+    @inject_self.cached  # type: ignore
+    def shift(
         self, clip: vs.VideoNode,
         shifts_or_top: float | tuple[float, float] | list[float] | None = None,
         shift_left: float | list[float] | None = None, **kwargs: Any

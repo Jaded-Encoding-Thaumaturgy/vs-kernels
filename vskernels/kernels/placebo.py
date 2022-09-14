@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 import vapoursynth as vs
-from vstools import Transfer
+from vstools import Transfer, inject_self
 
 from .abstract import Kernel
 
@@ -91,8 +91,10 @@ class Placebo(Kernel):
     def get_matrix_args(self, *args: Any, **kwargs: Any) -> dict[str, Any]:
         raise NotImplementedError
 
-    def descale(self, *args: Any, **kwargs: Any) -> vs.VideoNode:
+    @inject_self.cached
+    def descale(self, *args: Any, **kwargs: Any) -> vs.VideoNode:  # type: ignore[override]
         raise NotImplementedError
 
-    def resample(self, *args: Any, **kwargs: Any) -> vs.VideoNode:
+    @inject_self.cached
+    def resample(self, *args: Any, **kwargs: Any) -> vs.VideoNode:  # type: ignore[override]
         raise NotImplementedError

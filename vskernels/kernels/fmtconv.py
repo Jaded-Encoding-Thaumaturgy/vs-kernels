@@ -4,10 +4,10 @@ from functools import wraps
 from typing import Any, Callable, TypeVar, cast, overload
 
 import vapoursynth as vs
-from vskernels.kernels.bicubic import Bicubic
-from vstools import HoldsVideoFormatT, MatrixT, VideoFormatT, VSFunction, core
+from vstools import HoldsVideoFormatT, MatrixT, VideoFormatT, VSFunction, core, inject_self
 
 from .abstract import Kernel
+from .bicubic import Bicubic
 
 __all__ = [
     'FmtConv'
@@ -127,16 +127,19 @@ class FmtConv(Kernel):
         return kwargs | dict(w=width, h=height)
 
     @overload
+    @inject_self.cached
     def shift(self, clip: vs.VideoNode, shift: tuple[float, float] = (0, 0), **kwargs: Any) -> vs.VideoNode:
         ...
 
     @overload
+    @inject_self.cached
     def shift(
         self, clip: vs.VideoNode,
         shift_top: float | list[float] = 0.0, shift_left: float | list[float] = 0.0, **kwargs: Any
     ) -> vs.VideoNode:
         ...
 
+    @inject_self.cached  # type: ignore
     def shift(  # type: ignore
         self, clip: vs.VideoNode,
         shifts_or_top: float | tuple[float, float] | list[float] | None = None,
@@ -177,7 +180,8 @@ class FmtConv(Kernel):
     def get_matrix_args(self, *args: Any, **kwargs: Any) -> dict[str, Any]:
         raise NotImplementedError
 
-    def resample(
+    @inject_self.cached
+    def resample(  # type: ignore[override]
         self, clip: vs.VideoNode, format: int | VideoFormatT | HoldsVideoFormatT,
         matrix: MatrixT | None = None, matrix_in: MatrixT | None = None, **kwargs: Any
     ) -> vs.VideoNode:
