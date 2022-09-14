@@ -12,9 +12,9 @@ from .kernels.impulse import Impulse
 from .types import MISSING, HoldsPropValueT, Matrix, MissingT, VideoProp
 
 __all__: List[str] = [
-    'get_matrix_from_res', 'get_prop',
+    'get_prop',
     'get_all_kernels', 'get_kernel',
-    'get_matrix', 'Matrix'
+    'Matrix'
 ]
 
 core = vs.core
@@ -23,13 +23,6 @@ core = vs.core
 T = TypeVar('T', bound=VideoProp)
 DT = TypeVar('DT')
 CT = TypeVar('CT')
-
-
-def get_matrix_from_res(frame: vs.VideoFrame | vs.VideoNode) -> Matrix:
-    """Return matrix based on the frame dimensions."""
-    print(DeprecationWarning('get_matrix_from_res: deprecated in favor of Matrix.from_res!'))
-
-    return Matrix.from_res(frame)
 
 
 @overload
@@ -143,32 +136,3 @@ def get_kernel(kernel_name: str | type[Kernel] | Kernel) -> Type[Kernel]:
         return kernel_name.__class__
 
     return kernel_name
-
-
-def get_matrix(frame: vs.VideoNode | vs.VideoFrame, strict: bool = False) -> Matrix:
-    """
-    Get the matrix of a clip or VideoFrame.
-
-    By default this function will first check the `_Matrix` prop for a valid matrix.
-    If the matrix is not set, it will guess based on the resolution.
-
-    If you want it to be strict and raise an error if no matrix is set, set ``strict=True``.
-
-    :param clip:                        Clip or VideoFrame to process.
-    :param strict:                      Whether to be strict about the matrix.
-                                        If ``True``, checks just the `_Matrix` prop.
-                                        If ``False``, will check the `_Matrix` prop
-                                        and make a guess if `_Matrix=Matrix.UNKNOWN`.
-                                        Default: False.
-
-    :return:                            Value representing a matrix.
-
-    :raise UndefinedMatrixError:        This matrix was undefined and strict was enabled.
-    :raise ReservedMatrixError:         This matrix is reserved.
-    :raise UnsupportedMatrixError:      VapourSynth no longer supports this matrix.
-    :raise UnsupportedMatrixError:      This matrix is unsupported.
-    """
-
-    print(DeprecationWarning('get_matrix: deprecated in favor of Matrix.from_video!'))
-
-    return Matrix.from_video(frame, strict)
