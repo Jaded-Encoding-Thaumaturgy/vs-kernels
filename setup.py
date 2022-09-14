@@ -12,6 +12,9 @@ exec(Path(f'{package_name}/_metadata.py').read_text(), meta := cast(dict[str, st
 readme = Path('README.md').read_text()
 requirements = Path('requirements.txt').read_text()
 
+# stubs comand
+# vsgenstubs4 std resize descale fmtc placebo -o stubs
+
 
 setuptools.setup(
     name=package_name,
