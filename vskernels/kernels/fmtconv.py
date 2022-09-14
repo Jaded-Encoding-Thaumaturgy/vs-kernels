@@ -5,7 +5,7 @@ from typing import Any, Callable, TypeVar, cast, overload
 
 import vapoursynth as vs
 from vskernels.kernels.bicubic import Bicubic
-from vstools import MatrixT, VideoFormatT, VSFunction, core
+from vstools import MatrixT, HoldsVideoFormatT, VSFunction, core
 
 from .abstract import Kernel
 
@@ -178,7 +178,7 @@ class FmtConv(Kernel):
         raise NotImplementedError
 
     def resample(
-        self, clip: vs.VideoNode, format: VideoFormatT,
+        self, clip: vs.VideoNode, format: HoldsVideoFormatT,
         matrix: MatrixT | None = None, matrix_in: MatrixT | None = None, **kwargs: Any
     ) -> vs.VideoNode:
         raise NotImplementedError

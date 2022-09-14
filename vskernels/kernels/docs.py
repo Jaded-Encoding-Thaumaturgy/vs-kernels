@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any, overload
 
 import vapoursynth as vs
-from vstools import MatrixT, VideoFormatT
+from vstools import MatrixT, HoldsVideoFormatT, get_format
 
 from .abstract import Kernel
 
@@ -60,7 +60,7 @@ class Example(Kernel):
         )
 
     def resample(
-        self, clip: vs.VideoNode, format: VideoFormatT,
+        self, clip: vs.VideoNode, format: HoldsVideoFormatT,
         matrix: MatrixT | None = None, matrix_in: MatrixT | None = None, **kwargs: Any
     ) -> vs.VideoNode:
         """
@@ -74,7 +74,7 @@ class Example(Kernel):
         :rtype:             ``VideoNode``
         """
         return core.resize.Bicubic(
-            clip, format=int(format),
+            clip, format=get_format(format).id,
             filter_param_a=self.b, filter_param_b=self.c,
             matrix=matrix, matrix_in=matrix_in, **self.kwargs, **kwargs
         )
