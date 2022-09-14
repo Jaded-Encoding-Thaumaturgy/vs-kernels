@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any, overload
 
 import vapoursynth as vs
-from vstools import MatrixT, HoldsVideoFormatT, get_format
+from vstools import HoldsVideoFormatT, MatrixT, VideoFormatT, get_format
 
 from .abstract import Kernel
 
@@ -17,7 +17,7 @@ core = vs.core
 class Example(Kernel):
     """Example Kernel class for documentation purposes."""
 
-    def __init__(self, b: float = 0, c: float = 1/2, **kwargs: Any) -> None:
+    def __init__(self, b: float = 0, c: float = 1 / 2, **kwargs: Any) -> None:
         self.b = b
         self.c = c
         super().__init__(**kwargs)
@@ -60,7 +60,7 @@ class Example(Kernel):
         )
 
     def resample(
-        self, clip: vs.VideoNode, format: HoldsVideoFormatT,
+        self, clip: vs.VideoNode, format: VideoFormatT | HoldsVideoFormatT,
         matrix: MatrixT | None = None, matrix_in: MatrixT | None = None, **kwargs: Any
     ) -> vs.VideoNode:
         """
