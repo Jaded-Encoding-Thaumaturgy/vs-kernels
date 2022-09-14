@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any, Callable, Dict, List, Tuple, cast, overload
+from typing import Any, Callable, cast, overload
 
 import vapoursynth as vs
 from vstools import Matrix, MatrixT, VideoFormatT, get_format
@@ -14,7 +14,7 @@ class Scaler(ABC):
     Abstract scaling interface.
     """
 
-    kwargs: Dict[str, Any]
+    kwargs: dict[str, Any]
     """Arguments passed to the internal scale function"""
 
     def __init__(self, **kwargs: Any) -> None:
@@ -22,7 +22,7 @@ class Scaler(ABC):
 
     @abstractmethod
     def scale(
-        self, clip: vs.VideoNode, width: int, height: int, shift: Tuple[float, float] = (0, 0), **kwargs: Any
+        self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (0, 0), **kwargs: Any
     ) -> vs.VideoNode:
         pass
 
@@ -30,7 +30,7 @@ class Scaler(ABC):
 class Descaler(ABC):
     @abstractmethod
     def descale(
-        self, clip: vs.VideoNode, width: int, height: int, shift: Tuple[float, float] = (0, 0), **kwargs: Any
+        self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (0, 0), **kwargs: Any
     ) -> vs.VideoNode:
         pass
 
@@ -49,12 +49,12 @@ class Kernel(Scaler, Descaler):
     """Descale function called internally when descaling"""
 
     def scale(
-        self, clip: vs.VideoNode, width: int, height: int, shift: Tuple[float, float] = (0, 0), **kwargs: Any
+        self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (0, 0), **kwargs: Any
     ) -> vs.VideoNode:
         return self.scale_function(clip, **self.get_scale_args(clip, shift, width, height, **kwargs))
 
     def descale(
-        self, clip: vs.VideoNode, width: int, height: int, shift: Tuple[float, float] = (0, 0), **kwargs: Any
+        self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (0, 0), **kwargs: Any
     ) -> vs.VideoNode:
         return self.descale_function(clip, **self.get_descale_args(clip, shift, width, height, **kwargs))
 
@@ -65,26 +65,26 @@ class Kernel(Scaler, Descaler):
         return self.scale_function(clip, **self.get_matrix_args(clip, format, matrix, matrix_in, **kwargs))
 
     @overload
-    def shift(self, clip: vs.VideoNode, shift: Tuple[float, float] = (0, 0), **kwargs: Any) -> vs.VideoNode:
+    def shift(self, clip: vs.VideoNode, shift: tuple[float, float] = (0, 0), **kwargs: Any) -> vs.VideoNode:
         ...
 
     @overload
     def shift(
         self, clip: vs.VideoNode,
-        shift_top: float | List[float] = 0.0, shift_left: float | List[float] = 0.0, **kwargs: Any
+        shift_top: float | list[float] = 0.0, shift_left: float | list[float] = 0.0, **kwargs: Any
     ) -> vs.VideoNode:
         ...
 
     def shift(  # type: ignore
         self, clip: vs.VideoNode,
-        shifts_or_top: float | Tuple[float, float] | List[float] | None = None,
-        shift_left: float | List[float] | None = None, **kwargs: Any
+        shifts_or_top: float | tuple[float, float] | list[float] | None = None,
+        shift_left: float | list[float] | None = None, **kwargs: Any
     ) -> vs.VideoNode:
         assert clip.format
 
         n_planes = clip.format.num_planes
 
-        def _shift(src: vs.VideoNode, shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
+        def _shift(src: vs.VideoNode, shift: tuple[float, float] = (0, 0)) -> vs.VideoNode:
             return self.scale_function(src, **self.get_scale_args(src, shift, **kwargs))
 
         if not shifts_or_top and not shift_left:
@@ -99,7 +99,7 @@ class Kernel(Scaler, Descaler):
         if shift_left is None:
             shift_left = 0.0
 
-        shifts_top = shifts_or_top if isinstance(shifts_or_top, List) else [shifts_or_top]
+        shifts_top = shifts_or_top if isinstance(shifts_or_top, list) else [shifts_or_top]
         shifts_left = shift_left if isinstance(shift_left, list) else [shift_left]
 
         if not shifts_top:
@@ -119,7 +119,7 @@ class Kernel(Scaler, Descaler):
         if len(set(shifts_top)) == len(set(shifts_left)) == 1 or n_planes == 1:
             return _shift(clip, (shifts_top[0], shifts_left[0]))
 
-        planes = cast(List[vs.VideoNode], clip.std.SplitPlanes())
+        planes = cast(list[vs.VideoNode], clip.std.SplitPlanes())
 
         shifted_planes = [
             plane if top == left == 0 else _shift(plane, (top, left))
@@ -130,26 +130,26 @@ class Kernel(Scaler, Descaler):
 
     def get_params_args(
         self, is_descale: bool, clip: vs.VideoNode, width: int | None = None, height: int | None = None, **kwargs: Any
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         return dict(width=width, height=height) | kwargs
 
     def get_scale_args(
-        self, clip: vs.VideoNode, shift: Tuple[float, float] = (0, 0),
+        self, clip: vs.VideoNode, shift: tuple[float, float] = (0, 0),
         width: int | None = None, height: int | None = None, **kwargs: Any
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         return dict(src_top=shift[0], src_left=shift[1]) | self.kwargs | self.get_params_args(
             False, clip, width, height, **kwargs
         )
 
     def get_descale_args(
-        self, clip: vs.VideoNode, shift: Tuple[float, float] = (0, 0),
+        self, clip: vs.VideoNode, shift: tuple[float, float] = (0, 0),
         width: int | None = None, height: int | None = None, **kwargs: Any
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         return dict(src_top=shift[0], src_left=shift[1]) | self.get_params_args(True, clip, width, height, **kwargs)
 
     def get_matrix_args(
         self, clip: vs.VideoNode, format: VideoFormatT, matrix: MatrixT | None, matrix_in: MatrixT | None, **kwargs: Any
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         return dict(
             format=get_format(format).id,
             matrix=Matrix.from_param(matrix),

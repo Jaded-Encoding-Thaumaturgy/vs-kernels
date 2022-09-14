@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-from typing import List
-
-__all__: List[str] = [  # noqa: F405
+__all__ = [  # noqa: F405
     # Abstracts
     'Kernel', 'FmtConv', 'Impulse', 'Placebo',
     # Bicubic

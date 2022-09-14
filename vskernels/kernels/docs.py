@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, List, Tuple, overload
+from typing import Any, overload
 
 import vapoursynth as vs
 from vstools import MatrixT, VideoFormatT
@@ -19,7 +19,7 @@ class Example(Kernel):
         super().__init__(**kwargs)
 
     def scale(
-        self, clip: vs.VideoNode, width: int, height: int, shift: Tuple[float, float] = (0, 0), **kwargs: Any
+        self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (0, 0), **kwargs: Any
     ) -> vs.VideoNode:
         """
         Perform a regular scaling operation.
@@ -38,7 +38,7 @@ class Example(Kernel):
         )
 
     def descale(
-        self, clip: vs.VideoNode, width: int, height: int, shift: Tuple[float, float] = (0, 0), **kwargs: Any
+        self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (0, 0), **kwargs: Any
     ) -> vs.VideoNode:
         """
         Perform a regular descaling operation.
@@ -76,12 +76,12 @@ class Example(Kernel):
         )
 
     @overload  # type: ignore
-    def shift(self, clip: vs.VideoNode, shift: Tuple[float, float] = (0, 0), **kwargs: Any) -> vs.VideoNode:
+    def shift(self, clip: vs.VideoNode, shift: tuple[float, float] = (0, 0), **kwargs: Any) -> vs.VideoNode:
         ...
 
     def shift(  # type: ignore
         self, clip: vs.VideoNode,
-        shift_top: float | List[float] = 0.0, shift_left: float | List[float] = 0.0, **kwargs: Any
+        shift_top: float | list[float] = 0.0, shift_left: float | list[float] = 0.0, **kwargs: Any
     ) -> vs.VideoNode:
         """
         Perform a regular shifting operation.

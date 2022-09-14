@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Any, Dict, Tuple
+from typing import Any
 
 import vapoursynth as vs
 from vstools import Transfer
@@ -60,16 +60,16 @@ class Placebo(Kernel):
         super().__init__(**kwargs)
 
     def get_scale_args(
-        self, clip: vs.VideoNode, shift: Tuple[float, float] = (0, 0),
+        self, clip: vs.VideoNode, shift: tuple[float, float] = (0, 0),
         width: int | None = None, height: int | None = None, **kwargs: Any
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         return dict(sx=shift[1], sy=shift[0]) | self.kwargs | self.get_params_args(
             False, clip, width, height, **kwargs
         )
 
     def get_params_args(
         self, is_descale: bool, clip: vs.VideoNode, width: int | None = None, height: int | None = None, **kwargs: Any
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         return dict(
             width=width, height=height, filter=self.kernel,
             radius=self.taps, param1=self.b, param2=self.c,
@@ -81,10 +81,10 @@ class Placebo(Kernel):
             trc=self.curve.value_libplacebo,
         )
 
-    def get_descale_args(self, *args: Any, **kwargs: Any) -> Dict[str, Any]:
+    def get_descale_args(self, *args: Any, **kwargs: Any) -> dict[str, Any]:
         raise NotImplementedError
 
-    def get_matrix_args(self, *args: Any, **kwargs: Any) -> Dict[str, Any]:
+    def get_matrix_args(self, *args: Any, **kwargs: Any) -> dict[str, Any]:
         raise NotImplementedError
 
     def descale(self, *args: Any, **kwargs: Any) -> vs.VideoNode:

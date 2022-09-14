@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 
-import setuptools
 from pathlib import Path
-from typing import cast, Dict
+from typing import cast
+
+import setuptools
 
 package_name = 'vskernels'
 
-exec(Path(f'{package_name}/_metadata.py').read_text(), meta := cast(Dict[str, str], {}))
+exec(Path(f'{package_name}/_metadata.py').read_text(), meta := cast(dict[str, str], {}))
 
 readme = Path('README.md').read_text()
 requirements = Path('requirements.txt').read_text()

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from math import sqrt
-from typing import Any, Dict, Tuple
+from typing import Any
 
 import vapoursynth as vs
 
@@ -34,7 +34,7 @@ class Bicubic(Kernel):
 
     def get_params_args(
         self, is_descale: bool, clip: vs.VideoNode, width: int | None = None, height: int | None = None, **kwargs: Any
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         args = super().get_params_args(is_descale, clip, width, height, **kwargs)
         if is_descale:
             return args | dict(b=self.b, c=self.c)
@@ -172,7 +172,7 @@ class BicubicAuto(Kernel):
 
     def get_params_args(
         self, is_descale: bool, clip: vs.VideoNode, width: int | None = None, height: int | None = None, **kwargs: Any
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         args = super().get_params_args(is_descale, clip, width, height, **kwargs)
 
         if width and height:
@@ -184,7 +184,7 @@ class BicubicAuto(Kernel):
             return args | dict(b=b, c=c)
         return args | dict(filter_param_a=b, filter_param_b=c)
 
-    def _get_bc_args(self, upsize: bool = True) -> Tuple[float, float]:
+    def _get_bc_args(self, upsize: bool = True) -> tuple[float, float]:
         autob = 0.0 if self.b is None else self.b
         autoc = 0.5 if self.c is None else self.c
         target = self.target - int(not upsize)
