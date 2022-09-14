@@ -61,15 +61,15 @@ class Placebo(Kernel):
 
     def get_scale_args(
         self, clip: vs.VideoNode, shift: Tuple[float, float] = (0, 0),
-        width: int | None = None, height: int | None = None,
+        width: int | None = None, height: int | None = None, **kwargs: Any
     ) -> Dict[str, Any]:
         return dict(
             sx=shift[1], sy=shift[0],
-            **self.kwargs, **self.get_params_args(False, clip, width, height)
+            **self.kwargs, **self.get_params_args(False, clip, width, height, **kwargs)
         )
 
     def get_params_args(
-        self, is_descale: bool, clip: vs.VideoNode, width: int | None = None, height: int | None = None
+        self, is_descale: bool, clip: vs.VideoNode, width: int | None = None, height: int | None = None, **kwargs: Any
     ) -> Dict[str, Any]:
         return dict(
             width=width, height=height, filter=self.kernel,

@@ -97,46 +97,46 @@ class FmtConv(Kernel):
 
     def get_scale_args(
         self, clip: vs.VideoNode, shift: Tuple[float, float] = (0, 0),
-        width: int | None = None, height: int | None = None,
+        width: int | None = None, height: int | None = None, **kwargs: Any
     ) -> Dict[str, Any]:
         return dict(
             sx=shift[1], sy=shift[0], kernel=self.kernel,
-            **self.kwargs, **self.get_params_args(False, clip, width, height)
+            **self.kwargs, **self.get_params_args(False, clip, width, height, **kwargs)
         )
 
     def get_descale_args(
         self, clip: vs.VideoNode, shift: Tuple[float, float] = (0, 0),
-        width: int | None = None, height: int | None = None,
+        width: int | None = None, height: int | None = None, **kwargs: Any
     ) -> Dict[str, Any]:
         args = dict(
             invks=True, invkstaps=self.taps,
-            **self.get_scale_args(clip, shift, width, height)
+            **self.get_scale_args(clip, shift, width, height, **kwargs)
         )
-        args.update(self.get_params_args(True, clip, width, height))
+        args.update(self.get_params_args(True, clip, width, height, **kwargs))
         return args
 
     def get_params_args(
-        self, is_descale: bool, clip: vs.VideoNode, width: int | None = None, height: int | None = None
+        self, is_descale: bool, clip: vs.VideoNode, width: int | None = None, height: int | None = None, **kwargs: Any
     ) -> Dict[str, Any]:
         if is_descale:
-            return dict(w=width, h=height, sw=width, sh=height)
-        return dict(w=width, h=height)
+            return dict(w=width, h=height, sw=width, sh=height, **kwargs)
+        return dict(w=width, h=height, **kwargs)
 
     @overload
-    def shift(self, clip: vs.VideoNode, shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
+    def shift(self, clip: vs.VideoNode, shift: Tuple[float, float] = (0, 0), **kwargs: Any) -> vs.VideoNode:
         ...
 
     @overload
     def shift(
         self, clip: vs.VideoNode,
-        shift_top: float | List[float] = 0.0, shift_left: float | List[float] = 0.0
+        shift_top: float | List[float] = 0.0, shift_left: float | List[float] = 0.0, **kwargs: Any
     ) -> vs.VideoNode:
         ...
 
     def shift(  # type: ignore
         self, clip: vs.VideoNode,
         shifts_or_top: float | Tuple[float, float] | List[float] | None = None,
-        shift_left: float | List[float] | None = None
+        shift_left: float | List[float] | None = None, **kwargs: Any
     ) -> vs.VideoNode:
         assert clip.format
 
@@ -144,7 +144,7 @@ class FmtConv(Kernel):
 
         def _shift(shift_top: float | List[float] = 0.0, shift_left: float | List[float] = 0.0) -> vs.VideoNode:
             return self.scale_function(
-                clip, sy=shift_top, sx=shift_left, kernel=self.kernel, **self.kwargs
+                clip, sy=shift_top, sx=shift_left, kernel=self.kernel, **self.kwargs, **kwargs
             )
 
         if not shifts_or_top and not shift_left:
@@ -174,6 +174,7 @@ class FmtConv(Kernel):
         raise NotImplementedError
 
     def resample(
-        self, clip: vs.VideoNode, format: VideoFormatT, matrix: MatrixT | None = None, matrix_in: MatrixT | None = None
+        self, clip: vs.VideoNode, format: VideoFormatT,
+        matrix: MatrixT | None = None, matrix_in: MatrixT | None = None, **kwargs: Any
     ) -> vs.VideoNode:
         raise NotImplementedError

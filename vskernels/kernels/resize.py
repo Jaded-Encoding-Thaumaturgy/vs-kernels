@@ -42,9 +42,9 @@ class Lanczos(Kernel):
         super().__init__(**kwargs)
 
     def get_params_args(
-        self, is_descale: bool, clip: vs.VideoNode, width: int | None = None, height: int | None = None
+        self, is_descale: bool, clip: vs.VideoNode, width: int | None = None, height: int | None = None, **kwargs: Any
     ) -> Dict[str, Any]:
-        args = super().get_params_args(is_descale, clip, width, height)
+        args = super().get_params_args(is_descale, clip, width, height, **kwargs)
         if is_descale:
             return dict(**args, taps=self.taps)
         return dict(**args, filter_param_a=self.taps)

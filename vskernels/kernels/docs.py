@@ -18,7 +18,9 @@ class Example(Kernel):
         self.c = c
         super().__init__(**kwargs)
 
-    def scale(self, clip: vs.VideoNode, width: int, height: int, shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
+    def scale(
+        self, clip: vs.VideoNode, width: int, height: int, shift: Tuple[float, float] = (0, 0), **kwargs: Any
+    ) -> vs.VideoNode:
         """
         Perform a regular scaling operation.
 
@@ -32,10 +34,12 @@ class Example(Kernel):
         """
         return core.resize.Bicubic(
             clip, width, height, src_top=shift[0], src_left=shift[1],
-            filter_param_a=self.b, filter_param_b=self.c, **self.kwargs
+            filter_param_a=self.b, filter_param_b=self.c, **self.kwargs, **kwargs
         )
 
-    def descale(self, clip: vs.VideoNode, width: int, height: int, shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
+    def descale(
+        self, clip: vs.VideoNode, width: int, height: int, shift: Tuple[float, float] = (0, 0), **kwargs: Any
+    ) -> vs.VideoNode:
         """
         Perform a regular descaling operation.
 
@@ -48,11 +52,12 @@ class Example(Kernel):
         :rtype:             ``VideoNode``
         """
         return core.descale.Debicubic(
-            clip, width, height, b=self.b, c=self.c, src_top=shift[0], src_left=shift[1]
+            clip, width, height, b=self.b, c=self.c, src_top=shift[0], src_left=shift[1], **kwargs
         )
 
     def resample(
-        self, clip: vs.VideoNode, format: VideoFormatT, matrix: MatrixT | None = None, matrix_in: MatrixT | None = None
+        self, clip: vs.VideoNode, format: VideoFormatT,
+        matrix: MatrixT | None = None, matrix_in: MatrixT | None = None, **kwargs: Any
     ) -> vs.VideoNode:
         """
         Perform a regular resampling operation.
@@ -67,16 +72,16 @@ class Example(Kernel):
         return core.resize.Bicubic(
             clip, format=int(format),
             filter_param_a=self.b, filter_param_b=self.c,
-            matrix=matrix, matrix_in=matrix_in, **self.kwargs
+            matrix=matrix, matrix_in=matrix_in, **self.kwargs, **kwargs
         )
 
     @overload  # type: ignore
-    def shift(self, clip: vs.VideoNode, shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
+    def shift(self, clip: vs.VideoNode, shift: Tuple[float, float] = (0, 0), **kwargs: Any) -> vs.VideoNode:
         ...
 
     def shift(  # type: ignore
         self, clip: vs.VideoNode,
-        shift_top: float | List[float] = 0.0, shift_left: float | List[float] = 0.0
+        shift_top: float | List[float] = 0.0, shift_left: float | List[float] = 0.0, **kwargs: Any
     ) -> vs.VideoNode:
         """
         Perform a regular shifting operation.
@@ -91,5 +96,5 @@ class Example(Kernel):
         return core.resize.Bicubic(
             clip, src_top=shift_top, src_left=shift_left,  # type: ignore
             filter_param_a=self.b, filter_param_b=self.c,
-            **self.kwargs
+            **self.kwargs, **kwargs
         )

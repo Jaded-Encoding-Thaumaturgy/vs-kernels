@@ -15,17 +15,17 @@ class Impulse(FmtConv):
     kernel = 'impulse'
 
     def get_params_args(
-        self, is_descale: bool, clip: vs.VideoNode, width: int | None = None, height: int | None = None
+        self, is_descale: bool, clip: vs.VideoNode, width: int | None = None, height: int | None = None, **kwargs: Any
     ) -> Dict[str, Any]:
-        return super().get_params_args(is_descale, clip, width, height)
+        return super().get_params_args(is_descale, clip, width, height, **kwargs)
 
     def __init__(self, impulse: Sequence[float], oversample: int = 8, taps: int = 1, **kwargs: Any) -> None:
         super().__init__(taps, impulse=[*impulse[::-1], *impulse[:-1]], kovrspl=oversample, **kwargs)
 
     def scale(
-        self, clip: vs.VideoNode, width: int, height: int, shift: Tuple[float, float] = (-0.125, -0.125)
+        self, clip: vs.VideoNode, width: int, height: int, shift: Tuple[float, float] = (-0.125, -0.125), **kwargs: Any
     ) -> vs.VideoNode:
-        return super().scale(clip, width, height, shift)
+        return super().scale(clip, width, height, shift, **kwargs)
 
 
 class Quadratic(Impulse):

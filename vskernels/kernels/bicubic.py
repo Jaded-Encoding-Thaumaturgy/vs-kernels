@@ -33,9 +33,9 @@ class Bicubic(Kernel):
         super().__init__(**kwargs)
 
     def get_params_args(
-        self, is_descale: bool, clip: vs.VideoNode, width: int | None = None, height: int | None = None
+        self, is_descale: bool, clip: vs.VideoNode, width: int | None = None, height: int | None = None, **kwargs: Any
     ) -> Dict[str, Any]:
-        args = super().get_params_args(is_descale, clip, width, height)
+        args = super().get_params_args(is_descale, clip, width, height, **kwargs)
         if is_descale:
             return dict(**args, b=self.b, c=self.c)
         return dict(**args, filter_param_a=self.b, filter_param_b=self.c)
@@ -171,9 +171,9 @@ class BicubicAuto(Kernel):
         super().__init__(**kwargs)
 
     def get_params_args(
-        self, is_descale: bool, clip: vs.VideoNode, width: int | None = None, height: int | None = None
+        self, is_descale: bool, clip: vs.VideoNode, width: int | None = None, height: int | None = None, **kwargs: Any
     ) -> Dict[str, Any]:
-        args = super().get_params_args(is_descale, clip, width, height)
+        args = super().get_params_args(is_descale, clip, width, height, **kwargs)
 
         if width and height:
             b, c = self._get_bc_args((width * height) > (clip.width * clip.height))
