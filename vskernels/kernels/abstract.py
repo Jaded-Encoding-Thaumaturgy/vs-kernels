@@ -4,7 +4,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Callable, Dict, List, Tuple, cast, overload
 
 import vapoursynth as vs
-from vstools import MatrixT, VideoFormatT
+from vstools import Matrix, MatrixT, VideoFormatT, get_format
 
 core = vs.core
 
@@ -151,5 +151,7 @@ class Kernel(Scaler, Descaler):
         self, clip: vs.VideoNode, format: VideoFormatT, matrix: MatrixT | None, matrix_in: MatrixT | None, **kwargs: Any
     ) -> Dict[str, Any]:
         return dict(
-            format=int(format), matrix=matrix, matrix_in=matrix_in
+            format=get_format(format).id,
+            matrix=Matrix.from_param(matrix),
+            matrix_in=Matrix.from_param(matrix_in)
         ) | self.kwargs | self.get_params_args(False, clip, **kwargs)
