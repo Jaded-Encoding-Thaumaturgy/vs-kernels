@@ -1,13 +1,17 @@
 from __future__ import annotations
 
-from typing import Any, Dict, Tuple
+from typing import Any
 
 import vapoursynth as vs
+from vstools import Transfer, inject_self
 
-from ..types import Transfer
 from .abstract import Kernel
 
 core = vs.core
+
+__all__ = [
+    'Placebo'
+]
 
 
 class Placebo(Kernel):
@@ -60,17 +64,16 @@ class Placebo(Kernel):
         super().__init__(**kwargs)
 
     def get_scale_args(
-        self, clip: vs.VideoNode, shift: Tuple[float, float] = (0, 0),
-        width: int | None = None, height: int | None = None,
-    ) -> Dict[str, Any]:
-        return dict(
-            sx=shift[1], sy=shift[0],
-            **self.kwargs, **self.get_params_args(False, clip, width, height)
+        self, clip: vs.VideoNode, shift: tuple[float, float] = (0, 0),
+        width: int | None = None, height: int | None = None, **kwargs: Any
+    ) -> dict[str, Any]:
+        return dict(sx=shift[1], sy=shift[0]) | self.kwargs | self.get_params_args(
+            False, clip, width, height, **kwargs
         )
 
     def get_params_args(
-        self, is_descale: bool, clip: vs.VideoNode, width: int | None = None, height: int | None = None
-    ) -> Dict[str, Any]:
+        self, is_descale: bool, clip: vs.VideoNode, width: int | None = None, height: int | None = None, **kwargs: Any
+    ) -> dict[str, Any]:
         return dict(
             width=width, height=height, filter=self.kernel,
             radius=self.taps, param1=self.b, param2=self.c,
@@ -79,17 +82,19 @@ class Placebo(Kernel):
             lut_entries=self.lut_entries,
             sigmoidize=self.sigmoidize, linearize=self.linearize,
             sigmoid_center=self.sigmoid_center, sigmoid_slope=self.sigmoid_slope,
-            trc=self.curve.as_libplacebo(),
+            trc=self.curve.value_libplacebo,
         )
 
-    def get_descale_args(self, *args: Any, **kwargs: Any) -> Dict[str, Any]:
+    def get_descale_args(self, *args: Any, **kwargs: Any) -> dict[str, Any]:
         raise NotImplementedError
 
-    def get_matrix_args(self, *args: Any, **kwargs: Any) -> Dict[str, Any]:
+    def get_matrix_args(self, *args: Any, **kwargs: Any) -> dict[str, Any]:
         raise NotImplementedError
 
-    def descale(self, *args: Any, **kwargs: Any) -> vs.VideoNode:
+    @inject_self.cached
+    def descale(self, *args: Any, **kwargs: Any) -> vs.VideoNode:  # type: ignore[override]
         raise NotImplementedError
 
-    def resample(self, *args: Any, **kwargs: Any) -> vs.VideoNode:
+    @inject_self.cached
+    def resample(self, *args: Any, **kwargs: Any) -> vs.VideoNode:  # type: ignore[override]
         raise NotImplementedError

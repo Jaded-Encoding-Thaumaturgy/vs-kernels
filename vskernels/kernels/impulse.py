@@ -1,10 +1,30 @@
 from __future__ import annotations
 
-from typing import Any, Dict, Sequence, Tuple
+from typing import Any, Sequence
 
 import vapoursynth as vs
+from vstools import inject_self
 
 from .fmtconv import FmtConv
+
+__all__ = [
+    'Impulse',
+    'Quadratic',
+    'Wiener',
+    'Hann',
+    'Hamming',
+    'BlackHarris',
+    'BlackNuttall',
+    'FlatTop',
+    'MinSide',
+    'Ginseng',
+    'Welch',
+    'Cosine',
+    'Bessel',
+    'Parzen',
+    'Kaiser',
+    'Bohman',
+]
 
 core = vs.core
 
@@ -15,17 +35,18 @@ class Impulse(FmtConv):
     kernel = 'impulse'
 
     def get_params_args(
-        self, is_descale: bool, clip: vs.VideoNode, width: int | None = None, height: int | None = None
-    ) -> Dict[str, Any]:
-        return super().get_params_args(is_descale, clip, width, height)
+        self, is_descale: bool, clip: vs.VideoNode, width: int | None = None, height: int | None = None, **kwargs: Any
+    ) -> dict[str, Any]:
+        return super().get_params_args(is_descale, clip, width, height, **kwargs)
 
     def __init__(self, impulse: Sequence[float], oversample: int = 8, taps: int = 1, **kwargs: Any) -> None:
         super().__init__(taps, impulse=[*impulse[::-1], *impulse[:-1]], kovrspl=oversample, **kwargs)
 
-    def scale(
-        self, clip: vs.VideoNode, width: int, height: int, shift: Tuple[float, float] = (-0.125, -0.125)
+    @inject_self.cached
+    def scale(  # type: ignore[override]
+        self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (-0.125, -0.125), **kwargs: Any
     ) -> vs.VideoNode:
-        return super().scale(clip, width, height, shift)
+        return super().scale(clip, width, height, shift, **kwargs)
 
 
 class Quadratic(Impulse):

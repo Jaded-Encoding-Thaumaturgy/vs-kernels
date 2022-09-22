@@ -1,15 +1,17 @@
 from __future__ import annotations
 
 from functools import wraps
-from typing import Any, Callable, Dict, List, Tuple, TypeVar, cast, overload
+from typing import Any, Callable, TypeVar, cast, overload
 
 import vapoursynth as vs
-from vskernels.kernels.bicubic import Bicubic
+from vstools import HoldsVideoFormatT, MatrixT, VideoFormatT, VSFunction, core, inject_self
 
-from ..types import MatrixT, VideoFormatT, VSFunction
 from .abstract import Kernel
+from .bicubic import Bicubic
 
-core = vs.core
+__all__ = [
+    'FmtConv'
+]
 
 F = TypeVar('F', bound=Callable[..., Any])
 call_wrapT = Callable[..., VSFunction]
@@ -32,7 +34,7 @@ class FmtConv(Kernel):
 
             bicubic = Bicubic()
 
-            def _check_fmt(fmt: int | vs.PresetFormat | vs.VideoFormat) -> Tuple[vs.VideoFormat, bool]:
+            def _check_fmt(fmt: int | vs.PresetFormat | vs.VideoFormat) -> tuple[vs.VideoFormat, bool]:
                 if not isinstance(fmt, vs.VideoFormat):
                     fmt = core.get_video_format(fmt)
 
@@ -85,8 +87,8 @@ class FmtConv(Kernel):
 
         return cast(VSFunction, _wrapper)
 
-    scale_function = wrap_fmtc_func(core.fmtc.resample)
-    descale_function = wrap_fmtc_func(core.fmtc.resample)
+    scale_function = wrap_fmtc_func(core.proxied.fmtc.resample)
+    descale_function = wrap_fmtc_func(core.proxied.fmtc.resample)
 
     kernel: str
     """Name of the fmtconv kernel"""
@@ -96,55 +98,60 @@ class FmtConv(Kernel):
         super().__init__(**kwargs)
 
     def get_scale_args(
-        self, clip: vs.VideoNode, shift: Tuple[float, float] = (0, 0),
-        width: int | None = None, height: int | None = None,
-    ) -> Dict[str, Any]:
+        self, clip: vs.VideoNode, shift: tuple[float, float] = (0, 0),
+        width: int | None = None, height: int | None = None, **kwargs: Any
+    ) -> dict[str, Any]:
         return dict(
             sx=shift[1], sy=shift[0], kernel=self.kernel,
-            **self.kwargs, **self.get_params_args(False, clip, width, height)
+            **self.kwargs, **self.get_params_args(False, clip, width, height, **kwargs)
         )
 
     def get_descale_args(
-        self, clip: vs.VideoNode, shift: Tuple[float, float] = (0, 0),
-        width: int | None = None, height: int | None = None,
-    ) -> Dict[str, Any]:
+        self, clip: vs.VideoNode, shift: tuple[float, float] = (0, 0),
+        width: int | None = None, height: int | None = None, **kwargs: Any
+    ) -> dict[str, Any]:
         args = dict(
             invks=True, invkstaps=self.taps,
-            **self.get_scale_args(clip, shift, width, height)
+        ) | self.get_scale_args(
+            clip, shift, width, height, **kwargs
+        ) | self.get_params_args(
+            True, clip, width, height, **kwargs
         )
-        args.update(self.get_params_args(True, clip, width, height))
         return args
 
     def get_params_args(
-        self, is_descale: bool, clip: vs.VideoNode, width: int | None = None, height: int | None = None
-    ) -> Dict[str, Any]:
+        self, is_descale: bool, clip: vs.VideoNode, width: int | None = None, height: int | None = None, **kwargs: Any
+    ) -> dict[str, Any]:
         if is_descale:
-            return dict(w=width, h=height, sw=width, sh=height)
-        return dict(w=width, h=height)
+            return kwargs | dict(w=width, h=height, sw=width, sh=height)
+        return kwargs | dict(w=width, h=height)
 
     @overload
-    def shift(self, clip: vs.VideoNode, shift: Tuple[float, float] = (0, 0)) -> vs.VideoNode:
+    @inject_self.cached
+    def shift(self, clip: vs.VideoNode, shift: tuple[float, float] = (0, 0), **kwargs: Any) -> vs.VideoNode:
         ...
 
     @overload
+    @inject_self.cached
     def shift(
         self, clip: vs.VideoNode,
-        shift_top: float | List[float] = 0.0, shift_left: float | List[float] = 0.0
+        shift_top: float | list[float] = 0.0, shift_left: float | list[float] = 0.0, **kwargs: Any
     ) -> vs.VideoNode:
         ...
 
+    @inject_self.cached  # type: ignore
     def shift(  # type: ignore
         self, clip: vs.VideoNode,
-        shifts_or_top: float | Tuple[float, float] | List[float] | None = None,
-        shift_left: float | List[float] | None = None
+        shifts_or_top: float | tuple[float, float] | list[float] | None = None,
+        shift_left: float | list[float] | None = None, **kwargs: Any
     ) -> vs.VideoNode:
         assert clip.format
 
         n_planes = clip.format.num_planes
 
-        def _shift(shift_top: float | List[float] = 0.0, shift_left: float | List[float] = 0.0) -> vs.VideoNode:
+        def _shift(shift_top: float | list[float] = 0.0, shift_left: float | list[float] = 0.0) -> vs.VideoNode:
             return self.scale_function(
-                clip, sy=shift_top, sx=shift_left, kernel=self.kernel, **self.kwargs
+                clip, sy=shift_top, sx=shift_left, kernel=self.kernel, **self.kwargs, **kwargs
             )
 
         if not shifts_or_top and not shift_left:
@@ -170,10 +177,12 @@ class FmtConv(Kernel):
 
         return _shift(shifts_top, shifts_left)
 
-    def get_matrix_args(self, *args: Any, **kwargs: Any) -> Dict[str, Any]:
+    def get_matrix_args(self, *args: Any, **kwargs: Any) -> dict[str, Any]:
         raise NotImplementedError
 
-    def resample(
-        self, clip: vs.VideoNode, format: VideoFormatT, matrix: MatrixT | None = None, matrix_in: MatrixT | None = None
+    @inject_self.cached
+    def resample(  # type: ignore[override]
+        self, clip: vs.VideoNode, format: int | VideoFormatT | HoldsVideoFormatT,
+        matrix: MatrixT | None = None, matrix_in: MatrixT | None = None, **kwargs: Any
     ) -> vs.VideoNode:
         raise NotImplementedError

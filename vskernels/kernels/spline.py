@@ -2,12 +2,21 @@ from __future__ import annotations
 
 from typing import Any
 
-import vapoursynth as vs
+from vstools import core
 
 from .abstract import Kernel
 from .fmtconv import FmtConv
 
-core = vs.core
+__all__ = [
+    'Spline',
+    'Spline16',
+    'Spline36',
+    'Spline64',
+    'Spline100',
+    'Spline144',
+    'Spline196',
+    'Spline256',
+]
 
 
 class Spline(FmtConv):
@@ -28,8 +37,8 @@ class Spline16(Kernel):
     * VapourSynth-descale
     """
 
-    scale_function = core.resize.Spline16
-    descale_function = core.descale.Despline16
+    scale_function = core.proxied.resize.Spline16
+    descale_function = core.proxied.descale.Despline16
 
 
 class Spline36(Kernel):
@@ -41,8 +50,8 @@ class Spline36(Kernel):
     * VapourSynth-descale
     """
 
-    scale_function = core.resize.Spline36
-    descale_function = core.descale.Despline36
+    scale_function = core.proxied.resize.Spline36
+    descale_function = core.proxied.descale.Despline36
 
 
 class Spline64(Kernel):
@@ -54,8 +63,8 @@ class Spline64(Kernel):
     * VapourSynth-descale
     """
 
-    scale_function = core.resize.Spline64
-    descale_function = core.descale.Despline64
+    scale_function = core.proxied.resize.Spline64
+    descale_function = core.proxied.descale.Despline64
 
 
 class Spline100(Spline):

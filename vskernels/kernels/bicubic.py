@@ -1,13 +1,28 @@
 from __future__ import annotations
 
 from math import sqrt
-from typing import Any, Dict, Tuple
+from typing import Any
 
 import vapoursynth as vs
+from vstools import core
 
 from .abstract import Kernel
 
-core = vs.core
+__all__ = [
+    'Bicubic',
+    'BSpline',
+    'Hermite',
+    'Mitchell',
+    'Catrom',
+    'BicubicSharp',
+    'RobidouxSoft',
+    'Robidoux',
+    'RobidouxSharp',
+    'BicubicDidee',
+    'BicubicZopti',
+    'BicubicZoptiNeutral',
+    'BicubicAuto',
+]
 
 
 class Bicubic(Kernel):
@@ -24,21 +39,21 @@ class Bicubic(Kernel):
     :param c: C-param for bicubic kernel
     """
 
-    scale_function = core.resize.Bicubic
-    descale_function = core.descale.Debicubic
+    scale_function = core.proxied.resize.Bicubic
+    descale_function = core.proxied.descale.Debicubic
 
-    def __init__(self, b: float = 0, c: float = 1/2, **kwargs: Any) -> None:
+    def __init__(self, b: float = 0, c: float = 1 / 2, **kwargs: Any) -> None:
         self.b = b
         self.c = c
         super().__init__(**kwargs)
 
     def get_params_args(
-        self, is_descale: bool, clip: vs.VideoNode, width: int | None = None, height: int | None = None
-    ) -> Dict[str, Any]:
-        args = super().get_params_args(is_descale, clip, width, height)
+        self, is_descale: bool, clip: vs.VideoNode, width: int | None = None, height: int | None = None, **kwargs: Any
+    ) -> dict[str, Any]:
+        args = super().get_params_args(is_descale, clip, width, height, **kwargs)
         if is_descale:
-            return dict(**args, b=self.b, c=self.c)
-        return dict(**args, filter_param_a=self.b, filter_param_b=self.c)
+            return args | dict(b=self.b, c=self.c)
+        return args | dict(filter_param_a=self.b, filter_param_b=self.c)
 
 
 class BSpline(Bicubic):
@@ -59,14 +74,14 @@ class Mitchell(Bicubic):
     """Bicubic b=1/3, c=1/3"""
 
     def __init__(self, **kwargs: Any) -> None:
-        super().__init__(b=1/3, c=1/3, **kwargs)
+        super().__init__(b=1 / 3, c=1 / 3, **kwargs)
 
 
 class Catrom(Bicubic):
     """Bicubic b=0, c=0.5"""
 
     def __init__(self, **kwargs: Any) -> None:
-        super().__init__(b=0, c=1/2, **kwargs)
+        super().__init__(b=0, c=1 / 2, **kwargs)
 
 
 class BicubicSharp(Bicubic):
@@ -118,7 +133,7 @@ class BicubicDidee(Bicubic):
     """
 
     def __init__(self, **kwargs: Any) -> None:
-        super().__init__(b=-1/2, c=1/4, **kwargs)
+        super().__init__(b=-1 / 2, c=1 / 4, **kwargs)
 
 
 class BicubicZopti(Bicubic):
@@ -157,8 +172,8 @@ class BicubicAuto(Kernel):
     b + 2c = target - 1 for downsizing
     """
 
-    scale_function = core.resize.Bicubic
-    descale_function = core.descale.Debicubic
+    scale_function = core.proxied.resize.Bicubic
+    descale_function = core.proxied.descale.Debicubic
 
     def __init__(self, b: float | None = None, c: float | None = None, target: float = 1.0, **kwargs: Any) -> None:
         if None not in {b, c}:
@@ -171,9 +186,9 @@ class BicubicAuto(Kernel):
         super().__init__(**kwargs)
 
     def get_params_args(
-        self, is_descale: bool, clip: vs.VideoNode, width: int | None = None, height: int | None = None
-    ) -> Dict[str, Any]:
-        args = super().get_params_args(is_descale, clip, width, height)
+        self, is_descale: bool, clip: vs.VideoNode, width: int | None = None, height: int | None = None, **kwargs: Any
+    ) -> dict[str, Any]:
+        args = super().get_params_args(is_descale, clip, width, height, **kwargs)
 
         if width and height:
             b, c = self._get_bc_args((width * height) > (clip.width * clip.height))
@@ -181,10 +196,10 @@ class BicubicAuto(Kernel):
             b, c = self._get_bc_args()
 
         if is_descale:
-            return dict(**args, b=b, c=c)
-        return dict(**args, filter_param_a=b, filter_param_b=c)
+            return args | dict(b=b, c=c)
+        return args | dict(filter_param_a=b, filter_param_b=c)
 
-    def _get_bc_args(self, upsize: bool = True) -> Tuple[float, float]:
+    def _get_bc_args(self, upsize: bool = True) -> tuple[float, float]:
         autob = 0.0 if self.b is None else self.b
         autoc = 0.5 if self.c is None else self.c
         target = self.target - int(not upsize)

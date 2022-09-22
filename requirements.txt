@@ -1,1 +1,2 @@
-VapourSynth>=51
+VapourSynth>=59
+vstools>=1.1.0
