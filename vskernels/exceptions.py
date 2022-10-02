@@ -13,7 +13,7 @@ class UnknownKernelError(CustomValueError):
     """Raised when an unknown kernel is passed."""
 
     def __init__(
-        self, function: FuncExceptT, kernel: str, message: str = 'Unknown kernel: {kernel}!',
+        self, func: FuncExceptT, kernel: str, message: str = 'Unknown kernel "{kernel}"!',
         **kwargs: Any
     ) -> None:
-        super().__init__(message, function, kernel=kernel, **kwargs)
+        super().__init__(message, func, kernel=kernel, **kwargs)

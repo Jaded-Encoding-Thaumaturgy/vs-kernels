@@ -2,16 +2,13 @@ from __future__ import annotations
 
 from typing import Any, overload
 
-import vapoursynth as vs
-from vstools import HoldsVideoFormatT, MatrixT, VideoFormatT, get_format, inject_self
+from vstools import HoldsVideoFormatT, MatrixT, VideoFormatT, core, get_video_format, inject_self, vs
 
 from .abstract import Kernel
 
 __all__ = [
     'Example'
 ]
-
-core = vs.core
 
 
 class Example(Kernel):
@@ -77,7 +74,7 @@ class Example(Kernel):
         :rtype:             ``VideoNode``
         """
         return core.resize.Bicubic(
-            clip, format=get_format(format).id,
+            clip, format=get_video_format(format).id,
             filter_param_a=self.b, filter_param_b=self.c,
             matrix=matrix, matrix_in=matrix_in, **self.kwargs, **kwargs
         )

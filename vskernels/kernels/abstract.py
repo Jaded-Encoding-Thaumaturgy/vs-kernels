@@ -3,9 +3,9 @@ from __future__ import annotations
 from abc import ABC, abstractmethod
 from typing import Any, Union, cast, overload
 
-import vapoursynth as vs
 from vstools import (
-    FuncExceptT, GenericVSFunction, HoldsVideoFormatT, Matrix, MatrixT, VideoFormatT, get_format, inject_self
+    FuncExceptT, GenericVSFunction, HoldsVideoFormatT, Matrix, MatrixT, VideoFormatT, core, get_video_format,
+    inject_self, vs
 )
 
 from ..exceptions import UnknownKernelError
@@ -16,8 +16,6 @@ __all__ = [
     'Kernel',
     'KernelT'
 ]
-
-core = vs.core
 
 
 class Scaler(ABC):
@@ -171,7 +169,7 @@ class Kernel(Scaler, Descaler):
         matrix: MatrixT | None, matrix_in: MatrixT | None, **kwargs: Any
     ) -> dict[str, Any]:
         return dict(
-            format=get_format(format).id,
+            format=get_video_format(format).id,
             matrix=Matrix.from_param(matrix),
             matrix_in=Matrix.from_param(matrix_in)
         ) | self.kwargs | self.get_params_args(False, clip, **kwargs)

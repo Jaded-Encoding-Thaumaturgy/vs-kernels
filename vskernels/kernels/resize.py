@@ -2,8 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-import vapoursynth as vs
-from vstools import core
+from vstools import core, vs
 
 from .abstract import Kernel
 

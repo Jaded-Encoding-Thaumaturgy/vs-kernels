@@ -3,8 +3,7 @@ from __future__ import annotations
 from math import sqrt
 from typing import Any
 
-import vapoursynth as vs
-from vstools import core
+from vstools import core, vs
 
 from .abstract import Kernel
 

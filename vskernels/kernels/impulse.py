@@ -2,8 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Sequence
 
-import vapoursynth as vs
-from vstools import inject_self
+from vstools import inject_self, vs
 
 from .fmtconv import FmtConv
 
@@ -25,8 +24,6 @@ __all__ = [
     'Kaiser',
     'Bohman',
 ]
-
-core = vs.core
 
 
 class Impulse(FmtConv):

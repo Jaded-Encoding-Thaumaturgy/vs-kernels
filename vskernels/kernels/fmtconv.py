@@ -1,10 +1,9 @@
 from __future__ import annotations
 
 from functools import wraps
-from typing import Any, Callable, TypeVar, cast, overload
+from typing import Any, Callable, cast, overload
 
-import vapoursynth as vs
-from vstools import HoldsVideoFormatT, MatrixT, VideoFormatT, VSFunction, core, inject_self
+from vstools import F, HoldsVideoFormatT, MatrixT, VideoFormatT, VSFunction, core, inject_self, vs
 
 from .abstract import Kernel
 from .bicubic import Bicubic
@@ -13,7 +12,7 @@ __all__ = [
     'FmtConv'
 ]
 
-F = TypeVar('F', bound=Callable[..., Any])
+
 call_wrapT = Callable[..., VSFunction]
 
 

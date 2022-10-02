@@ -2,8 +2,6 @@ from __future__ import annotations
 
 from typing import Any
 
-import vapoursynth as vs
-
 from .fmtconv import FmtConv
 from .placebo import Placebo
 
@@ -22,8 +20,6 @@ __all__ = [
     'EwaRobidoux',
     'EwaRobidouxSharp',
 ]
-
-core = vs.core
 
 
 class Box(FmtConv):

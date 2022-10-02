@@ -2,12 +2,9 @@ from __future__ import annotations
 
 from typing import Any
 
-import vapoursynth as vs
-from vstools import Transfer, inject_self
+from vstools import Transfer, core, inject_self, vs
 
 from .abstract import Kernel
-
-core = vs.core
 
 __all__ = [
     'Placebo'

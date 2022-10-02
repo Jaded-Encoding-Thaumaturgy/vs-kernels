@@ -3,17 +3,12 @@ from __future__ import annotations
 from functools import lru_cache
 from typing import Generator
 
-import vapoursynth as vs
-
-from .kernels import FmtConv, Kernel, Placebo
+from .kernels import FmtConv, Impulse, Kernel, Placebo
 from .kernels.docs import Example
-from .kernels.impulse import Impulse
 
 __all__ = [
     'get_all_kernels'
 ]
-
-core = vs.core
 
 
 excluded_kernels = [Kernel, FmtConv, Example, Impulse, Placebo]
