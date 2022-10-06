@@ -4,8 +4,8 @@ from abc import ABC, abstractmethod
 from typing import Any, Union, cast, overload
 
 from vstools import (
-    FuncExceptT, GenericVSFunction, HoldsVideoFormatT, Matrix, MatrixT, VideoFormatT, core, get_video_format,
-    inject_self, vs
+    CustomTypeError, FuncExceptT, GenericVSFunction, HoldsVideoFormatT, Matrix, MatrixT, VideoFormatT, core,
+    get_video_format, inject_self, vs
 )
 
 from ..exceptions import UnknownKernelError
@@ -201,6 +201,30 @@ class Kernel(Scaler, Descaler):
             return kernel.__class__
 
         return kernel
+
+    @classmethod
+    def ensure_obj(
+        cls: type[Kernel], kernel: KernelT | None = None, func_except: FuncExceptT | None = None
+    ) -> type[Kernel]:
+        from ..util import excluded_kernels
+
+        new_kernel: Kernel | None = None
+
+        if not isinstance(kernel, Kernel):
+            try:
+                new_kernel = Kernel.from_param(kernel, func_except)()
+            except Exception:
+                ...
+        else:
+            new_kernel = kernel
+
+        if new_kernel is None:
+            new_kernel = cls()
+
+        if new_kernel.__class__ in excluded_kernels:
+            raise CustomTypeError('This kernel can\'t be instantiated to be used!')
+
+        return new_kernel
 
 
 KernelT = Union[str, type[Kernel], Kernel]

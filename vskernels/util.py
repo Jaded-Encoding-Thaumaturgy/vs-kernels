@@ -9,6 +9,7 @@ from .kernels import Bicubic, FmtConv, Impulse, Kernel, KernelT, Placebo
 from .kernels.docs import Example
 
 __all__ = [
+    'excluded_kernels',
     'get_all_kernels',
     'NoShift'
 ]
