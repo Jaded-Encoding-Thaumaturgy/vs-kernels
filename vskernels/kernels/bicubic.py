@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from math import sqrt
+from math import acos, asinh, cos, sqrt
 from typing import Any
 
 from vstools import core, vs
@@ -18,6 +18,7 @@ __all__ = [
     'Robidoux',
     'RobidouxSharp',
     'BicubicDidee',
+    'SetsuCubic',
     'BicubicZopti',
     'BicubicZoptiNeutral',
     'BicubicAuto',
@@ -133,6 +134,20 @@ class BicubicDidee(Bicubic):
 
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(b=-1 / 2, c=1 / 4, **kwargs)
+
+
+class SetsuCubic(Bicubic):
+    """
+    Schizo (Setsugen's) values calculated from the legendary Pompo-san filterchain.
+    Useful for heavy post processed content or ringing in general.
+
+    Bicubic b=-0.26470935063297507, c=0.7358829780174403
+    """
+
+    def __init__(self, **kwargs: Any) -> None:
+        super().__init__(
+            asinh(.5) * acos(.5) * cos(400), abs(asinh(.5) * acos(-.5) * cos(450)), **kwargs
+        )
 
 
 class BicubicZopti(Bicubic):
