@@ -1,21 +1,73 @@
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any, Union, cast, overload
+from typing import Any, Sequence, Union, cast, overload
 
 from vstools import (
-    CustomTypeError, FuncExceptT, GenericVSFunction, HoldsVideoFormatT, Matrix, MatrixT, VideoFormatT, core,
+    CustomValueError, FuncExceptT, GenericVSFunction, HoldsVideoFormatT, Matrix, MatrixT, T, VideoFormatT, core,
     get_subclasses, get_video_format, inject_self, vs
 )
 
-from ..exceptions import UnknownKernelError
+from ..exceptions import UnknownDescalerError, UnknownKernelError, UnknownScalerError
 
 __all__ = [
-    'Scaler',
+    'Scaler', 'ScalerT',
     'Descaler',
-    'Kernel',
-    'KernelT'
+    'Kernel', 'KernelT'
 ]
+
+
+class BaseScaler:
+    @staticmethod
+    def from_param(
+        cls: type[T],
+        value: str | type[T] | T,
+        exception_cls: type[CustomValueError],
+        excluded: Sequence[type[T]] = [],
+        func_except: FuncExceptT | None = None
+    ) -> type[T]:
+        if isinstance(value, str):
+            all_scalers = get_subclasses(Kernel, excluded)
+            search_str = value.lower().strip()
+
+            for scaler_cls in all_scalers:
+                if scaler_cls.__name__.lower() == search_str:
+                    return scaler_cls
+
+            raise exception_cls(func_except or cls.from_param, value)
+
+        if isinstance(value, cls):
+            return value.__class__
+
+        return cls
+
+    @staticmethod
+    def ensure_obj(
+        cls: type[T],
+        value: str | type[T] | T,
+        exception_cls: type[CustomValueError],
+        excluded: Sequence[type[T]] = [],
+        func_except: FuncExceptT | None = None
+    ) -> T:
+        new_scaler: T | None = None
+
+        if not isinstance(value, cls):
+            try:
+                new_scaler = cls.from_param(value, func_except)()
+            except Exception:
+                ...
+        else:
+            new_scaler = value
+
+        if new_scaler is None:
+            new_scaler = cls()
+
+        if new_scaler.__class__ in excluded:
+            raise exception_cls(
+                'This {cls_name} can\'t be instantiated to be used!', cls_name=new_scaler.__class__
+            )
+
+        return new_scaler
 
 
 class Scaler(ABC):
@@ -36,6 +88,18 @@ class Scaler(ABC):
     ) -> vs.VideoNode:
         pass
 
+    @classmethod
+    def from_param(
+        cls: type[Scaler], scaler: ScalerT | None = None, func_except: FuncExceptT | None = None
+    ) -> type[Scaler]:
+        return BaseScaler.from_param(cls, scaler, UnknownScalerError, [], func_except)
+
+    @classmethod
+    def ensure_obj(
+        cls: type[Scaler], scaler: ScalerT | None = None, func_except: FuncExceptT | None = None
+    ) -> Scaler:
+        return BaseScaler.ensure_obj(cls, scaler, UnknownScalerError, [], func_except)
+
 
 class Descaler(ABC):
     @abstractmethod
@@ -44,6 +108,18 @@ class Descaler(ABC):
         self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (0, 0), **kwargs: Any
     ) -> vs.VideoNode:
         pass
+
+    @classmethod
+    def from_param(
+        cls: type[Descaler], descaler: DescalerT | None = None, func_except: FuncExceptT | None = None
+    ) -> type[Descaler]:
+        return BaseScaler.from_param(cls, descaler, UnknownDescalerError, [], func_except)
+
+    @classmethod
+    def ensure_obj(
+        cls: type[Descaler], descaler: DescalerT | None = None, func_except: FuncExceptT | None = None
+    ) -> Descaler:
+        return BaseScaler.ensure_obj(cls, descaler, UnknownDescalerError, [], func_except)
 
 
 class Kernel(Scaler, Descaler):
@@ -175,56 +251,18 @@ class Kernel(Scaler, Descaler):
         ) | self.kwargs | self.get_params_args(False, clip, **kwargs)
 
     @classmethod
-    def from_param(cls: type[Kernel], kernel: KernelT, func_except: FuncExceptT | None = None) -> type[Kernel]:
-        """
-        Get a kernel by name.
-
-        :param name:    Kernel name.
-
-        :return:        Kernel class.
-
-        :raise UnknownKernelError:  Some kind of unknown error occured.
-        """
+    def from_param(
+        cls: type[Kernel], kernel: KernelT | None = None, func_except: FuncExceptT | None = None
+    ) -> type[Kernel]:
         from ..util import excluded_kernels
-
-        if isinstance(kernel, str):
-            all_kernels = get_subclasses(Kernel, excluded_kernels)
-            search_str = kernel.lower().strip()
-
-            for kernel_cls in all_kernels:
-                if kernel_cls.__name__.lower() == search_str:
-                    return kernel_cls
-
-            raise UnknownKernelError(func_except or Kernel.from_param, kernel)
-
-        if isinstance(kernel, Kernel):
-            return kernel.__class__
-
-        return kernel
+        return BaseScaler.from_param(cls, kernel, UnknownKernelError, excluded_kernels, func_except)
 
     @classmethod
     def ensure_obj(
         cls: type[Kernel], kernel: KernelT | None = None, func_except: FuncExceptT | None = None
     ) -> Kernel:
         from ..util import excluded_kernels
-
-        new_kernel: Kernel | None = None
-
-        if not isinstance(kernel, Kernel):
-            try:
-                new_kernel = Kernel.from_param(kernel, func_except)()
-            except Exception:
-                ...
-        else:
-            new_kernel = kernel
-
-        if new_kernel is None:
-            new_kernel = cls()
-
-        if new_kernel.__class__ in excluded_kernels:
-            raise CustomTypeError('This kernel can\'t be instantiated to be used!')
-
-        return new_kernel
+        return BaseScaler.ensure_obj(cls, kernel, UnknownKernelError, excluded_kernels, func_except)
 
 
 ScalerT = Union[str, type[Scaler], Scaler]
