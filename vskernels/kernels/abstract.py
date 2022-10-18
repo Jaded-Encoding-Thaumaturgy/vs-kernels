@@ -205,7 +205,7 @@ class Kernel(Scaler, Descaler):
     @classmethod
     def ensure_obj(
         cls: type[Kernel], kernel: KernelT | None = None, func_except: FuncExceptT | None = None
-    ) -> type[Kernel]:
+    ) -> Kernel:
         from ..util import excluded_kernels
 
         new_kernel: Kernel | None = None
