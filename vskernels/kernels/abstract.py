@@ -227,4 +227,6 @@ class Kernel(Scaler, Descaler):
         return new_kernel
 
 
+ScalerT = Union[str, type[Scaler], Scaler]
+DescalerT = Union[str, type[Descaler], Descaler]
 KernelT = Union[str, type[Kernel], Kernel]
