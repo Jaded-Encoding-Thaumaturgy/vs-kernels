@@ -44,7 +44,7 @@ class BaseScaler:
     @staticmethod
     def ensure_obj(
         cls: type[T],
-        value: str | type[T] | T,
+        value: str | type[T] | T | None,
         exception_cls: type[CustomValueError],
         excluded: Sequence[type[T]] = [],
         func_except: FuncExceptT | None = None
