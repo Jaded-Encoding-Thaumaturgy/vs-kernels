@@ -36,6 +36,9 @@ class BaseScaler:
 
             raise exception_cls(func_except or cls.from_param, value)
 
+        if issubclass(value, cls):
+            return value
+
         if isinstance(value, cls):
             return value.__class__
 
