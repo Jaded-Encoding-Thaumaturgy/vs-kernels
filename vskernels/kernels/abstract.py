@@ -255,17 +255,59 @@ class Kernel(Scaler, Descaler):
             matrix_in=Matrix.from_param(matrix_in)
         ) | self.kwargs | self.get_params_args(False, clip, **kwargs)
 
+    @overload
     @classmethod
     def from_param(
         cls: type[Kernel], kernel: KernelT | None = None, func_except: FuncExceptT | None = None
     ) -> type[Kernel]:
+        ...
+
+    @overload
+    @classmethod
+    def from_param(
+        cls: type[Kernel], kernel: ScalerT | KernelT | None = None, func_except: FuncExceptT | None = None
+    ) -> type[Scaler]:
+        ...
+
+    @overload
+    @classmethod
+    def from_param(
+        cls: type[Kernel], kernel: DescalerT | KernelT | None = None, func_except: FuncExceptT | None = None
+    ) -> type[Descaler]:
+        ...
+
+    @classmethod
+    def from_param(
+        cls: type[Kernel], kernel: ScalerT | DescalerT | KernelT | None = None, func_except: FuncExceptT | None = None
+    ) -> type[Scaler] | type[Descaler] | type[Kernel]:
         from ..util import excluded_kernels
         return BaseScaler.from_param(cls, kernel, UnknownKernelError, excluded_kernels, func_except)
 
+    @overload
     @classmethod
     def ensure_obj(
         cls: type[Kernel], kernel: KernelT | None = None, func_except: FuncExceptT | None = None
     ) -> Kernel:
+        ...
+
+    @overload
+    @classmethod
+    def ensure_obj(
+        cls: type[Kernel], kernel: ScalerT | KernelT | None = None, func_except: FuncExceptT | None = None
+    ) -> Scaler:
+        ...
+
+    @overload
+    @classmethod
+    def ensure_obj(
+        cls: type[Kernel], kernel: DescalerT | KernelT | None = None, func_except: FuncExceptT | None = None
+    ) -> Descaler:
+        ...
+
+    @classmethod
+    def ensure_obj(
+        cls: type[Kernel], kernel: ScalerT | DescalerT | KernelT | None = None, func_except: FuncExceptT | None = None
+    ) -> Scaler | Descaler | Kernel:
         from ..util import excluded_kernels
         return BaseScaler.ensure_obj(cls, kernel, UnknownKernelError, excluded_kernels, func_except)
 
