@@ -64,8 +64,9 @@ class BaseScaler:
 
         if new_scaler.__class__ in excluded:
             raise exception_cls(
+                func_except or cls.ensure_obj, new_scaler.__class__,
                 'This {cls_name} can\'t be instantiated to be used!',
-                new_scaler.__class__, cls_name=new_scaler.__class__
+                cls_name=new_scaler.__class__
             )
 
         return new_scaler
