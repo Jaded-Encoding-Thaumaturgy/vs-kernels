@@ -5,7 +5,7 @@ from typing import Any, Union, cast, overload
 
 from vstools import (
     CustomTypeError, FuncExceptT, GenericVSFunction, HoldsVideoFormatT, Matrix, MatrixT, VideoFormatT, core,
-    get_video_format, inject_self, vs
+    get_subclasses, get_video_format, inject_self, vs
 )
 
 from ..exceptions import UnknownKernelError
@@ -185,10 +185,10 @@ class Kernel(Scaler, Descaler):
 
         :raise UnknownKernelError:  Some kind of unknown error occured.
         """
-        from ..util import get_all_kernels
+        from ..util import excluded_kernels
 
         if isinstance(kernel, str):
-            all_kernels = get_all_kernels()
+            all_kernels = get_subclasses(Kernel, excluded_kernels)
             search_str = kernel.lower().strip()
 
             for kernel_cls in all_kernels:
