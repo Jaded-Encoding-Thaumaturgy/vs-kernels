@@ -141,12 +141,18 @@ class SetsuCubic(Bicubic):
     Schizo (Setsugen's) values calculated from the legendary Pompo-san filterchain.
     Useful for heavy post processed content or ringing in general.
 
-    Bicubic b=-0.26470935063297507, c=0.7358829780174403
+    Bicubic
+    strenght=200: b=-0.22582213942537233, c=0.06676658576029935
+    strenght=100: b=-0.26470935063297507, c=0.73588297801744030
+    strength=50:  b=-0.24550548633321580, c=0.37020197611906490
+    strength=1:   b=-0.32938660656063920, c=0.21245005943760129
     """
 
-    def __init__(self, **kwargs: Any) -> None:
+    def __init__(self, strength: int = 100, **kwargs: Any) -> None:
         super().__init__(
-            asinh(.5) * acos(.5) * cos(400), abs(asinh(.5) * acos(-.5) * cos(450)), **kwargs
+            asinh(.5) * acos(.5) * -abs(cos(strength * 4)),
+            abs(asinh(.5) * acos(-.5) * cos((strength * 4) + strength / 2)),
+            **kwargs
         )
 
 
