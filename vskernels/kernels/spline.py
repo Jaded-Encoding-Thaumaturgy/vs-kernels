@@ -38,7 +38,7 @@ class Spline16(Kernel):
     """
 
     scale_function = core.proxied.resize.Spline16
-    descale_function = core.proxied.descale.Despline16
+    descale_function = lambda *args, **kwargs: core.descale.Despline16(*args, **kwargs)  # noqa: E731
 
 
 class Spline36(Kernel):
@@ -51,7 +51,7 @@ class Spline36(Kernel):
     """
 
     scale_function = core.proxied.resize.Spline36
-    descale_function = core.proxied.descale.Despline36
+    descale_function = lambda *args, **kwargs: core.descale.Despline36(*args, **kwargs)  # noqa: E731
 
 
 class Spline64(Kernel):
@@ -64,7 +64,7 @@ class Spline64(Kernel):
     """
 
     scale_function = core.proxied.resize.Spline64
-    descale_function = core.proxied.descale.Despline64
+    descale_function = lambda *args, **kwargs: core.descale.Despline64(*args, **kwargs)  # noqa: E731
 
 
 class Spline100(Spline):

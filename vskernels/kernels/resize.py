@@ -24,7 +24,7 @@ class Bilinear(Kernel):
     """Built-in bilinear resizer."""
 
     scale_function = core.proxied.resize.Bilinear
-    descale_function = core.proxied.descale.Debilinear
+    descale_function = lambda *args, **kwargs: core.descale.Debilinear(*args, **kwargs)  # noqa: E731
 
 
 class Lanczos(Kernel):
@@ -39,7 +39,7 @@ class Lanczos(Kernel):
     """
 
     scale_function = core.proxied.resize.Lanczos
-    descale_function = core.proxied.descale.Delanczos
+    descale_function = lambda *args, **kwargs: core.descale.Delanczos(*args, **kwargs)  # noqa: E731
 
     def __init__(self, taps: int = 3, **kwargs: Any) -> None:
         self.taps = taps

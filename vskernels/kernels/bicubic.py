@@ -40,7 +40,7 @@ class Bicubic(Kernel):
     """
 
     scale_function = core.proxied.resize.Bicubic
-    descale_function = core.proxied.descale.Debicubic
+    descale_function = lambda *args, **kwargs: core.descale.Debicubic(*args, **kwargs)  # noqa: E731
 
     def __init__(self, b: float = 0, c: float = 1 / 2, **kwargs: Any) -> None:
         self.b = b
@@ -193,7 +193,7 @@ class BicubicAuto(Kernel):
     """
 
     scale_function = core.proxied.resize.Bicubic
-    descale_function = core.proxied.descale.Debicubic
+    descale_function = lambda *args, **kwargs: core.descale.Debicubic(*args, **kwargs)  # noqa: E731
 
     def __init__(self, b: float | None = None, c: float | None = None, target: float = 1.0, **kwargs: Any) -> None:
         if None not in {b, c}:
