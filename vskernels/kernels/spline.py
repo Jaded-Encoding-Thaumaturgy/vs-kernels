@@ -37,8 +37,8 @@ class Spline16(Kernel):
     * VapourSynth-descale
     """
 
-    scale_function = staticmethod(core.proxied.resize.Spline16)
-    descale_function = staticmethod(lambda *args, **kwargs: core.descale.Despline16(*args, **kwargs))  # noqa: E731
+    scale_function = core.proxied.resize.Spline16
+    descale_function = core.lazy.descale.Despline16
 
 
 class Spline36(Kernel):
@@ -50,8 +50,8 @@ class Spline36(Kernel):
     * VapourSynth-descale
     """
 
-    scale_function = staticmethod(core.proxied.resize.Spline36)
-    descale_function = staticmethod(lambda *args, **kwargs: core.descale.Despline36(*args, **kwargs))  # noqa: E731
+    scale_function = core.proxied.resize.Spline36
+    descale_function = core.lazy.descale.Despline36
 
 
 class Spline64(Kernel):
@@ -63,8 +63,8 @@ class Spline64(Kernel):
     * VapourSynth-descale
     """
 
-    scale_function = staticmethod(core.proxied.resize.Spline64)
-    descale_function = staticmethod(lambda *args, **kwargs: core.descale.Despline64(*args, **kwargs))  # noqa: E731
+    scale_function = core.proxied.resize.Spline64
+    descale_function = core.lazy.descale.Despline64
 
 
 class Spline100(Spline):
