@@ -16,7 +16,7 @@ __all__ = [
 class Point(Kernel):
     """Built-in point resizer."""
 
-    scale_function = descale_function = staticmethod(core.proxied.resize.Point)
+    scale_function = descale_function = core.proxied.resize.Point
 
 
 class Bilinear(Kernel):
