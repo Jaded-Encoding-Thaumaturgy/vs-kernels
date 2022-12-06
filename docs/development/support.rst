@@ -56,15 +56,14 @@ but outfitted to use vs-kernels instead:
 
 .. code-block:: py
 
-    from vskernels import Kernel, get_kernel
+    from vskernels import Kernel, get_kernel, KernelT
 
     def descale(clip: vs.VideoNode,
                 width: int = 1280, height: int = 720,
-                kernel: Kernel | str = 'bicubic') -> vs.VideoNode:
+                kernel: KernelT = 'bicubic') -> vs.VideoNode:
         """A simple descaling function"""
 
-        if isinstance(kernel, str):
-            kernel = get_kernel(kernel)()
+        kernel = Kernel.ensure_obj(kernel, descale)
 
         return kernel.descale(clip, width, height)
 
