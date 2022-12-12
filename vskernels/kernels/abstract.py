@@ -5,7 +5,7 @@ from typing import Any, Sequence, Union, cast, overload
 
 from vstools import (
     CustomValueError, FuncExceptT, GenericVSFunction, HoldsVideoFormatT, Matrix, MatrixT, T, VideoFormatT, core,
-    get_subclasses, get_video_format, inject_self, vs
+    get_subclasses, get_video_format, inject_self, vs, vs_object
 )
 
 from ..exceptions import UnknownDescalerError, UnknownKernelError, UnknownScalerError
@@ -75,7 +75,7 @@ class BaseScaler:
         return new_scaler
 
 
-class Scaler(ABC):
+class Scaler(vs_object):
     """
     Abstract scaling interface.
     """
@@ -106,7 +106,7 @@ class Scaler(ABC):
         return BaseScaler.ensure_obj(cls, scaler, UnknownScalerError, [], func_except)
 
 
-class Descaler(ABC):
+class Descaler(vs_object):
     @abstractmethod
     @inject_self.cached
     def descale(
