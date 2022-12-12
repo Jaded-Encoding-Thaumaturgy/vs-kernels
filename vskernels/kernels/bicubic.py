@@ -39,7 +39,7 @@ class Bicubic(Kernel):
     :param c: C-param for bicubic kernel
     """
 
-    scale_function = core.proxied.resize.Bicubic
+    scale_function = core.lazy.resize.Bicubic
     descale_function = core.lazy.descale.Debicubic
 
     def __init__(self, b: float = 0, c: float = 1 / 2, **kwargs: Any) -> None:
@@ -192,7 +192,7 @@ class BicubicAuto(Kernel):
     b + 2c = target - 1 for downsizing
     """
 
-    scale_function = core.proxied.resize.Bicubic
+    scale_function = core.lazy.resize.Bicubic
     descale_function = core.lazy.descale.Debicubic
 
     def __init__(self, b: float | None = None, c: float | None = None, target: float = 1.0, **kwargs: Any) -> None:

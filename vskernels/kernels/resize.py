@@ -16,13 +16,13 @@ __all__ = [
 class Point(Kernel):
     """Built-in point resizer."""
 
-    scale_function = descale_function = core.proxied.resize.Point
+    scale_function = descale_function = core.lazy.resize.Point
 
 
 class Bilinear(Kernel):
     """Built-in bilinear resizer."""
 
-    scale_function = core.proxied.resize.Bilinear
+    scale_function = core.lazy.resize.Bilinear
     descale_function = core.lazy.descale.Debilinear
 
 
@@ -37,7 +37,7 @@ class Lanczos(Kernel):
     :param taps: taps param for lanczos kernel
     """
 
-    scale_function = core.proxied.resize.Lanczos
+    scale_function = core.lazy.resize.Lanczos
     descale_function = core.lazy.descale.Delanczos
 
     def __init__(self, taps: int = 3, **kwargs: Any) -> None:
