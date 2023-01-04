@@ -38,6 +38,9 @@ class NoShift(Bicubic, NoShiftBase):
     ```
     """
 
+    def __class_getitem__(cls, kernel: KernelT) -> type[Kernel]:
+        return cls.from_kernel(kernel)
+
     @staticmethod
     def from_kernel(kernel: KernelT) -> type[Kernel]:
         """
