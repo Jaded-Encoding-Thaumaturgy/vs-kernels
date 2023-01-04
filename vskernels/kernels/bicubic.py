@@ -3,7 +3,7 @@ from __future__ import annotations
 from math import acos, asinh, cos, sqrt
 from typing import Any
 
-from vstools import core, vs
+from vstools import CustomValueError, core, vs
 
 from .abstract import Kernel
 
@@ -197,7 +197,7 @@ class BicubicAuto(Kernel):
 
     def __init__(self, b: float | None = None, c: float | None = None, target: float = 1.0, **kwargs: Any) -> None:
         if None not in {b, c}:
-            raise ValueError("BicubicAuto: You can't specify both b and c!")
+            raise CustomValueError("You can't specify both b and c!", self.__class__)
 
         self.b = b
         self.c = c
@@ -222,7 +222,9 @@ class BicubicAuto(Kernel):
     def _get_bc_args(self, upsize: bool = True) -> tuple[float, float]:
         autob = 0.0 if self.b is None else self.b
         autoc = 0.5 if self.c is None else self.c
+
         target = self.target - int(not upsize)
+
         if self.c is not None and self.b is None:
             autob = target - 2 * self.c
         elif self.c is None and self.b is not None:
