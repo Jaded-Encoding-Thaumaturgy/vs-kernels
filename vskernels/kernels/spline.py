@@ -22,7 +22,7 @@ __all__ = [
 class Spline(FmtConv):
     """fmtconv's spline resizer."""
 
-    kernel = 'spline'
+    _kernel = 'spline'
 
     def __init__(self, taps: int = 2, **kwargs: Any) -> None:
         super().__init__(taps=taps, **kwargs)

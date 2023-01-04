@@ -79,7 +79,7 @@ class FmtConv(Kernel):
 
     descale_function = scale_function
 
-    kernel: str
+    _kernel: str
     """Name of the fmtconv kernel"""
 
     def __init__(self, taps: int = 4, **kwargs: Any) -> None:
@@ -91,7 +91,7 @@ class FmtConv(Kernel):
         width: int | None = None, height: int | None = None, **kwargs: Any
     ) -> dict[str, Any]:
         return dict(
-            sx=shift[1], sy=shift[0], kernel=self.kernel,
+            sx=shift[1], sy=shift[0], kernel=self._kernel,
             **self.kwargs, **self.get_params_args(False, clip, width, height, **kwargs)
         )
 
@@ -140,7 +140,7 @@ class FmtConv(Kernel):
 
         def _shift(shift_top: float | list[float] = 0.0, shift_left: float | list[float] = 0.0) -> vs.VideoNode:
             return self.scale_function(
-                clip, sy=shift_top, sx=shift_left, kernel=self.kernel, **self.kwargs, **kwargs
+                clip, sy=shift_top, sx=shift_left, kernel=self._kernel, **self.kwargs, **kwargs
             )
 
         if not shifts_or_top and not shift_left:

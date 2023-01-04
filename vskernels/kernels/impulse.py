@@ -29,7 +29,7 @@ __all__ = [
 class Impulse(FmtConv):
     """fmtconv's impulse resizer."""
 
-    kernel = 'impulse'
+    _kernel = 'impulse'
 
     def get_params_args(
         self, is_descale: bool, clip: vs.VideoNode, width: int | None = None, height: int | None = None, **kwargs: Any
