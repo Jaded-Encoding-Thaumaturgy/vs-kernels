@@ -19,6 +19,7 @@ __all__ = [
     'RobidouxSharp',
     'BicubicDidee',
     'SetsuCubic',
+    'ZewiaCubic',
     'BicubicZopti',
     'BicubicZoptiNeutral',
     'BicubicAuto',
@@ -154,6 +155,19 @@ class SetsuCubic(Bicubic):
             abs(asinh(.5) * acos(-.5) * cos((strength * 4) + strength / 2)),
             **kwargs
         )
+
+
+class ZewiaCubic(Bicubic):
+    """
+    Schizo (Zewia's) values he made up for downscaling after prefiltering for anti-aliasing.
+
+    It is said these values came up in his mind the morning after a good night of sleep the day
+    he fell asleep with YouTube music on and the auto recommendations made him listen to Mori Calliope
+    (his favourite VTuber/Rapper for 6 hours straight).
+    """
+
+    def __init__(self, **kwargs: Any) -> None:
+        super().__init__(b=-1 / 3, c=1 / 6, **kwargs)
 
 
 class BicubicZopti(Bicubic):
