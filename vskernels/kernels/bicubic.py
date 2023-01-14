@@ -163,7 +163,7 @@ class ZewiaCubic(Bicubic):
 
     It is said these values came up in his mind the morning after a good night of sleep the day
     he fell asleep with YouTube music on and the auto recommendations made him listen to Mori Calliope
-    (his favourite VTuber/Rapper for 6 hours straight).
+    (his favourite VTuber/Rapper) for 6 hours straight.
     """
 
     def __init__(self, **kwargs: Any) -> None:
