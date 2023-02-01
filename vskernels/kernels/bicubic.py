@@ -149,7 +149,7 @@ class SetsuCubic(Bicubic):
     strength=1:   b=-0.32938660656063920, c=0.21245005943760129
     """
 
-    def __init__(self, strength: int = 100, **kwargs: Any) -> None:
+    def __init__(self, strength: float = 100.0, **kwargs: Any) -> None:
         super().__init__(
             asinh(.5) * acos(.5) * -abs(cos(strength * 4)),
             abs(asinh(.5) * acos(-.5) * cos((strength * 4) + strength / 2)),
