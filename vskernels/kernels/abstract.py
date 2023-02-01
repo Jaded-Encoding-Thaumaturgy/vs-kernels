@@ -36,7 +36,7 @@ class BaseScaler:
 
             raise exception_cls(func_except or cls.from_param, value)
 
-        if issubclass(value, cls):
+        if isinstance(value, type) and issubclass(value, cls):
             return value
 
         if isinstance(value, cls):
@@ -52,18 +52,14 @@ class BaseScaler:
         excluded: Sequence[type[T]] = [],
         func_except: FuncExceptT | None = None
     ) -> T:
-        new_scaler: T | None = None
+        new_scaler: T
 
-        if not isinstance(value, cls):
-            try:
-                new_scaler = cls.from_param(value, func_except)()
-            except Exception:
-                ...
-        else:
-            new_scaler = value
-
-        if new_scaler is None:
+        if value is None:
             new_scaler = cls()
+        elif isinstance(value, cls) or cls.__class__ is not type and isinstance(value, cls.__class__):
+            new_scaler = value
+        else:
+            new_scaler = cls.from_param(value, func_except)()
 
         if new_scaler.__class__ in excluded:
             raise exception_cls(
