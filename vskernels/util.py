@@ -13,15 +13,15 @@ __all__ = [
 ]
 
 
-excluded_kernels = [Kernel, FmtConv, Example, Impulse, Placebo]
-
-
 class NoShiftBase(Kernel):
     def get_scale_args(self, clip: vs.VideoNode, *args: Any, **kwargs: Any) -> dict[str, Any]:
         return super().get_scale_args(clip, (0, 0), *(args and args[1:]), **kwargs)
 
     def get_descale_args(self, clip: vs.VideoNode, *args: Any, **kwargs: Any) -> dict[str, Any]:
         return super().get_descale_args(clip, (0, 0), *(args and args[1:]), **kwargs)
+
+
+excluded_kernels = [Kernel, FmtConv, Example, Impulse, Placebo, NoShiftBase]
 
 
 class NoShift(Bicubic, NoShiftBase):
