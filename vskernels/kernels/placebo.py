@@ -12,7 +12,7 @@ __all__ = [
 
 
 class Placebo(Kernel):
-    kernel: str
+    _kernel: str
     """Name of the placebo kernel"""
 
     # Kernel settings
@@ -72,7 +72,7 @@ class Placebo(Kernel):
         self, is_descale: bool, clip: vs.VideoNode, width: int | None = None, height: int | None = None, **kwargs: Any
     ) -> dict[str, Any]:
         return dict(
-            width=width, height=height, filter=self.kernel,
+            width=width, height=height, filter=self._kernel,
             radius=self.taps, param1=self.b, param2=self.c,
             clamp=self.clamp, taper=self.taper, blur=self.blur,
             antiring=self.antiring, cutoff=self.cutoff,
