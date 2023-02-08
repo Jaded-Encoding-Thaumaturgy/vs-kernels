@@ -2,29 +2,29 @@ from __future__ import annotations
 
 from typing import Any
 
-from vstools import vs
+from vstools import inject_self, vs
 
-from .kernels import Bicubic, FmtConv, Impulse, Kernel, KernelT, Placebo
+from .kernels import Bicubic, FmtConv, Impulse, Kernel, KernelT, Placebo, Scaler
 from .kernels.docs import Example
 
 __all__ = [
     'excluded_kernels',
-    'NoShift'
+    'NoShift', 'NoScale'
 ]
 
 
-class NoShiftBase(Kernel):
-    def get_scale_args(self, clip: vs.VideoNode, *args: Any, **kwargs: Any) -> dict[str, Any]:
-        return super().get_scale_args(clip, (0, 0), *(args and args[1:]), **kwargs)
+class NoShiftBase(Scaler):
+    @inject_self.cached
+    def scale(
+        self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (0, 0), **kwargs: Any
+    ) -> vs.VideoNode:
+        try:
+            return super().scale(clip, clip.width, clip.height, shift, **kwargs)
+        except Exception:
+            return clip
 
-    def get_descale_args(self, clip: vs.VideoNode, *args: Any, **kwargs: Any) -> dict[str, Any]:
-        return super().get_descale_args(clip, (0, 0), *(args and args[1:]), **kwargs)
 
-
-excluded_kernels = [Kernel, FmtConv, Example, Impulse, Placebo, NoShiftBase]
-
-
-class NoShift(Bicubic, NoShiftBase):
+class NoShift(Bicubic, NoShiftBase):  # type: ignore
     """
     Class util used to always pass shift=(0, 0)\n
     By default it inherits from :py:class:`vskernels.Bicubic`,
@@ -69,3 +69,27 @@ class NoShift(Bicubic, NoShiftBase):
             ...
 
         return inner_no_shift
+
+
+class NoScaleBase(Kernel):
+    def get_params_args(
+        self, is_descale: bool, clip: vs.VideoNode, width: int | None = None, height: int | None = None, **kwargs: Any
+    ) -> dict[str, Any]:
+        return super().get_params_args(is_descale, clip, clip.width, clip.height, **kwargs)
+
+
+class NoScale(Bicubic, NoScaleBase):  # type: ignore
+    def __class_getitem__(cls, kernel: KernelT) -> type[Kernel]:
+        return cls.from_kernel(kernel)
+
+    @staticmethod
+    def from_kernel(kernel: KernelT) -> type[Kernel]:
+        kernel_t = Kernel.from_param(kernel)
+
+        class inner_no_shift(NoScaleBase, kernel_t):
+            ...
+
+        return inner_no_shift
+
+
+excluded_kernels = [Kernel, FmtConv, Example, Impulse, Placebo, NoShiftBase, NoScaleBase]
