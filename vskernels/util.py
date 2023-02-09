@@ -13,15 +13,12 @@ __all__ = [
 ]
 
 
-class NoShiftBase(Scaler):
-    @inject_self.cached
-    def scale(
-        self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (0, 0), **kwargs: Any
-    ) -> vs.VideoNode:
-        try:
-            return super().scale(clip, clip.width, clip.height, shift, **kwargs)
-        except Exception:
-            return clip
+class NoShiftBase(Kernel):
+    def get_scale_args(self, clip: vs.VideoNode, *args: Any, **kwargs: Any) -> dict[str, Any]:
+        return super().get_scale_args(clip, (0, 0), *(args and args[1:]), **kwargs)
+
+    def get_descale_args(self, clip: vs.VideoNode, *args: Any, **kwargs: Any) -> dict[str, Any]:
+        return super().get_descale_args(clip, (0, 0), *(args and args[1:]), **kwargs)
 
 
 class NoShift(Bicubic, NoShiftBase):  # type: ignore
@@ -65,17 +62,21 @@ class NoShift(Bicubic, NoShiftBase):  # type: ignore
 
         kernel_t = Kernel.from_param(kernel)
 
-        class inner_no_shift(NoShiftBase, kernel_t):
+        class inner_no_shift(NoShiftBase, kernel_t):  # type: ignore
             ...
 
         return inner_no_shift
 
 
-class NoScaleBase(Kernel):
-    def get_params_args(
-        self, is_descale: bool, clip: vs.VideoNode, width: int | None = None, height: int | None = None, **kwargs: Any
-    ) -> dict[str, Any]:
-        return super().get_params_args(is_descale, clip, clip.width, clip.height, **kwargs)
+class NoScaleBase(Scaler):
+    @inject_self.cached
+    def scale(  # type: ignore
+        self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (0, 0), **kwargs: Any
+    ) -> vs.VideoNode:
+        try:
+            return super().scale(clip, clip.width, clip.height, shift, **kwargs)  # type: ignore
+        except Exception:
+            return clip
 
 
 class NoScale(Bicubic, NoScaleBase):  # type: ignore
@@ -86,7 +87,7 @@ class NoScale(Bicubic, NoScaleBase):  # type: ignore
     def from_kernel(kernel: KernelT) -> type[Kernel]:
         kernel_t = Kernel.from_param(kernel)
 
-        class inner_no_shift(NoScaleBase, kernel_t):
+        class inner_no_shift(NoScaleBase, kernel_t):  # type: ignore
             ...
 
         return inner_no_shift
