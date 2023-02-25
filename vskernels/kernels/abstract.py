@@ -21,6 +21,7 @@ class BaseScaler:
     @staticmethod
     def from_param(
         cls: type[T],
+        basecls: type[T],
         value: str | type[T] | T,
         exception_cls: type[CustomValueError],
         excluded: Sequence[type[T]] = [],
@@ -36,7 +37,7 @@ class BaseScaler:
 
             raise exception_cls(func_except or cls.from_param, value)  # type: ignore
 
-        if isinstance(value, type) and issubclass(value, cls):
+        if isinstance(value, type) and issubclass(value, basecls):
             return value
 
         if isinstance(value, cls):
@@ -47,6 +48,7 @@ class BaseScaler:
     @staticmethod
     def ensure_obj(
         cls: type[T],
+        basecls: type[T],
         value: str | type[T] | T | None,
         exception_cls: type[CustomValueError],
         excluded: Sequence[type[T]] = [],
@@ -56,8 +58,8 @@ class BaseScaler:
 
         if value is None:
             new_scaler = cls()
-        elif isinstance(value, cls) or cls.__class__ is not type and isinstance(value, cls.__class__):  # type: ignore
-            new_scaler = value  # type: ignore
+        elif isinstance(value, cls) or isinstance(value, basecls):
+            new_scaler = value
         else:
             new_scaler = cls.from_param(value, func_except)()  # type: ignore
 
@@ -93,13 +95,13 @@ class Scaler(vs_object):
     def from_param(
         cls: type[Scaler], scaler: ScalerT | None = None, func_except: FuncExceptT | None = None
     ) -> type[Scaler]:
-        return BaseScaler.from_param(cls, scaler, UnknownScalerError, [], func_except)  # type: ignore
+        return BaseScaler.from_param(cls, Scaler, scaler, UnknownScalerError, [], func_except)  # type: ignore
 
     @classmethod
     def ensure_obj(
         cls: type[Scaler], scaler: ScalerT | None = None, func_except: FuncExceptT | None = None
     ) -> Scaler:
-        return BaseScaler.ensure_obj(cls, scaler, UnknownScalerError, [], func_except)
+        return BaseScaler.ensure_obj(cls, Scaler, scaler, UnknownScalerError, [], func_except)  # type: ignore
 
 
 class Descaler(vs_object):
@@ -114,13 +116,13 @@ class Descaler(vs_object):
     def from_param(
         cls: type[Descaler], descaler: DescalerT | None = None, func_except: FuncExceptT | None = None
     ) -> type[Descaler]:
-        return BaseScaler.from_param(cls, descaler, UnknownDescalerError, [], func_except)  # type: ignore
+        return BaseScaler.from_param(cls, Descaler, descaler, UnknownDescalerError, [], func_except)  # type: ignore
 
     @classmethod
     def ensure_obj(
         cls: type[Descaler], descaler: DescalerT | None = None, func_except: FuncExceptT | None = None
     ) -> Descaler:
-        return BaseScaler.ensure_obj(cls, descaler, UnknownDescalerError, [], func_except)
+        return BaseScaler.ensure_obj(cls, Descaler, descaler, UnknownDescalerError, [], func_except)  # type: ignore
 
 
 class Kernel(Scaler, Descaler):
@@ -277,7 +279,9 @@ class Kernel(Scaler, Descaler):
         cls: type[Kernel], kernel: ScalerT | DescalerT | KernelT | None = None, func_except: FuncExceptT | None = None
     ) -> type[Scaler] | type[Descaler] | type[Kernel]:
         from ..util import excluded_kernels
-        return BaseScaler.from_param(cls, kernel, UnknownKernelError, excluded_kernels, func_except)  # type: ignore
+        return BaseScaler.from_param(
+            cls, Kernel, kernel, UnknownKernelError, excluded_kernels, func_except  # type: ignore
+        )
 
     @overload
     @classmethod
@@ -305,7 +309,9 @@ class Kernel(Scaler, Descaler):
         cls: type[Kernel], kernel: ScalerT | DescalerT | KernelT | None = None, func_except: FuncExceptT | None = None
     ) -> Scaler | Descaler | Kernel:
         from ..util import excluded_kernels
-        return BaseScaler.ensure_obj(cls, kernel, UnknownKernelError, excluded_kernels, func_except)  # type: ignore
+        return BaseScaler.ensure_obj(
+            cls, Kernel, kernel, UnknownKernelError, excluded_kernels, func_except  # type: ignore
+        )
 
 
 ScalerT = Union[str, type[Scaler], Scaler]
