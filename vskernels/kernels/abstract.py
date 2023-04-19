@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 from abc import abstractmethod
+from math import ceil
 from typing import Any, Sequence, Union, cast, overload
 
 from vstools import (
-    CustomValueError, FuncExceptT, GenericVSFunction, HoldsVideoFormatT, Matrix, MatrixT, T, VideoFormatT, core,
-    get_subclasses, get_video_format, inject_self, vs, vs_object
+    CustomValueError, FuncExceptT, GenericVSFunction, HoldsVideoFormatT, Matrix, MatrixT, T, VideoFormatT,
+    check_variable_resolution, core, get_subclasses, get_video_format, inject_self, vs, vs_object
 )
 
 from ..exceptions import UnknownDescalerError, UnknownKernelError, UnknownScalerError
@@ -102,6 +103,21 @@ class Scaler(vs_object):
         cls: type[Scaler], scaler: ScalerT | None = None, func_except: FuncExceptT | None = None
     ) -> Scaler:
         return BaseScaler.ensure_obj(cls, Scaler, scaler, UnknownScalerError, [], func_except)  # type: ignore
+
+    @inject_self.cached
+    def multi(
+        self, clip: vs.VideoNode, multi: float = 2, shift: tuple[float, float] = (0, 0), **kwargs: Any
+    ) -> vs.VideoNode:
+        assert check_variable_resolution(clip, self.multi)
+
+        dst_width, dst_height = ceil(clip.width * multi), ceil(clip.height * multi)
+
+        if max(dst_width, dst_height) <= 0.0:
+            raise CustomValueError(
+                'Multiplying the resolution by "multi" must result in a positive resolution!', self.multi, multi
+            )
+
+        return self.scale(clip, dst_width, dst_height, shift, **kwargs)
 
 
 class Descaler(vs_object):
