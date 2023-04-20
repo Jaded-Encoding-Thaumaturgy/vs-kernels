@@ -82,15 +82,27 @@ class FmtConv(Kernel):
     _kernel: str
     """Name of the fmtconv kernel"""
 
+    _resize_fmtc_params_lut = {
+        'sw': 'src_width', 'sx': 'src_left',
+        'sh': 'src_height', 'sy': 'src_top'
+    }
+
     def __init__(self, taps: int = 4, **kwargs: Any) -> None:
         self.taps = taps
         super().__init__(**kwargs)
+
+    def _clean_args(self, **kwargs: Any) -> dict[str, Any]:
+        for fmtc_param, res_param in self._resize_fmtc_params_lut.items():
+            if res_param in kwargs:
+                kwargs[fmtc_param] = kwargs.pop(res_param)
+
+        return kwargs
 
     def get_scale_args(
         self, clip: vs.VideoNode, shift: tuple[float, float] = (0, 0),
         width: int | None = None, height: int | None = None, **kwargs: Any
     ) -> dict[str, Any]:
-        return dict(
+        return self._clean_args(
             sx=shift[1], sy=shift[0], kernel=self._kernel,
             **self.kwargs, **self.get_params_args(False, clip, width, height, **kwargs)
         )
@@ -106,7 +118,7 @@ class FmtConv(Kernel):
         ) | self.get_params_args(
             True, clip, width, height, **kwargs
         )
-        return args
+        return self._clean_args(**args)
 
     def get_params_args(
         self, is_descale: bool, clip: vs.VideoNode, width: int | None = None, height: int | None = None, **kwargs: Any
