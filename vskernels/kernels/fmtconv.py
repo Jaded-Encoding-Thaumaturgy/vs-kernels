@@ -27,7 +27,7 @@ class FmtConv(Kernel):
     def scale_function(self, clip: vs.VideoNode, **kwargs: Any) -> vs.VideoNode:
         assert clip.format
 
-        def _check_fmt(fmt: int | vs.PresetFormat | vs.VideoFormat) -> tuple[vs.VideoFormat, bool]:
+        def _check_fmt(fmt: int | VideoFormatT) -> tuple[vs.VideoFormat, bool]:
             fmt = core.get_video_format(fmt)
 
             return fmt, ((
