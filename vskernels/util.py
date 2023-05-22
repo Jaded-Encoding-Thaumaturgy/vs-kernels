@@ -79,7 +79,7 @@ class NoScaleBase(Scaler):
             return clip
 
 
-class NoScale(Bicubic, NoScaleBase):  # type: ignore
+class NoScale(NoScaleBase, Bicubic):  # type: ignore
     def __class_getitem__(cls, kernel: KernelT) -> type[Kernel]:
         return cls.from_kernel(kernel)
 
@@ -87,10 +87,10 @@ class NoScale(Bicubic, NoScaleBase):  # type: ignore
     def from_kernel(kernel: KernelT) -> type[Kernel]:
         kernel_t = Kernel.from_param(kernel)
 
-        class inner_no_shift(NoScaleBase, kernel_t):  # type: ignore
+        class inner_no_scale(kernel_t, NoScaleBase):  # type: ignore
             ...
 
-        return inner_no_shift
+        return inner_no_scale
 
 
 excluded_kernels = [Kernel, FmtConv, Example, Impulse, Placebo, NoShiftBase, NoScaleBase]
