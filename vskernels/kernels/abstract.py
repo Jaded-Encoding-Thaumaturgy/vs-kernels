@@ -14,6 +14,7 @@ from ..exceptions import UnknownDescalerError, UnknownKernelError, UnknownScaler
 __all__ = [
     'Scaler', 'ScalerT',
     'Descaler', 'DescalerT',
+    'Resampler', 'ResamplerT',
     'Kernel', 'KernelT'
 ]
 
@@ -141,7 +142,29 @@ class Descaler(vs_object):
         return BaseScaler.ensure_obj(cls, Descaler, descaler, UnknownDescalerError, [], func_except)  # type: ignore
 
 
-class Kernel(Scaler, Descaler):
+class Resampler(vs_object):
+    @abstractmethod
+    @inject_self.cached
+    def resample(
+        self, clip: vs.VideoNode, format: int | VideoFormatT | HoldsVideoFormatT,
+        matrix: MatrixT | None = None, matrix_in: MatrixT | None = None, **kwargs: Any
+    ) -> vs.VideoNode:
+        pass
+
+    @classmethod
+    def from_param(
+        cls: type[Resampler], resampler: ResamplerT | None = None, func_except: FuncExceptT | None = None
+    ) -> type[Resampler]:
+        return BaseScaler.from_param(cls, Resampler, resampler, UnknownDescalerError, [], func_except)  # type: ignore
+
+    @classmethod
+    def ensure_obj(
+        cls: type[Resampler], resampler: ResamplerT | None = None, func_except: FuncExceptT | None = None
+    ) -> Resampler:
+        return BaseScaler.ensure_obj(cls, Resampler, resampler, UnknownDescalerError, [], func_except)  # type: ignore
+
+
+class Kernel(Scaler, Descaler, Resampler):
     """
     Abstract scaling kernel interface.
 
@@ -153,6 +176,8 @@ class Kernel(Scaler, Descaler):
     """Scale function called internally when scaling/resampling/shifting"""
     descale_function: GenericVSFunction
     """Descale function called internally when descaling"""
+    resample_function: GenericVSFunction
+    """Resample function called internally when resampling"""
 
     @inject_self.cached
     def scale(  # type: ignore[override]
@@ -171,7 +196,7 @@ class Kernel(Scaler, Descaler):
         self, clip: vs.VideoNode, format: int | VideoFormatT | HoldsVideoFormatT,
         matrix: MatrixT | None = None, matrix_in: MatrixT | None = None, **kwargs: Any
     ) -> vs.VideoNode:
-        return self.scale_function(clip, **self.get_matrix_args(clip, format, matrix, matrix_in, **kwargs))
+        return self.resample_function(clip, **self.get_resample_args(clip, format, matrix, matrix_in, **kwargs))
 
     @overload
     @inject_self.cached
@@ -259,7 +284,7 @@ class Kernel(Scaler, Descaler):
     ) -> dict[str, Any]:
         return dict(src_top=shift[0], src_left=shift[1]) | self.get_params_args(True, clip, width, height, **kwargs)
 
-    def get_matrix_args(
+    def get_resample_args(
         self, clip: vs.VideoNode, format: int | VideoFormatT | HoldsVideoFormatT,
         matrix: MatrixT | None, matrix_in: MatrixT | None, **kwargs: Any
     ) -> dict[str, Any]:
@@ -290,10 +315,17 @@ class Kernel(Scaler, Descaler):
     ) -> type[Descaler]:
         ...
 
+    @overload
     @classmethod
     def from_param(
-        cls: type[Kernel], kernel: ScalerT | DescalerT | KernelT | None = None, func_except: FuncExceptT | None = None
-    ) -> type[Scaler] | type[Descaler] | type[Kernel]:
+        cls: type[Kernel], kernel: ResamplerT | KernelT | None = None, func_except: FuncExceptT | None = None
+    ) -> type[Resampler]:
+        ...
+
+    @classmethod
+    def from_param(
+        cls: type[Kernel], kernel: ScalerT | DescalerT | ResamplerT | KernelT | None = None, func_except: FuncExceptT | None = None
+    ) -> type[Scaler] | type[Descaler] | type[Resampler] | type[Kernel]:
         from ..util import excluded_kernels
         return BaseScaler.from_param(
             cls, Kernel, kernel, UnknownKernelError, excluded_kernels, func_except  # type: ignore
@@ -320,10 +352,17 @@ class Kernel(Scaler, Descaler):
     ) -> Descaler:
         ...
 
+    @overload
     @classmethod
     def ensure_obj(
-        cls: type[Kernel], kernel: ScalerT | DescalerT | KernelT | None = None, func_except: FuncExceptT | None = None
-    ) -> Scaler | Descaler | Kernel:
+        cls: type[Kernel], kernel: ResamplerT | KernelT | None = None, func_except: FuncExceptT | None = None
+    ) -> Resampler:
+        ...
+
+    @classmethod
+    def ensure_obj(
+        cls: type[Kernel], kernel: ScalerT | DescalerT | ResamplerT | KernelT | None = None, func_except: FuncExceptT | None = None
+    ) -> Scaler | Descaler | Resampler | Kernel:
         from ..util import excluded_kernels
         return BaseScaler.ensure_obj(
             cls, Kernel, kernel, UnknownKernelError, excluded_kernels, func_except  # type: ignore
@@ -332,4 +371,5 @@ class Kernel(Scaler, Descaler):
 
 ScalerT = Union[str, type[Scaler], Scaler]
 DescalerT = Union[str, type[Descaler], Descaler]
+ResamplerT = Union[str, type[Resampler], Resampler]
 KernelT = Union[str, type[Kernel], Kernel]

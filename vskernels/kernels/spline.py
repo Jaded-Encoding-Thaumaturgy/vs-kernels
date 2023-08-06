@@ -37,7 +37,7 @@ class Spline16(Kernel):
     * VapourSynth-descale
     """
 
-    scale_function = core.lazy.resize.Spline16
+    scale_function = resample_function = core.lazy.resize.Spline16
     descale_function = core.lazy.descale.Despline16
 
 
@@ -50,7 +50,7 @@ class Spline36(Kernel):
     * VapourSynth-descale
     """
 
-    scale_function = core.lazy.resize.Spline36
+    scale_function = resample_function = core.lazy.resize.Spline36
     descale_function = core.lazy.descale.Despline36
 
 
@@ -63,7 +63,7 @@ class Spline64(Kernel):
     * VapourSynth-descale
     """
 
-    scale_function = core.lazy.resize.Spline64
+    scale_function = resample_function = core.lazy.resize.Spline64
     descale_function = core.lazy.descale.Despline64
 
 
