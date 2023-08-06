@@ -13,7 +13,7 @@ from ..exceptions import UnknownDescalerError, UnknownKernelError, UnknownScaler
 
 __all__ = [
     'Scaler', 'ScalerT',
-    'Descaler',
+    'Descaler', 'DescalerT',
     'Kernel', 'KernelT'
 ]
 
