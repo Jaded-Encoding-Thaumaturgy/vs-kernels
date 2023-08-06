@@ -2,16 +2,16 @@ from __future__ import annotations
 
 from typing import Any
 
-from vstools import Transfer, core, inject_self, vs
+from vstools import Transfer, core, vs
 
-from .abstract import Kernel
+from .abstract import Scaler
 
 __all__ = [
     'Placebo'
 ]
 
 
-class Placebo(Kernel):
+class Placebo(Scaler):
     _kernel: str
     """Name of the placebo kernel"""
 
@@ -81,17 +81,3 @@ class Placebo(Kernel):
             sigmoid_center=self.sigmoid_center, sigmoid_slope=self.sigmoid_slope,
             trc=self.curve.value_libplacebo,
         )
-
-    def get_descale_args(self, *args: Any, **kwargs: Any) -> dict[str, Any]:
-        raise NotImplementedError
-
-    def get_matrix_args(self, *args: Any, **kwargs: Any) -> dict[str, Any]:
-        raise NotImplementedError
-
-    @inject_self.cached
-    def descale(self, *args: Any, **kwargs: Any) -> vs.VideoNode:  # type: ignore[override]
-        raise NotImplementedError
-
-    @inject_self.cached
-    def resample(self, *args: Any, **kwargs: Any) -> vs.VideoNode:  # type: ignore[override]
-        raise NotImplementedError
