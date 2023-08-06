@@ -2,9 +2,9 @@ from __future__ import annotations
 
 from typing import Any, Callable, overload
 
-from vstools import HoldsVideoFormatT, MatrixT, VideoFormatT, VSFunction, core, inject_self, vs
+from vstools import VideoFormatT, VSFunction, core, inject_self, vs
 
-from .abstract import Kernel
+from .abstract import Scaler
 from .bicubic import Bicubic
 
 __all__ = [
@@ -15,7 +15,7 @@ __all__ = [
 call_wrapT = Callable[..., VSFunction]
 
 
-class FmtConv(Kernel):
+class FmtConv(Scaler):
     """
     Abstract fmtconv's resizer.
 
@@ -77,7 +77,7 @@ class FmtConv(Kernel):
         assert filtered.format
         return Bicubic.resample(filtered, out_fmt)
 
-    descale_function = scale_function
+    resample_function = scale_function
 
     _kernel: str
     """Name of the fmtconv kernel"""
@@ -106,19 +106,6 @@ class FmtConv(Kernel):
             sx=shift[1], sy=shift[0], kernel=self._kernel,
             **self.kwargs, **self.get_params_args(False, clip, width, height, **kwargs)
         )
-
-    def get_descale_args(
-        self, clip: vs.VideoNode, shift: tuple[float, float] = (0, 0),
-        width: int | None = None, height: int | None = None, **kwargs: Any
-    ) -> dict[str, Any]:
-        args = dict(
-            invks=True, invkstaps=self.taps,
-        ) | self.get_scale_args(
-            clip, shift, width, height, **kwargs
-        ) | self.get_params_args(
-            True, clip, width, height, **kwargs
-        )
-        return self._clean_args(**args)
 
     def get_params_args(
         self, is_descale: bool, clip: vs.VideoNode, width: int | None = None, height: int | None = None, **kwargs: Any
@@ -177,13 +164,3 @@ class FmtConv(Kernel):
                 shifts_left = shifts_left[:n_planes]
 
         return _shift(shifts_top, shifts_left)
-
-    def get_matrix_args(self, *args: Any, **kwargs: Any) -> dict[str, Any]:
-        raise NotImplementedError
-
-    @inject_self.cached
-    def resample(  # type: ignore[override]
-        self, clip: vs.VideoNode, format: int | VideoFormatT | HoldsVideoFormatT,
-        matrix: MatrixT | None = None, matrix_in: MatrixT | None = None, **kwargs: Any
-    ) -> vs.VideoNode:
-        raise NotImplementedError
