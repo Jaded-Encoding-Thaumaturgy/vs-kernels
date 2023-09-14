@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from abc import abstractmethod
 from math import ceil
 from typing import Any, Sequence, Union, cast, overload
 
@@ -86,12 +85,11 @@ class Scaler(vs_object):
     def __init__(self, **kwargs: Any) -> None:
         self.kwargs = kwargs
 
-    @abstractmethod
     @inject_self.cached
-    def scale(
+    def scale(  # type: ignore[override]
         self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (0, 0), **kwargs: Any
     ) -> vs.VideoNode:
-        pass
+        return self.scale_function(clip, **self.get_scale_args(clip, shift, width, height, **kwargs))
 
     @classmethod
     def from_param(
@@ -122,12 +120,11 @@ class Scaler(vs_object):
 
 
 class Descaler(vs_object):
-    @abstractmethod
     @inject_self.cached
-    def descale(
+    def descale(  # type: ignore[override]
         self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (0, 0), **kwargs: Any
     ) -> vs.VideoNode:
-        pass
+        return self.descale_function(clip, **self.get_descale_args(clip, shift, width, height, **kwargs))
 
     @classmethod
     def from_param(
@@ -143,13 +140,12 @@ class Descaler(vs_object):
 
 
 class Resampler(vs_object):
-    @abstractmethod
     @inject_self.cached
     def resample(
         self, clip: vs.VideoNode, format: int | VideoFormatT | HoldsVideoFormatT,
         matrix: MatrixT | None = None, matrix_in: MatrixT | None = None, **kwargs: Any
     ) -> vs.VideoNode:
-        pass
+        return self.resample_function(clip, **self.get_resample_args(clip, format, matrix, matrix_in, **kwargs))
 
     @classmethod
     def from_param(
@@ -178,25 +174,6 @@ class Kernel(Scaler, Descaler, Resampler):
     """Descale function called internally when descaling"""
     resample_function: GenericVSFunction
     """Resample function called internally when resampling"""
-
-    @inject_self.cached
-    def scale(  # type: ignore[override]
-        self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (0, 0), **kwargs: Any
-    ) -> vs.VideoNode:
-        return self.scale_function(clip, **self.get_scale_args(clip, shift, width, height, **kwargs))
-
-    @inject_self.cached
-    def descale(  # type: ignore[override]
-        self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (0, 0), **kwargs: Any
-    ) -> vs.VideoNode:
-        return self.descale_function(clip, **self.get_descale_args(clip, shift, width, height, **kwargs))
-
-    @inject_self.cached
-    def resample(
-        self, clip: vs.VideoNode, format: int | VideoFormatT | HoldsVideoFormatT,
-        matrix: MatrixT | None = None, matrix_in: MatrixT | None = None, **kwargs: Any
-    ) -> vs.VideoNode:
-        return self.resample_function(clip, **self.get_resample_args(clip, format, matrix, matrix_in, **kwargs))
 
     @overload
     @inject_self.cached
@@ -324,7 +301,8 @@ class Kernel(Scaler, Descaler, Resampler):
 
     @classmethod
     def from_param(
-        cls: type[Kernel], kernel: ScalerT | DescalerT | ResamplerT | KernelT | None = None, func_except: FuncExceptT | None = None
+        cls: type[Kernel], kernel: ScalerT | DescalerT | ResamplerT | KernelT | None = None,
+        func_except: FuncExceptT | None = None
     ) -> type[Scaler] | type[Descaler] | type[Resampler] | type[Kernel]:
         from ..util import excluded_kernels
         return BaseScaler.from_param(
@@ -361,7 +339,8 @@ class Kernel(Scaler, Descaler, Resampler):
 
     @classmethod
     def ensure_obj(
-        cls: type[Kernel], kernel: ScalerT | DescalerT | ResamplerT | KernelT | None = None, func_except: FuncExceptT | None = None
+        cls: type[Kernel], kernel: ScalerT | DescalerT | ResamplerT | KernelT | None = None,
+        func_except: FuncExceptT | None = None
     ) -> Scaler | Descaler | Resampler | Kernel:
         from ..util import excluded_kernels
         return BaseScaler.ensure_obj(
