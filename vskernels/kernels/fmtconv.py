@@ -110,9 +110,11 @@ class FmtConv(Scaler):
     def get_params_args(
         self, is_descale: bool, clip: vs.VideoNode, width: int | None = None, height: int | None = None, **kwargs: Any
     ) -> dict[str, Any]:
+        kwargs |= dict(w=width, h=height, taps=self.taps)
+
         if is_descale:
-            return kwargs | dict(w=width, h=height, sw=width, sh=height)
-        return kwargs | dict(w=width, h=height)
+            kwargs |= dict(sw=width, sh=height)
+        return kwargs
 
     @overload
     @inject_self.cached
