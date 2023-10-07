@@ -12,6 +12,7 @@ __all__ = [
     'Sinc',
     'Gaussian',
     'NearestNeighbour',
+    'EwaBicubic',
     'EwaJinc',
     'EwaLanczos',
     'EwaGinseng',
@@ -60,6 +61,13 @@ class NearestNeighbour(Gaussian):
 
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(100, **kwargs)
+
+
+class EwaBicubic(Placebo):
+    _kernel = 'ewa_robidoux'
+
+    def __init__(self, b: float = 0.0, c: float = 0.5, **kwargs: Any) -> None:
+        super().__init__(None, b, c, **kwargs)
 
 
 class EwaJinc(Placebo):
