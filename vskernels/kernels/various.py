@@ -66,42 +66,47 @@ class NearestNeighbour(Gaussian):
 class EwaBicubic(Placebo):
     _kernel = 'ewa_robidoux'
 
-    def __init__(self, b: float = 0.0, c: float = 0.5, **kwargs: Any) -> None:
-        super().__init__(None, b, c, **kwargs)
+    def __init__(self, b: float = 0.0, c: float = 0.5, radius: int | None = None, **kwargs: Any) -> None:
+        radius = kwargs.pop('taps', None)
 
+        if radius is None:
+            radius = 1 if (b, c) == (0, 0) else 2
 
-class EwaJinc(Placebo):
-    _kernel = 'ewa_jinc'
-
-    def __init__(self, taps: int = 3, **kwargs: Any) -> None:
-        super().__init__(taps, None, None, **kwargs)
+        super().__init__(radius, b, c, **kwargs)
 
 
 class EwaLanczos(Placebo):
     _kernel = 'ewa_lanczos'
 
-    def __init__(self, taps: int = 3, **kwargs: Any) -> None:
+    def __init__(self, taps: int = 3.2383154841662362076499, **kwargs: Any) -> None:
+        super().__init__(taps, None, None, **kwargs)
+
+
+class EwaJinc(EwaLanczos):
+    def __init__(self, taps: int = 3.2383154841662362076499, **kwargs: Any) -> None:
+        print(DeprecationWarning('EwaJinc is deprecated! Switch over to EwaLanczos.'))
+
         super().__init__(taps, None, None, **kwargs)
 
 
 class EwaGinseng(Placebo):
     _kernel = 'ewa_ginseng'
 
-    def __init__(self, taps: int = 3, **kwargs: Any) -> None:
+    def __init__(self, taps: int = 3.2383154841662362076499, **kwargs: Any) -> None:
         super().__init__(taps, None, None, **kwargs)
 
 
 class EwaHann(Placebo):
     _kernel = 'ewa_hann'
 
-    def __init__(self, taps: int = 3, **kwargs: Any) -> None:
+    def __init__(self, taps: int = 3.2383154841662362076499, **kwargs: Any) -> None:
         super().__init__(taps, None, None, **kwargs)
 
 
 class EwaHannSoft(Placebo):
     _kernel = 'haasnsoft'
 
-    def __init__(self, taps: int = 3, **kwargs: Any) -> None:
+    def __init__(self, taps: int = 3.2383154841662362076499, **kwargs: Any) -> None:
         super().__init__(taps, None, None, **kwargs)
 
 
