@@ -402,9 +402,6 @@ class ComplexScaler(Scaler):
 
         kwargs = self.get_scale_args(clip, shift, width, height, **kwargs)
 
-        if keep_ar:
-            print('vsk', kwargs)
-
         clip = self.scale_function(clip, **kwargs)
 
         if keep_ar:
