@@ -352,8 +352,8 @@ class ComplexScaler(Scaler):
         self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (0, 0),
         **kwargs: Any
     ) -> tuple[KwargsT, tuple[float, float], Sar]:
-        kwargs.update(src_top=shift[0], src_left=shift[1])
-
+        kwargs.setdefault('src_top', kwargs.pop('sy', shift[0]))
+        kwargs.setdefault('src_left', kwargs.pop('sx', shift[1]))
         kwargs.setdefault('src_width', kwargs.pop('sw', clip.width))
         kwargs.setdefault('src_height', kwargs.pop('sh', clip.height))
 
