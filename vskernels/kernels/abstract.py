@@ -1,11 +1,13 @@
 from __future__ import annotations
 
-from math import ceil
-from typing import Any, Sequence, Union, cast, overload
+from math import ceil, exp
+from typing import Any, Sequence, Union, cast, overload, TYPE_CHECKING
 
 from vstools import (
     CustomValueError, FuncExceptT, GenericVSFunction, HoldsVideoFormatT, KwargsT, Matrix, MatrixT, T, Resolution,
-    VideoFormatT, check_variable_resolution, core, get_subclasses, get_video_format, inject_self, vs, vs_object, Sar)
+    VideoFormatT, check_variable_resolution, core, get_subclasses, get_video_format, inject_self, vs, vs_object, Sar,
+    Transfer, depth
+)
 
 from ..exceptions import UnknownDescalerError, UnknownKernelError, UnknownScalerError
 
@@ -13,7 +15,9 @@ __all__ = [
     'Scaler', 'ScalerT',
     'Descaler', 'DescalerT',
     'Resampler', 'ResamplerT',
-    'Kernel', 'KernelT'
+    'Kernel', 'KernelT',
+
+    'ComplexScaler', 'LinearScaler'
 ]
 
 
@@ -347,7 +351,64 @@ class Kernel(Scaler, Descaler, Resampler):
         )
 
 
-class ComplexScaler(Scaler):
+class LinearScaler(Scaler):
+    def __init__(self, **kwargs: Any) -> None:
+        self.orig_kwargs = kwargs
+        self.kwargs = {k: v for k, v in kwargs.items() if k not in ('linear', 'sigmoid')}
+
+    @inject_self.cached
+    def scale(  # type: ignore[override]
+        self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (0, 0),
+        *, linear: bool = False, sigmoid: bool | tuple[float, float] = False, **kwargs: Any
+    ) -> vs.VideoNode:
+        from ..kernels import Point, Catrom
+
+        sigmoid = self.orig_kwargs.get('sigmoid', sigmoid)
+        linear = self.orig_kwargs.get('linear', False) or linear or not not sigmoid
+
+        if not linear:
+            return super().scale(clip, width, height, shift, **kwargs)
+
+        if sigmoid is True:
+            sigmoid = (6.5, 0.75)
+
+        if sigmoid:
+            sslope, scenter = sigmoid
+
+            if 1.0 > sslope or sslope > 20.0:
+                raise CustomValueError('sigmoid slope has to be in range 1.0-20.0 (inclusive).', self.__class__)
+
+            if 0.0 > scenter or scenter > 1.0:
+                raise CustomValueError('sigmoid center has to be in range 0.0-1.0 (inclusive).', self.__class__)
+
+            soffset = 1.0 / (1 + exp(sslope * scenter))
+            sscale = 1.0 / (1 + exp(sslope * (scenter - 1))) - soffset
+
+        wclip, curve = depth(clip, 32) if sigmoid else clip, Transfer.from_video(clip)
+
+        convert_csp = (Matrix.from_transfer(curve), wclip.format)
+
+        if wclip.format and wclip.format.color_family is vs.YUV:
+            wclip = (self if isinstance(self, Kernel) else Catrom).resample(wclip, vs.RGBS, None, convert_csp[0])
+
+        wclip = Point.scale_function(wclip, transfer_in=curve, transfer=Transfer.LINEAR)
+
+        if sigmoid:
+            wclip = wclip.std.Expr(f'{scenter} 1 x {sscale} * {soffset} + / 1 - log {sslope} / - 0 max 1 min')
+
+        scaled = super().scale(wclip, width, height, shift, **kwargs)
+
+        if sigmoid:
+            scaled = scaled.std.Expr(f'1 1 {sslope} {scenter} x - * exp + / {soffset} - {sscale} / 0 max 1 min')
+
+        scaled = Point.resample(scaled, convert_csp[1], convert_csp[0], transfer_in=Transfer.LINEAR, transfer=curve)
+
+        print('linear')
+
+        return depth(scaled, clip)
+
+
+class _KeepArScaler(Scaler):
     def _handle_crop_resize_kwargs(  # type: ignore[override]
         self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (0, 0),
         **kwargs: Any
@@ -395,7 +456,7 @@ class ComplexScaler(Scaler):
     @inject_self.cached
     def scale(  # type: ignore[override]
         self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (0, 0),
-        keep_ar: bool = False, **kwargs: Any
+        *, keep_ar: bool = False, **kwargs: Any
     ) -> vs.VideoNode:
         if keep_ar:
             kwargs, shift, sar = self._handle_crop_resize_kwargs(clip, width, height, shift, **kwargs)
@@ -408,6 +469,17 @@ class ComplexScaler(Scaler):
             clip = sar.apply(clip)
 
         return clip
+
+
+class ComplexScaler(LinearScaler, _KeepArScaler):
+    if TYPE_CHECKING:
+        @inject_self.cached
+        def scale(  # type: ignore[override]
+            self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (0, 0),
+            *, keep_ar: bool = False, linear: bool = False, sigmoid: bool | tuple[float, float] = False,
+            **kwargs: Any
+        ) -> vs.VideoNode:
+            ...
 
 
 ComplexScalerT = Union[str, type[ComplexScaler], ComplexScaler]
