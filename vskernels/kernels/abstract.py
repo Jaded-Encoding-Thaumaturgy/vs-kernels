@@ -352,6 +352,8 @@ class Kernel(Scaler, Descaler, Resampler):
 
 
 class LinearScaler(Scaler):
+    orig_kwargs = {}
+
     def __init__(self, **kwargs: Any) -> None:
         self.orig_kwargs = kwargs
         self.kwargs = {k: v for k, v in kwargs.items() if k not in ('linear', 'sigmoid')}
@@ -366,13 +368,13 @@ class LinearScaler(Scaler):
         sigmoid = self.orig_kwargs.get('sigmoid', sigmoid)
         linear = self.orig_kwargs.get('linear', False) or linear or not not sigmoid
 
-        if not linear:
+        if not linear and not hasattr(self, '_linear_scale'):
             return super().scale(clip, width, height, shift, **kwargs)
 
-        if sigmoid is True:
-            sigmoid = (6.5, 0.75)
-
         if sigmoid:
+            if sigmoid is True:
+                sigmoid = (6.5, 0.75)
+
             sslope, scenter = sigmoid
 
             if 1.0 > sslope or sslope > 20.0:
@@ -384,28 +386,33 @@ class LinearScaler(Scaler):
             soffset = 1.0 / (1 + exp(sslope * scenter))
             sscale = 1.0 / (1 + exp(sslope * (scenter - 1))) - soffset
 
+        assert (fmt := clip.format)
+
         wclip, curve = depth(clip, 32) if sigmoid else clip, Transfer.from_video(clip)
 
-        convert_csp = (Matrix.from_transfer(curve), wclip.format)
+        matrix = Matrix.from_transfer(curve)
 
-        if wclip.format and wclip.format.color_family is vs.YUV:
-            wclip = (self if isinstance(self, Kernel) else Catrom).resample(wclip, vs.RGBS, None, convert_csp[0])
+        if wclip.format.color_family is vs.YUV:
+            wclip = (self if isinstance(self, Kernel) else Catrom).resample(wclip, vs.RGBS, None, matrix)
 
-        wclip = Point.scale_function(wclip, transfer_in=curve, transfer=Transfer.LINEAR)
+        if linear:
+            wclip = Point.scale_function(wclip, transfer_in=curve, transfer=Transfer.LINEAR)
 
         if sigmoid:
             wclip = wclip.std.Expr(f'{scenter} 1 x {sscale} * {soffset} + / 1 - log {sslope} / - 0 max 1 min')
 
-        scaled = super().scale(wclip, width, height, shift, **kwargs)
+        if hasattr(self, '_linear_scale'):
+            scaled = self._linear_scale(wclip, width, height, shift, **kwargs)
+        else:
+            scaled = super().scale(wclip, width, height, shift, **kwargs)
 
         if sigmoid:
             scaled = scaled.std.Expr(f'1 1 {sslope} {scenter} x - * exp + / {soffset} - {sscale} / 0 max 1 min')
 
-        scaled = Point.resample(scaled, convert_csp[1], convert_csp[0], transfer_in=Transfer.LINEAR, transfer=curve)
+        if linear:
+            scaled = Point.scale_function(scaled, transfer_in=Transfer.LINEAR, transfer=curve)
 
-        print('linear')
-
-        return depth(scaled, clip)
+        return Point.resample(scaled, fmt, matrix)
 
 
 class _KeepArScaler(Scaler):
