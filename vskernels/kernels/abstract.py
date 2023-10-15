@@ -16,7 +16,10 @@ __all__ = [
     'Resampler', 'ResamplerT',
     'Kernel', 'KernelT',
 
-    'ComplexScaler', 'LinearScaler'
+    'ComplexScaler',
+    'ComplexKernel',
+
+    'LinearScaler'
 ]
 
 
@@ -350,32 +353,59 @@ class Kernel(Scaler, Descaler, Resampler):
         )
 
 
-class LinearScaler(Scaler):
+class _BaseLinearOperation:
     orig_kwargs = {}
 
     def __init__(self, **kwargs: Any) -> None:
         self.orig_kwargs = kwargs
         self.kwargs = {k: v for k, v in kwargs.items() if k not in ('linear', 'sigmoid')}
 
-    @inject_self.cached
-    def scale(  # type: ignore[override]
-        self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (0, 0),
-        *, linear: bool = False, sigmoid: bool | tuple[float, float] = False, **kwargs: Any
-    ) -> vs.VideoNode:
-        from ..util import LinearLight
+    @staticmethod
+    def _linear_op(op_name: str) -> Any:
+        def func(
+            self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (0, 0),
+            *, linear: bool = False, sigmoid: bool | tuple[float, float] = False, **kwargs: Any
+        ) -> vs.VideoNode:
+            from ..util import LinearLight
 
-        has_custom_scaler = hasattr(self, '_linear_scale')
-        scaler = self._linear_scale if has_custom_scaler else super().scale
-        sigmoid = self.orig_kwargs.get('sigmoid', sigmoid)
-        linear = self.orig_kwargs.get('linear', False) or linear or not not sigmoid
+            has_custom_op = hasattr(self, f'_linear_{op_name}')
+            operation = getattr(self, f'_linear_{op_name}') if has_custom_op else super().scale
+            sigmoid = self.orig_kwargs.get('sigmoid', sigmoid)
+            linear = self.orig_kwargs.get('linear', False) or linear or not not sigmoid
 
-        if not linear and not has_custom_scaler:
-            return scaler(clip, width, height, shift, **kwargs)
+            if not linear and not has_custom_op:
+                return operation(clip, width, height, shift, **kwargs)
 
-        with LinearLight(clip, linear, sigmoid, self) as ll:
-            ll.linear = scaler(ll.linear, width, height, shift, **kwargs)
+            with LinearLight(clip, linear, sigmoid, self) as ll:
+                ll.linear = operation(ll.linear, width, height, shift, **kwargs)
 
-        return ll.out
+            return ll.out
+
+        return func
+
+
+class LinearScaler(_BaseLinearOperation, Scaler):
+    if TYPE_CHECKING:
+        @inject_self.cached
+        def scale(  # type: ignore[override]
+            self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (0, 0),
+            *, linear: bool = False, sigmoid: bool | tuple[float, float] = False, **kwargs: Any
+        ) -> vs.VideoNode:
+            ...
+    else:
+        scale = _BaseLinearOperation._linear_op('scale')
+
+
+class LinearDescaler(_BaseLinearOperation, Descaler):
+    if TYPE_CHECKING:
+        @inject_self.cached
+        def descale(  # type: ignore[override]
+            self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (0, 0),
+            *, linear: bool = False, sigmoid: bool | tuple[float, float] = False, **kwargs: Any
+        ) -> vs.VideoNode:
+            ...
+    else:
+        descale = _BaseLinearOperation._linear_op('descale')
 
 
 class _KeepArScaler(Scaler):
@@ -452,8 +482,14 @@ class ComplexScaler(LinearScaler, _KeepArScaler):
             ...
 
 
-ComplexScalerT = Union[str, type[ComplexScaler], ComplexScaler]
+class ComplexKernel(Kernel, LinearDescaler, ComplexScaler):
+    ...
+
+
 ScalerT = Union[str, type[Scaler], Scaler]
 DescalerT = Union[str, type[Descaler], Descaler]
 ResamplerT = Union[str, type[Resampler], Resampler]
 KernelT = Union[str, type[Kernel], Kernel]
+
+ComplexScalerT = Union[str, type[ComplexScaler], ComplexScaler]
+ComplexKernelT = Union[str, type[ComplexKernel], ComplexKernel]

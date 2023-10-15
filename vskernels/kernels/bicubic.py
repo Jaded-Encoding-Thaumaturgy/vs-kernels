@@ -5,7 +5,7 @@ from typing import Any
 
 from vstools import CustomValueError, core, vs
 
-from .abstract import ComplexScaler, Kernel
+from .abstract import ComplexKernel, Kernel
 
 __all__ = [
     'Bicubic',
@@ -26,7 +26,7 @@ __all__ = [
 ]
 
 
-class Bicubic(Kernel, ComplexScaler):
+class Bicubic(ComplexKernel):
     """
     Built-in bicubic resizer.
 

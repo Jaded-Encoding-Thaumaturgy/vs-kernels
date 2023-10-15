@@ -4,7 +4,7 @@ from typing import Any
 
 from vstools import core, vs
 
-from .abstract import Kernel, ComplexScaler
+from .abstract import ComplexKernel
 
 __all__ = [
     'Point',
@@ -13,20 +13,20 @@ __all__ = [
 ]
 
 
-class Point(Kernel, ComplexScaler):
+class Point(ComplexKernel):
     """Built-in point resizer."""
 
     scale_function = resample_function = descale_function = core.lazy.resize.Point
 
 
-class Bilinear(Kernel, ComplexScaler):
+class Bilinear(ComplexKernel):
     """Built-in bilinear resizer."""
 
     scale_function = resample_function = core.lazy.resize.Bilinear
     descale_function = core.lazy.descale.Debilinear
 
 
-class Lanczos(Kernel, ComplexScaler):
+class Lanczos(ComplexKernel):
     """
     Built-in lanczos resizer.
 
