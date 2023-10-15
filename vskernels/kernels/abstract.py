@@ -1,12 +1,11 @@
 from __future__ import annotations
 
-from math import ceil, exp
-from typing import Any, Sequence, Union, cast, overload, TYPE_CHECKING
+from math import ceil
+from typing import TYPE_CHECKING, Any, Sequence, Union, cast, overload
 
 from vstools import (
-    CustomValueError, FuncExceptT, GenericVSFunction, HoldsVideoFormatT, KwargsT, Matrix, MatrixT, T, Resolution,
-    VideoFormatT, check_variable_resolution, core, get_subclasses, get_video_format, inject_self, vs, vs_object, Sar,
-    Transfer, depth
+    CustomValueError, FuncExceptT, GenericVSFunction, HoldsVideoFormatT, KwargsT, Matrix, MatrixT, Resolution, Sar, T,
+    VideoFormatT, check_variable_resolution, core, get_subclasses, get_video_format, inject_self, vs, vs_object
 )
 
 from ..exceptions import UnknownDescalerError, UnknownKernelError, UnknownScalerError
@@ -363,56 +362,20 @@ class LinearScaler(Scaler):
         self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (0, 0),
         *, linear: bool = False, sigmoid: bool | tuple[float, float] = False, **kwargs: Any
     ) -> vs.VideoNode:
-        from ..kernels import Point, Catrom
+        from ..util import LinearLight
 
+        has_custom_scaler = hasattr(self, '_linear_scale')
+        scaler = self._linear_scale if has_custom_scaler else super().scale
         sigmoid = self.orig_kwargs.get('sigmoid', sigmoid)
         linear = self.orig_kwargs.get('linear', False) or linear or not not sigmoid
 
-        if not linear and not hasattr(self, '_linear_scale'):
-            return super().scale(clip, width, height, shift, **kwargs)
+        if not linear and not has_custom_scaler:
+            return scaler(clip, width, height, shift, **kwargs)
 
-        if sigmoid:
-            if sigmoid is True:
-                sigmoid = (6.5, 0.75)
+        with LinearLight(clip, linear, sigmoid, self) as ll:
+            ll.linear = scaler(ll.linear, width, height, shift, **kwargs)
 
-            sslope, scenter = sigmoid
-
-            if 1.0 > sslope or sslope > 20.0:
-                raise CustomValueError('sigmoid slope has to be in range 1.0-20.0 (inclusive).', self.__class__)
-
-            if 0.0 > scenter or scenter > 1.0:
-                raise CustomValueError('sigmoid center has to be in range 0.0-1.0 (inclusive).', self.__class__)
-
-            soffset = 1.0 / (1 + exp(sslope * scenter))
-            sscale = 1.0 / (1 + exp(sslope * (scenter - 1))) - soffset
-
-        assert (fmt := clip.format)
-
-        wclip, curve = depth(clip, 32) if sigmoid else clip, Transfer.from_video(clip)
-
-        matrix = Matrix.from_transfer(curve)
-
-        if wclip.format.color_family is vs.YUV:
-            wclip = (self if isinstance(self, Kernel) else Catrom).resample(wclip, vs.RGBS, None, matrix)
-
-        if linear:
-            wclip = Point.scale_function(wclip, transfer_in=curve, transfer=Transfer.LINEAR)
-
-        if sigmoid:
-            wclip = wclip.std.Expr(f'{scenter} 1 x {sscale} * {soffset} + / 1 - log {sslope} / - 0 max 1 min')
-
-        if hasattr(self, '_linear_scale'):
-            scaled = self._linear_scale(wclip, width, height, shift, **kwargs)
-        else:
-            scaled = super().scale(wclip, width, height, shift, **kwargs)
-
-        if sigmoid:
-            scaled = scaled.std.Expr(f'1 1 {sslope} {scenter} x - * exp + / {soffset} - {sscale} / 0 max 1 min')
-
-        if linear:
-            scaled = Point.scale_function(scaled, transfer_in=Transfer.LINEAR, transfer=curve)
-
-        return Point.resample(scaled, fmt, matrix)
+        return ll.out
 
 
 class _KeepArScaler(Scaler):
