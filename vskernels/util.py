@@ -115,9 +115,10 @@ class LinearLight:
 
         @cachedproperty
         def linear(self) -> vs.VideoNode:
+            wclip = self.ll._wclip
 
             if self.ll._wclip.format.color_family is vs.YUV:
-                wclip = Catrom.from_param(self.ll.kernel).resample(self.ll._wclip, vs.RGBS, None, self.ll._matrix)
+                wclip = Catrom.from_param(self.ll.kernel).resample(wclip, vs.RGBS, None, self.ll._matrix)
 
             if self.ll.linear:
                 wclip = Point.scale_function(wclip, transfer_in=self.ll._curve, transfer=Transfer.LINEAR)
@@ -164,16 +165,16 @@ class LinearLight:
             if self.sigmoid is True:
                 self.sigmoid = (6.5, 0.75)
 
-            sslope, scenter = self.sigmoid
+            self._sslope, self._scenter = self.sigmoid
 
-            if 1.0 > sslope or sslope > 20.0:
+            if 1.0 > self._sslope or self._sslope > 20.0:
                 raise CustomValueError('sigmoid slope has to be in range 1.0-20.0 (inclusive).', self.__class__)
 
-            if 0.0 > scenter or scenter > 1.0:
+            if 0.0 > self._scenter or self._scenter > 1.0:
                 raise CustomValueError('sigmoid center has to be in range 0.0-1.0 (inclusive).', self.__class__)
 
-            self._soffset = 1.0 / (1 + exp(sslope * scenter))
-            self._sscale = 1.0 / (1 + exp(sslope * (scenter - 1))) - self._soffset
+            self._soffset = 1.0 / (1 + exp(self._sslope * self._scenter))
+            self._sscale = 1.0 / (1 + exp(self._sslope * (self._scenter - 1))) - self._soffset
 
         self._fmt = self.clip.format
         assert self._fmt

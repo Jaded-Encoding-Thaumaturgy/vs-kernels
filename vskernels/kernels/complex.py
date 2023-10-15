@@ -32,7 +32,7 @@ class _BaseLinearOperation:
             from ..util import LinearLight
 
             has_custom_op = hasattr(self, f'_linear_{op_name}')
-            operation = getattr(self, f'_linear_{op_name}') if has_custom_op else super().scale  # type: ignore
+            operation = getattr(self, f'_linear_{op_name}') if has_custom_op else getattr(super(), op_name)
             sigmoid = self.orig_kwargs.get('sigmoid', sigmoid)
             linear = self.orig_kwargs.get('linear', False) or linear or not not sigmoid
 
@@ -56,7 +56,7 @@ class LinearScaler(_BaseLinearOperation, Scaler):
         ) -> vs.VideoNode:
             ...
     else:
-        scale = _BaseLinearOperation._linear_op('scale')
+        scale = inject_self.cached(_BaseLinearOperation._linear_op('scale'))
 
 
 class LinearDescaler(_BaseLinearOperation, Descaler):
@@ -68,7 +68,7 @@ class LinearDescaler(_BaseLinearOperation, Descaler):
         ) -> vs.VideoNode:
             ...
     else:
-        descale = _BaseLinearOperation._linear_op('descale')
+        descale = inject_self.cached(_BaseLinearOperation._linear_op('descale'))
 
 
 class KeepArScaler(Scaler):
