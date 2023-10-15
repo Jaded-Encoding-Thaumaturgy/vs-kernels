@@ -4,7 +4,7 @@ from typing import Any, Callable, overload
 
 from vstools import VideoFormatT, VSFunction, core, inject_self, vs
 
-from .abstract import ComplexScaler
+from .complex import ComplexScaler
 from .bicubic import Bicubic
 
 __all__ = [

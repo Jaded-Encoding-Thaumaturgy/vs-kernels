@@ -4,7 +4,7 @@ from typing import Any
 
 from vstools import core
 
-from .abstract import ComplexKernel
+from .complex import ComplexKernel
 from .fmtconv import FmtConv
 
 __all__ = [
