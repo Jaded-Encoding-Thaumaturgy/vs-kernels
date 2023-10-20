@@ -78,12 +78,12 @@ class EwaBicubic(Placebo):
 class EwaLanczos(Placebo):
     _kernel = 'ewa_lanczos'
 
-    def __init__(self, taps: int = 3.2383154841662362076499, **kwargs: Any) -> None:
+    def __init__(self, taps: float = 3.2383154841662362076499, **kwargs: Any) -> None:
         super().__init__(taps, None, None, **kwargs)
 
 
 class EwaJinc(EwaLanczos):
-    def __init__(self, taps: int = 3.2383154841662362076499, **kwargs: Any) -> None:
+    def __init__(self, taps: float = 3.2383154841662362076499, **kwargs: Any) -> None:
         print(DeprecationWarning('EwaJinc is deprecated! Switch over to EwaLanczos.'))
 
         super().__init__(taps, None, None, **kwargs)
@@ -92,21 +92,21 @@ class EwaJinc(EwaLanczos):
 class EwaGinseng(Placebo):
     _kernel = 'ewa_ginseng'
 
-    def __init__(self, taps: int = 3.2383154841662362076499, **kwargs: Any) -> None:
+    def __init__(self, taps: float = 3.2383154841662362076499, **kwargs: Any) -> None:
         super().__init__(taps, None, None, **kwargs)
 
 
 class EwaHann(Placebo):
     _kernel = 'ewa_hann'
 
-    def __init__(self, taps: int = 3.2383154841662362076499, **kwargs: Any) -> None:
+    def __init__(self, taps: float = 3.2383154841662362076499, **kwargs: Any) -> None:
         super().__init__(taps, None, None, **kwargs)
 
 
 class EwaHannSoft(Placebo):
     _kernel = 'haasnsoft'
 
-    def __init__(self, taps: int = 3.2383154841662362076499, **kwargs: Any) -> None:
+    def __init__(self, taps: float = 3.2383154841662362076499, **kwargs: Any) -> None:
         super().__init__(taps, None, None, **kwargs)
 
 
