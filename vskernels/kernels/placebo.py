@@ -4,14 +4,14 @@ from typing import Any
 
 from vstools import Transfer, core, vs
 
-from .abstract import Scaler
+from .complex import LinearScaler
 
 __all__ = [
     'Placebo'
 ]
 
 
-class Placebo(Scaler):
+class Placebo(LinearScaler):
     _kernel: str
     """Name of the placebo kernel"""
 
