@@ -5,7 +5,6 @@ from typing import Any
 
 from vstools import CustomValueError, core, vs
 
-from .abstract import Kernel
 from .complex import ComplexKernel
 
 __all__ = [
@@ -200,7 +199,7 @@ class BicubicZoptiNeutral(Bicubic):
         super().__init__(b=-0.6, c=0.3, **kwargs)
 
 
-class BicubicAuto(Kernel):
+class BicubicAuto(ComplexKernel):
     """
     Kernel that follows the rule of:
     b + 2c = target for upsizing
