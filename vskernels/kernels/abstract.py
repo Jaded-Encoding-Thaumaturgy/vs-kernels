@@ -4,8 +4,8 @@ from math import ceil
 from typing import Any, Sequence, Union, cast, overload
 
 from vstools import (
-    CustomValueError, FuncExceptT, GenericVSFunction, HoldsVideoFormatT, Matrix, MatrixT, T,
-    VideoFormatT, check_variable_resolution, core, get_subclasses, get_video_format, inject_self, vs, vs_object
+    CustomIndexError, CustomValueError, FieldBased, FuncExceptT, GenericVSFunction, HoldsVideoFormatT, Matrix, MatrixT,
+    T, VideoFormatT, check_variable_resolution, core, get_subclasses, get_video_format, inject_self, vs, vs_object
 )
 
 from ..exceptions import UnknownDescalerError, UnknownKernelError, UnknownScalerError
@@ -124,6 +124,25 @@ class Descaler(vs_object):
     def descale(  # type: ignore[override]
         self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (0, 0), **kwargs: Any
     ) -> vs.VideoNode:
+        field_based = FieldBased.from_video(clip)
+
+        if field_based.is_inter:
+            if height % 2:
+                raise CustomIndexError('You can\'t descale to odd resolution when crossconverted!', self.descale)
+
+            de_kwargs = self.get_descale_args(clip, shift, width, height // 2, **kwargs)
+
+            top_shift, field_shift = de_kwargs.get('src_top'), 0.125 * height / clip.height
+
+            fields = clip.std.SeparateFields(field_based.is_tff)
+
+            interleaved = core.std.Interleave([
+                self.descale_function(fields[offset::2], **(de_kwargs | dict(src_top=top_shift + (field_shift * mult))))
+                for offset, mult in [(0, 1), (1, -1)]
+            ])
+
+            return interleaved.std.DoubleWeave(field_based.is_tff)[::2]
+
         return self.descale_function(clip, **self.get_descale_args(clip, shift, width, height, **kwargs))
 
     @classmethod
