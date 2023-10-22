@@ -11,7 +11,6 @@ __all__ = [
     'BlackManMinLobe',
     'Sinc',
     'Gaussian',
-    'NearestNeighbour',
     'EwaBicubic',
     'EwaJinc',
     'EwaLanczos',
@@ -54,13 +53,6 @@ class Gaussian(FmtConv):
 
     def __init__(self, curve: float = 30, taps: int = 2, **kwargs: Any) -> None:
         super().__init__(taps, a1=curve, **kwargs)
-
-
-class NearestNeighbour(Gaussian):
-    """Nearest Neighbour kernel."""
-
-    def __init__(self, **kwargs: Any) -> None:
-        super().__init__(100, **kwargs)
 
 
 class EwaBicubic(Placebo):
