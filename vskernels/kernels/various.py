@@ -66,6 +66,13 @@ class EwaBicubic(Placebo):
         super().__init__(radius, b, c, **kwargs)
 
 
+class EwaJinc(Placebo):
+    _kernel = 'ewa_jinc'
+
+    def __init__(self, taps: float = 3.2383154841662362076499, **kwargs: Any) -> None:
+        super().__init__(taps, None, None, **kwargs)
+
+
 class EwaLanczos(Placebo):
     _kernel = 'ewa_lanczos'
 
