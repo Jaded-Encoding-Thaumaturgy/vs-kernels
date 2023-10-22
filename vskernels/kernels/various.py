@@ -12,6 +12,7 @@ __all__ = [
     'Sinc',
     'Gaussian',
     'EwaBicubic',
+    'EwaJinc',
     'EwaLanczos',
     'EwaGinseng',
     'EwaHann',
