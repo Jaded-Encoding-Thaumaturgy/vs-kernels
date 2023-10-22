@@ -52,8 +52,8 @@ class Gaussian(FmtConv):
 
     _kernel = 'gaussian'
 
-    def __init__(self, curve: int = 30, **kwargs: Any) -> None:
-        super().__init__(a1=curve, **kwargs)
+    def __init__(self, curve: float = 30, taps: int = 2, **kwargs: Any) -> None:
+        super().__init__(taps, a1=curve, **kwargs)
 
 
 class NearestNeighbour(Gaussian):
