@@ -82,10 +82,10 @@ class EwaLanczos(Placebo):
         super().__init__(taps, None, None, **kwargs)
 
 
-class EwaJinc(EwaLanczos):
-    def __init__(self, taps: float = 3.2383154841662362076499, **kwargs: Any) -> None:
-        print(DeprecationWarning('EwaJinc is deprecated! Switch over to EwaLanczos.'))
+class EwaJinc(Placebo):
+    _kernel = 'ewa_jinc'
 
+    def __init__(self, taps: float = 3.2383154841662362076499, **kwargs: Any) -> None:
         super().__init__(taps, None, None, **kwargs)
 
 
