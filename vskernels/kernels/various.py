@@ -11,9 +11,7 @@ __all__ = [
     'BlackManMinLobe',
     'Sinc',
     'Gaussian',
-    'NearestNeighbour',
     'EwaBicubic',
-    'EwaJinc',
     'EwaLanczos',
     'EwaGinseng',
     'EwaHann',
@@ -52,22 +50,15 @@ class Gaussian(FmtConv):
 
     _kernel = 'gaussian'
 
-    def __init__(self, curve: int = 30, **kwargs: Any) -> None:
+    def __init__(self, curve: float = 30, **kwargs: Any) -> None:
         super().__init__(a1=curve, **kwargs)
-
-
-class NearestNeighbour(Gaussian):
-    """Nearest Neighbour kernel."""
-
-    def __init__(self, **kwargs: Any) -> None:
-        super().__init__(100, **kwargs)
 
 
 class EwaBicubic(Placebo):
     _kernel = 'ewa_robidoux'
 
     def __init__(self, b: float = 0.0, c: float = 0.5, radius: int | None = None, **kwargs: Any) -> None:
-        radius = kwargs.pop('taps', None)
+        radius = kwargs.pop('taps', radius)
 
         if radius is None:
             radius = 1 if (b, c) == (0, 0) else 2
@@ -79,13 +70,6 @@ class EwaLanczos(Placebo):
     _kernel = 'ewa_lanczos'
 
     def __init__(self, taps: float = 3.2383154841662362076499, **kwargs: Any) -> None:
-        super().__init__(taps, None, None, **kwargs)
-
-
-class EwaJinc(EwaLanczos):
-    def __init__(self, taps: float = 3.2383154841662362076499, **kwargs: Any) -> None:
-        print(DeprecationWarning('EwaJinc is deprecated! Switch over to EwaLanczos.'))
-
         super().__init__(taps, None, None, **kwargs)
 
 
