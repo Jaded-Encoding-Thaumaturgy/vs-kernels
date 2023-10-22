@@ -12,10 +12,6 @@ __all__ = [
     'Spline16',
     'Spline36',
     'Spline64',
-    'Spline100',
-    'Spline144',
-    'Spline196',
-    'Spline256',
 ]
 
 
@@ -65,31 +61,3 @@ class Spline64(ComplexKernel):
 
     scale_function = resample_function = core.lazy.resize.Spline64
     descale_function = core.lazy.descale.Despline64
-
-
-class Spline100(Spline):
-    """fmtconv's spline kernel with taps=5."""
-
-    def __init__(self, **kwargs: Any) -> None:
-        super().__init__(taps=5, **kwargs)
-
-
-class Spline144(Spline):
-    """fmtconv's spline kernel with taps=6."""
-
-    def __init__(self, **kwargs: Any) -> None:
-        super().__init__(taps=6, **kwargs)
-
-
-class Spline196(Spline):
-    """fmtconv's spline kernel with taps=7."""
-
-    def __init__(self, **kwargs: Any) -> None:
-        super().__init__(taps=7, **kwargs)
-
-
-class Spline256(Spline):
-    """fmtconv's spline kernel with taps=8."""
-
-    def __init__(self, **kwargs: Any) -> None:
-        super().__init__(taps=8, **kwargs)
