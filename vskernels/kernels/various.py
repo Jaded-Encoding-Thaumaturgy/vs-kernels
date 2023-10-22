@@ -67,7 +67,7 @@ class EwaBicubic(Placebo):
     _kernel = 'ewa_robidoux'
 
     def __init__(self, b: float = 0.0, c: float = 0.5, radius: int | None = None, **kwargs: Any) -> None:
-        radius = kwargs.pop('taps', None)
+        radius = kwargs.pop('taps', radius)
 
         if radius is None:
             radius = 1 if (b, c) == (0, 0) else 2
