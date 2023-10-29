@@ -1,6 +1,6 @@
 """Kernel objects for scaling and format conversion within VapourSynth"""
 
-__version__ = '2.4.1'
+__version__ = '3.0.0'
 
 __author_name__, __author_email__ = 'LightArrowsEXE', 'LightArrowsReboot@gmail.com'
 __maintainer_name__, __maintainer_email__ = 'Setsugen no ao', 'setsugen@setsugen.dev'
