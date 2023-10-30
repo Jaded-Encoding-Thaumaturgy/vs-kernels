@@ -24,8 +24,9 @@ An example of catching an import exception:
     try:
         from vskernels import Kernel, get_kernel
     except ModuleNotFoundError:
-        raise ModuleNotFoundError("Could not import vs-kernels! Please download here: "
-                                  "https://github.com/Irrational-Encoding-Wizardry/vs-kernels")
+        raise ModuleNotFoundError(
+            "Could not import vs-kernels! Please download it here: ""https://github.com/Jaded-Encoding-Thaumaturgy/vs-kernels"
+        )
 
 This will prompt the user to install vs-kernels
 if they don't have it already.
