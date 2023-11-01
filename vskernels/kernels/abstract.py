@@ -5,7 +5,8 @@ from typing import Any, Sequence, Union, cast, overload
 
 from vstools import (
     CustomIndexError, CustomValueError, FieldBased, FuncExceptT, GenericVSFunction, HoldsVideoFormatT, Matrix, MatrixT,
-    T, VideoFormatT, check_variable_resolution, core, get_subclasses, get_video_format, inject_self, vs, vs_object
+    T, VideoFormatT, check_correct_subsampling, check_variable_resolution, core, get_subclasses, get_video_format,
+    inject_self, vs, vs_object
 )
 
 from ..exceptions import UnknownDescalerError, UnknownKernelError, UnknownScalerError
@@ -89,6 +90,7 @@ class Scaler(vs_object):
     def scale(  # type: ignore[override]
         self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (0, 0), **kwargs: Any
     ) -> vs.VideoNode:
+        check_correct_subsampling(clip, width, height)
         return self.scale_function(clip, **self.get_scale_args(clip, shift, width, height, **kwargs))
 
     @classmethod
@@ -124,6 +126,8 @@ class Descaler(vs_object):
     def descale(  # type: ignore[override]
         self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (0, 0), **kwargs: Any
     ) -> vs.VideoNode:
+        check_correct_subsampling(clip, width, height)
+
         field_based = FieldBased.from_video(clip)
 
         if field_based.is_inter:

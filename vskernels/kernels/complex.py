@@ -123,6 +123,7 @@ class KeepArScaler(Scaler):
     ) -> vs.VideoNode:
         if keep_ar:
             kwargs, shift, sar = self._handle_crop_resize_kwargs(clip, width, height, shift, **kwargs)
+        check_correct_subsampling(clip, width, height)
 
         kwargs = self.get_scale_args(clip, shift, width, height, **kwargs)
 
