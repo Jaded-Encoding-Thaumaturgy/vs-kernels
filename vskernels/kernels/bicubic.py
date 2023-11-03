@@ -202,8 +202,7 @@ class BicubicZoptiNeutral(Bicubic):
 class BicubicAuto(ComplexKernel):
     """
     Kernel that follows the rule of:
-    b + 2c = target for upsizing
-    b + 2c = target - 1 for downsizing
+    b + 2c = target
     """
 
     scale_function = resample_function = core.lazy.resize.Bicubic
@@ -224,24 +223,19 @@ class BicubicAuto(ComplexKernel):
     ) -> dict[str, Any]:
         args = super().get_params_args(is_descale, clip, width, height, **kwargs)
 
-        if width and height:
-            b, c = self._get_bc_args((width * height) > (clip.width * clip.height))
-        else:
-            b, c = self._get_bc_args()
+        b, c = self._get_bc_args()
 
         if is_descale:
             return args | dict(b=b, c=c)
         return args | dict(filter_param_a=b, filter_param_b=c)
 
-    def _get_bc_args(self, upsize: bool = True) -> tuple[float, float]:
+    def _get_bc_args(self) -> tuple[float, float]:
         autob = 0.0 if self.b is None else self.b
         autoc = 0.5 if self.c is None else self.c
 
-        target = self.target - int(not upsize)
-
         if self.c is not None and self.b is None:
-            autob = target - 2 * self.c
+            autob = self.target - 2 * self.c
         elif self.c is None and self.b is not None:
-            autoc = (target - self.b) / 2
+            autoc = (self.target - self.b) / 2
 
         return autob, autoc
