@@ -26,6 +26,13 @@ __all__ = [
 ]
 
 
+def _meme_preset_warning(self: any):
+    print(DeprecationWarning(
+        f"{self.__class__.__name__} and other meme Bicubic presets are deprecated!\n"
+        "They will be removed in the next major update."
+    ))
+
+
 class Bicubic(ComplexKernel):
     """
     Built-in bicubic resizer.
@@ -134,6 +141,7 @@ class BicubicDidee(Bicubic):
     """
 
     def __init__(self, **kwargs: Any) -> None:
+        _meme_preset_warning(self)
         super().__init__(b=-1 / 2, c=1 / 4, **kwargs)
 
 
@@ -150,6 +158,7 @@ class SetsuCubic(Bicubic):
     """
 
     def __init__(self, strength: float = 100.0, **kwargs: Any) -> None:
+        _meme_preset_warning(self)
         super().__init__(
             asinh(.5) * acos(.5) * -abs(cos(strength * 4)),
             abs(asinh(.5) * acos(-.5) * cos((strength * 4) + strength / 2)),
@@ -167,6 +176,7 @@ class ZewiaCubic(Bicubic):
     """
 
     def __init__(self, **kwargs: Any) -> None:
+        _meme_preset_warning(self)
         super().__init__(b=-1 / 3, c=1 / 6, **kwargs)
 
 
@@ -182,6 +192,7 @@ class BicubicZopti(Bicubic):
     """
 
     def __init__(self, **kwargs: Any) -> None:
+        _meme_preset_warning(self)
         super().__init__(b=-0.6, c=0.4, **kwargs)
 
 
@@ -196,6 +207,7 @@ class BicubicZoptiNeutral(Bicubic):
     """
 
     def __init__(self, **kwargs: Any) -> None:
+        _meme_preset_warning(self)
         super().__init__(b=-0.6, c=0.3, **kwargs)
 
 
