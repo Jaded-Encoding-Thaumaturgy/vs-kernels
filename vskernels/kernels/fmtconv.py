@@ -4,6 +4,7 @@ from typing import Any, Callable, overload
 
 from vstools import VideoFormatT, VSFunction, core, inject_self, vs
 
+from .abstract import Resampler
 from .complex import ComplexScaler
 from .bicubic import Bicubic
 
@@ -15,7 +16,7 @@ __all__ = [
 call_wrapT = Callable[..., VSFunction]
 
 
-class FmtConv(ComplexScaler):
+class FmtConv(Resampler, ComplexScaler):
     """
     Abstract fmtconv's resizer.
 
