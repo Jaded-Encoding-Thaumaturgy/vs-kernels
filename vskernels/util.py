@@ -111,6 +111,8 @@ class LinearLight:
 
     kernel: KernelT = Catrom
 
+    out_fmt: vs.VideoFormat | None = None
+
     @dataclass
     class LinearLightProcessing(cachedproperty.baseclass):
         ll: LinearLight
@@ -120,7 +122,7 @@ class LinearLight:
             wclip = self.ll._wclip
 
             if self.ll._wclip.format.color_family is vs.YUV:
-                wclip = Catrom.from_param(self.ll.kernel).resample(wclip, vs.RGBS, None, self.ll._matrix)
+                wclip = self.ll._kernel.resample(wclip, vs.RGBS, None, self.ll._matrix)
 
             if self.ll.linear:
                 wclip = Point.scale_function(wclip, transfer_in=self.ll._curve, transfer=Transfer.LINEAR)
@@ -158,7 +160,7 @@ class LinearLight:
             if self.ll.linear:
                 processed = Point.scale_function(processed, transfer_in=Transfer.LINEAR, transfer=self.ll._curve)
 
-            return Point.resample(processed, self.ll._fmt, self.ll._matrix)
+            return resample_to(processed, self.ll._fmt, self.ll._matrix, self.ll._kernel)
 
     def __enter__(self) -> LinearLightProcessing:
         self.linear = self.linear or not not self.sigmoid
@@ -178,12 +180,13 @@ class LinearLight:
             self._soffset = 1.0 / (1 + exp(self._sslope * self._scenter))
             self._sscale = 1.0 / (1 + exp(self._sslope * (self._scenter - 1))) - self._soffset
 
-        self._fmt = self.clip.format
+        self._fmt = self.out_fmt or self.clip.format
         assert self._fmt
 
         self._wclip = depth(self.clip, 32) if self.sigmoid else self.clip
         self._curve = Transfer.from_video(self.clip)
         self._matrix = Matrix.from_transfer(self._curve)
+        self._kernel = Catrom.from_param(self.kernel)
 
         self._exited = False
 
