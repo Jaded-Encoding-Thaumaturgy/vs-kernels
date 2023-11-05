@@ -123,6 +123,8 @@ class LinearLight:
 
             if self.ll._wclip.format.color_family is vs.YUV:
                 wclip = self.ll._kernel.resample(wclip, vs.RGBS, None, self.ll._matrix)
+            else:
+                wclip = depth(wclip, 32)
 
             if self.ll.linear:
                 wclip = Point.scale_function(wclip, transfer_in=self.ll._curve, transfer=Transfer.LINEAR)
@@ -186,7 +188,7 @@ class LinearLight:
         self._wclip = depth(self.clip, 32) if self.sigmoid else self.clip
         self._curve = Transfer.from_video(self.clip)
         self._matrix = Matrix.from_transfer(self._curve)
-        self._kernel = Catrom.from_param(self.kernel)
+        self._kernel = Catrom.ensure_obj(self.kernel)
 
         self._exited = False
 
