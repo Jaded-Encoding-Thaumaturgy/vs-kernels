@@ -40,7 +40,7 @@ class FmtConv(Resampler, ComplexScaler):
         in_fmt = clip.format
         out_fmt = None
 
-        csp = kwargs.get('csp', None)
+        csp = kwargs.get('csp', kwargs.get('format', None))
         bits = kwargs.get('bits', None)
         flt = kwargs.get('flt', 0)
 
