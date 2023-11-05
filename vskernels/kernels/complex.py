@@ -57,7 +57,7 @@ class _BaseLinearOperation:
             if not linear and not has_custom_op:
                 return operation(clip, width, height, shift, **kwargs)
 
-            with LinearLight(clip, linear, sigmoid, self) as ll:
+            with LinearLight(clip, linear, sigmoid, self, kwargs.pop('format', None)) as ll:
                 ll.linear = operation(ll.linear, width, height, shift, **kwargs)
 
             return ll.out
