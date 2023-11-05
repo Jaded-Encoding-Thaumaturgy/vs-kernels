@@ -91,7 +91,7 @@ class LinearDescaler(_BaseLinearOperation, Descaler):
 
 class KeepArScaler(Scaler):
     def _get_kwargs_keep_ar(
-        self, sar: Sar | float | bool | None = None, dar: Dar | float | bool | None = None, keep_ar: bool | None = None,
+        self, sar: Sar | float | bool | None = None, dar: Dar | float | bool | None = None, keep_ar: bool = False,
         **kwargs: Any
     ) -> KwargsT:
         kwargs = KwargsT(keep_ar=keep_ar, sar=sar, dar=dar) | kwargs
@@ -156,7 +156,7 @@ class KeepArScaler(Scaler):
     @inject_self.cached
     def scale(  # type: ignore[override]
         self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (0, 0), *,
-        sar: Sar | float | bool | None = None, dar: Dar | float | bool | None = None, keep_ar: bool | None = None,
+        sar: Sar | float | bool | None = None, dar: Dar | float | bool | None = None, keep_ar: bool = False,
         **kwargs: Any
     ) -> vs.VideoNode:
         check_correct_subsampling(clip, width, height)
@@ -181,7 +181,7 @@ class ComplexScaler(LinearScaler, KeepArScaler):
         def scale(  # type: ignore[override]
             self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (0, 0),
             *,
-            sar: Sar | bool | float | None = None, dar: Dar | bool | float | None = None, keep_ar: bool | None = None,
+            sar: Sar | bool | float | None = None, dar: Dar | bool | float | None = None, keep_ar: bool = False,
             linear: bool = False, sigmoid: bool | tuple[float, float] = False,
             **kwargs: Any
         ) -> vs.VideoNode:
