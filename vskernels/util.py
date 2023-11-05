@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from math import exp
 from typing import Any
 
-from vstools import CustomValueError, Matrix, Transfer, cachedproperty, depth, inject_self, vs, CustomRuntimeError
+from vstools import CustomValueError, HoldsVideoFormatT, Matrix, MatrixT, Transfer, cachedproperty, depth, inject_self, vs, CustomRuntimeError, get_video_format
 
 from .kernels import Bicubic, Catrom, FmtConv, Impulse, Kernel, KernelT, Placebo, Point, Scaler
 from .kernels.docs import Example
@@ -13,7 +13,9 @@ __all__ = [
     'excluded_kernels',
     'NoShift', 'NoScale',
 
-    'LinearLight'
+    'LinearLight',
+
+    'resample_to'
 ]
 
 
@@ -189,3 +191,23 @@ class LinearLight:
 
     def __exit__(self, *args: Any, **kwargs: Any) -> None:
         self._exited = True
+
+
+def resample_to(
+    clip: vs.VideoNode, out_fmt: HoldsVideoFormatT, matrix: MatrixT | None = None, kernel: KernelT = Catrom
+) -> vs.VideoNode:
+    out_fmt = get_video_format(out_fmt)
+    assert clip.format
+
+    kernel = Kernel.from_param(kernel)
+
+    if out_fmt == clip.format:
+        return clip
+
+    if out_fmt.color_family is clip.format.color_family:
+        return depth(clip, out_fmt)
+
+    if out_fmt.subsampling_w == out_fmt.subsampling_h == 0:
+        return Point.resample(clip, out_fmt, matrix)
+
+    return kernel.resample(clip, out_fmt, matrix)
