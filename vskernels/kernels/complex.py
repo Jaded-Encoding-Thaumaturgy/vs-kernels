@@ -98,7 +98,8 @@ class KeepArScaler(Scaler):
 
         if None not in set(kwargs.get(x) for x in ('keep_ar', 'sar', 'dar')):
             print(UserWarning(
-                f'{self.__class__.__name__}.scale: "keep_ar" set with non-None values set in "sar" and "dar" won\'t do anything!'
+                f'{self.__class__.__name__}.scale: "keep_ar" set '
+                'with non-None values set in "sar" and "dar" won\'t do anything!'
             ))
 
         default_val = kwargs.pop('keep_ar')

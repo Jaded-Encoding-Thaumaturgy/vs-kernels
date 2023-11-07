@@ -4,7 +4,10 @@ from dataclasses import dataclass
 from math import exp
 from typing import Any
 
-from vstools import CustomValueError, HoldsVideoFormatT, Matrix, MatrixT, Transfer, cachedproperty, depth, inject_self, vs, CustomRuntimeError, get_video_format
+from vstools import (
+    CustomRuntimeError, CustomValueError, HoldsVideoFormatT, Matrix, MatrixT, Transfer, cachedproperty, depth,
+    get_video_format, inject_self, vs
+)
 
 from .kernels import Bicubic, Catrom, FmtConv, Impulse, Kernel, KernelT, Placebo, Point, Scaler
 from .kernels.docs import Example
