@@ -13,6 +13,8 @@ __all__ = [
     'Hermite',
     'Mitchell',
     'Catrom',
+    'FFmpegCubic',
+    'AdobeCubic',
     'BicubicSharp',
     'RobidouxSoft',
     'Robidoux',
@@ -90,6 +92,20 @@ class Catrom(Bicubic):
 
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(b=0, c=1 / 2, **kwargs)
+
+
+class FFmpegBicubic(Bicubic):
+    """Bicubic b=0, c=0.6; FFmpeg's swscale default"""
+
+    def __init__(self, **kwargs: Any) -> None:
+        super().__init__(b=0, c=0.6, **kwargs)
+
+
+class AdobeBicubic(Bicubic):
+    """Bicubic b=0, c=0.75; Adobe's "Bicubic" interpolation preset"""
+
+    def __init__(self, **kwargs: Any) -> None:
+        super().__init__(b=0, c=3 / 4, **kwargs)
 
 
 class BicubicSharp(Bicubic):
