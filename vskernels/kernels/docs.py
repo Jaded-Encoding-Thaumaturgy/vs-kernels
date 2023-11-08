@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any, overload
 
-from vstools import HoldsVideoFormatT, MatrixT, VideoFormatT, core, get_video_format, inject_self, vs
+from vstools import HoldsVideoFormatT, MatrixT, VideoFormatT, core, depth, get_video_format, inject_self, vs
 
 from .abstract import Kernel
 
@@ -54,9 +54,9 @@ class Example(Kernel):
 
         :rtype:             ``VideoNode``
         """
-        return core.descale.Debicubic(
-            clip, width, height, b=self.b, c=self.c, src_top=shift[0], src_left=shift[1], **kwargs
-        )
+        return depth(core.descale.Debicubic(
+            depth(clip, 32), width, height, b=self.b, c=self.c, src_top=shift[0], src_left=shift[1], **kwargs
+        ), clip)
 
     @inject_self.cached
     def resample(  # type: ignore[override]
