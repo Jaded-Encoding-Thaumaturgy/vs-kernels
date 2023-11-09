@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from math import acos, asinh, cos, sqrt
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from vstools import CustomValueError, core, vs
 
@@ -28,11 +28,14 @@ __all__ = [
 ]
 
 
-def _meme_preset_warning(self: any):
-    print(DeprecationWarning(
-        f"{self.__class__.__name__} and other meme Bicubic presets are deprecated!\n"
-        "They will be removed in the next major update."
-    ))
+class MemeKernel:
+    if TYPE_CHECKING:
+        def __init__(self, *args: Any, **kwargs: Any) -> None:
+            print(DeprecationWarning(
+                f"{self.__class__.__name__} and other meme Bicubic presets are deprecated!\n"
+                "They will be removed in the next major update."
+            ))
+            super().__init__(*args, **kwargs)
 
 
 class Bicubic(ComplexKernel):
@@ -142,7 +145,7 @@ class RobidouxSharp(Bicubic):
         super().__init__(b=b, c=c, **kwargs)
 
 
-class BicubicDidee(Bicubic):
+class BicubicDidee(MemeKernel, Bicubic):
     """
     Kernel inspired by a Didée post.
 
@@ -157,11 +160,10 @@ class BicubicDidee(Bicubic):
     """
 
     def __init__(self, **kwargs: Any) -> None:
-        _meme_preset_warning(self)
         super().__init__(b=-1 / 2, c=1 / 4, **kwargs)
 
 
-class SetsuCubic(Bicubic):
+class SetsuCubic(MemeKernel, Bicubic):
     """
     Schizo (Setsugen's) values calculated from the legendary Pompo-san filterchain.
     Useful for heavy post processed content or ringing in general.
@@ -174,7 +176,6 @@ class SetsuCubic(Bicubic):
     """
 
     def __init__(self, strength: float = 100.0, **kwargs: Any) -> None:
-        _meme_preset_warning(self)
         super().__init__(
             asinh(.5) * acos(.5) * -abs(cos(strength * 4)),
             abs(asinh(.5) * acos(-.5) * cos((strength * 4) + strength / 2)),
@@ -182,7 +183,7 @@ class SetsuCubic(Bicubic):
         )
 
 
-class ZewiaCubic(Bicubic):
+class ZewiaCubic(MemeKernel, Bicubic):
     """
     Schizo (Zewia's) values he made up for downscaling after prefiltering for anti-aliasing.
 
@@ -192,11 +193,10 @@ class ZewiaCubic(Bicubic):
     """
 
     def __init__(self, **kwargs: Any) -> None:
-        _meme_preset_warning(self)
         super().__init__(b=-1 / 3, c=1 / 6, **kwargs)
 
 
-class BicubicZopti(Bicubic):
+class BicubicZopti(MemeKernel, Bicubic):
     """
     Kernel optimized by Zopti.
 
@@ -208,11 +208,10 @@ class BicubicZopti(Bicubic):
     """
 
     def __init__(self, **kwargs: Any) -> None:
-        _meme_preset_warning(self)
         super().__init__(b=-0.6, c=0.4, **kwargs)
 
 
-class BicubicZoptiNeutral(Bicubic):
+class BicubicZoptiNeutral(MemeKernel, Bicubic):
     """
     Kernel inspired by Zopti.
     Bicubic b=-0.6, c=0.3
@@ -223,7 +222,6 @@ class BicubicZoptiNeutral(Bicubic):
     """
 
     def __init__(self, **kwargs: Any) -> None:
-        _meme_preset_warning(self)
         super().__init__(b=-0.6, c=0.3, **kwargs)
 
 

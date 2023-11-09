@@ -6,12 +6,14 @@ from typing import Any
 
 from vstools import (
     CustomRuntimeError, CustomValueError, HoldsVideoFormatT, Matrix, MatrixT, Transfer, cachedproperty, depth,
-    get_video_format, inject_self, vs, to_singleton
+    get_video_format, inject_self, to_singleton, vs
 )
 
 from .kernels import (
-    Bicubic, BicubicAuto, Catrom, ComplexKernel, FmtConv, Impulse, Kernel, KernelT, Placebo, Point, Scaler
+    Bicubic, BicubicAuto, Catrom, ComplexKernel, FmtConv, Impulse, Kernel, KernelT, LinearDescaler, Placebo, Point,
+    Scaler, ZimgComplexKernel, ZimgDescaler
 )
+from .kernels.bicubic import MemeKernel
 from .kernels.docs import Example
 
 __all__ = [
@@ -112,7 +114,7 @@ class excluded_kernels(list[type]):
         ])
 
         self.exclude_sub = [
-            NoShiftBase, NoScaleBase, BicubicAuto
+            NoShiftBase, NoScaleBase, BicubicAuto, MemeKernel
         ]
 
     def __contains__(self, key: object) -> bool:
