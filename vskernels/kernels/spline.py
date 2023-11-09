@@ -4,7 +4,7 @@ from typing import Any
 
 from vstools import core
 
-from .complex import ComplexKernel
+from .zimg import ZimgComplexKernel
 from .fmtconv import FmtConv
 
 __all__ = [
@@ -24,7 +24,7 @@ class Spline(FmtConv):
         super().__init__(taps=taps, **kwargs)
 
 
-class Spline16(ComplexKernel):
+class Spline16(ZimgComplexKernel):
     """
     Built-in spline16 resizer.
 
@@ -37,7 +37,7 @@ class Spline16(ComplexKernel):
     descale_function = core.lazy.descale.Despline16
 
 
-class Spline36(ComplexKernel):
+class Spline36(ZimgComplexKernel):
     """
     Built-in spline36 resizer.
 
@@ -50,7 +50,7 @@ class Spline36(ComplexKernel):
     descale_function = core.lazy.descale.Despline36
 
 
-class Spline64(ComplexKernel):
+class Spline64(ZimgComplexKernel):
     """
     Built-in spline64 resizer.
 
