@@ -6,10 +6,12 @@ from typing import Any
 
 from vstools import (
     CustomRuntimeError, CustomValueError, HoldsVideoFormatT, Matrix, MatrixT, Transfer, cachedproperty, depth,
-    get_video_format, inject_self, vs
+    get_video_format, inject_self, vs, to_singleton
 )
 
-from .kernels import Bicubic, Catrom, FmtConv, Impulse, Kernel, KernelT, Placebo, Point, Scaler
+from .kernels import (
+    Bicubic, BicubicAuto, Catrom, ComplexKernel, FmtConv, Impulse, Kernel, KernelT, Placebo, Point, Scaler
+)
 from .kernels.docs import Example
 
 __all__ = [
@@ -102,7 +104,32 @@ class NoScale(NoScaleBase, Bicubic):  # type: ignore
         return inner_no_scale
 
 
-excluded_kernels = [Kernel, FmtConv, Example, Impulse, Placebo, NoShiftBase, NoScaleBase]
+@to_singleton
+class excluded_kernels(list[type]):
+    def __init__(self) -> None:
+        super().__init__([
+            Kernel, FmtConv, Example, Impulse, Placebo, ComplexKernel
+        ])
+
+        self.exclude_sub = [
+            NoShiftBase, NoScaleBase, BicubicAuto
+        ]
+
+    def __contains__(self, key: object) -> bool:
+        if not isinstance(key, type):
+            key = key.__class__
+
+        if super().__contains__(key):
+            return True
+
+        if key in self.exclude_sub:
+            return True
+
+        for t in self.exclude_sub:
+            if issubclass(key, t):
+                return True
+
+        return False
 
 
 @dataclass
