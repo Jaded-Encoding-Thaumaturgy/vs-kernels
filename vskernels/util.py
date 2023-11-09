@@ -110,7 +110,8 @@ class NoScale(NoScaleBase, Bicubic):  # type: ignore
 class excluded_kernels(list[type]):
     def __init__(self) -> None:
         super().__init__([
-            Kernel, FmtConv, Example, Impulse, Placebo, ComplexKernel
+            Kernel, FmtConv, Example, Impulse, Placebo, ComplexKernel,
+            ZimgDescaler, ZimgComplexKernel, LinearDescaler
         ])
 
         self.exclude_sub = [
