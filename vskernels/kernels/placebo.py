@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-from vstools import Transfer, core, vs
+from vstools import Transfer, TransferT, core, inject_self, vs
 
 from .complex import LinearScaler
 
@@ -32,16 +32,7 @@ class Placebo(LinearScaler):
     # Other settings
     lut_entries: int = 64
 
-    # Linearize/Sigmoidize settings
-    sigmoidize: bool = True
-    linearize: bool = True
-    sigmoid_center: float = 0.75
-    sigmoid_slope: float = 6.5
-    curve: Transfer = Transfer.BT709
-
-    def scale_function(self, *args: Any, **kwargs: Any) -> vs.VideoNode:
-        # Wrapping it here so it's not a hard-dep
-        return core.placebo.Resample(*args, **kwargs)
+    scale_function = core.lazy.placebo.Resample
 
     def __init__(
         self,
@@ -60,6 +51,17 @@ class Placebo(LinearScaler):
         self.cutoff = cutoff
         super().__init__(**kwargs)
 
+    if TYPE_CHECKING:
+        @inject_self.cached
+        def scale(  # type: ignore[override]
+            self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (0, 0),
+            *, linear: bool = True, sigmoid: bool | tuple[float, float] = True, curve: TransferT | None = None,
+            **kwargs: Any
+        ) -> vs.VideoNode:
+            ...
+    else:
+        ...
+
     def get_scale_args(
         self, clip: vs.VideoNode, shift: tuple[float, float] = (0, 0),
         width: int | None = None, height: int | None = None, **kwargs: Any
@@ -71,13 +73,12 @@ class Placebo(LinearScaler):
     def get_params_args(
         self, is_descale: bool, clip: vs.VideoNode, width: int | None = None, height: int | None = None, **kwargs: Any
     ) -> dict[str, Any]:
+        curve = Transfer.from_param_or_video(kwargs.get('curve', Transfer.BT709), clip)
+
         return dict(
             width=width, height=height, filter=self._kernel,
             radius=self.taps, param1=self.b, param2=self.c,
             clamp=self.clamp, taper=self.taper, blur=self.blur,
             antiring=self.antiring, cutoff=self.cutoff,
-            lut_entries=self.lut_entries,
-            sigmoidize=self.sigmoidize, linearize=self.linearize,
-            sigmoid_center=self.sigmoid_center, sigmoid_slope=self.sigmoid_slope,
-            trc=self.curve.value_libplacebo,
+            lut_entries=self.lut_entries, trc=curve.value_libplacebo
         )
