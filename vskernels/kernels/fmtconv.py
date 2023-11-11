@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+from math import ceil
 from typing import Any, Callable, overload
 
 from vstools import VideoFormatT, VSFunction, core, inject_self, vs
 
 from .abstract import Resampler
-from .complex import ComplexScaler
 from .bicubic import Bicubic
+from .complex import ComplexScaler
 
 __all__ = [
     'FmtConv'
@@ -167,3 +168,12 @@ class FmtConv(Resampler, ComplexScaler):
                 shifts_left = shifts_left[:n_planes]
 
         return _shift(shifts_top, shifts_left)
+
+    @inject_self.property
+    def kernel_radius(self) -> int:
+        taps_hv = self.kwargs.get('taps_h', self.kwargs.get('taps_v', None))
+
+        if taps_hv is None:
+            taps_hv = self.taps
+
+        return ceil(taps_hv)

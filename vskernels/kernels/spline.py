@@ -4,8 +4,8 @@ from typing import Any
 
 from vstools import core
 
-from .zimg import ZimgComplexKernel
 from .fmtconv import FmtConv
+from .zimg import ZimgComplexKernel
 
 __all__ = [
     'Spline',
@@ -35,6 +35,7 @@ class Spline16(ZimgComplexKernel):
 
     scale_function = resample_function = core.lazy.resize.Spline16
     descale_function = core.lazy.descale.Despline16
+    _static_kernel_radius = 2
 
 
 class Spline36(ZimgComplexKernel):
@@ -48,6 +49,7 @@ class Spline36(ZimgComplexKernel):
 
     scale_function = resample_function = core.lazy.resize.Spline36
     descale_function = core.lazy.descale.Despline36
+    _static_kernel_radius = 3
 
 
 class Spline64(ZimgComplexKernel):
@@ -61,3 +63,4 @@ class Spline64(ZimgComplexKernel):
 
     scale_function = resample_function = core.lazy.resize.Spline64
     descale_function = core.lazy.descale.Despline64
+    _static_kernel_radius = 4

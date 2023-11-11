@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from math import ceil
 from typing import TYPE_CHECKING, Any
 
 from vstools import Transfer, TransferT, core, inject_self, vs
@@ -82,3 +83,15 @@ class Placebo(LinearScaler):
             antiring=self.antiring, cutoff=self.cutoff,
             lut_entries=self.lut_entries, trc=curve.value_libplacebo
         )
+
+    @inject_self.property
+    def kernel_radius(self) -> int:
+        from .bicubic import Bicubic
+
+        if self.taps:
+            return ceil(self.taps)
+
+        if self.b or self.c:
+            return Bicubic(self.b, self.c).kernel_radius
+
+        return 2

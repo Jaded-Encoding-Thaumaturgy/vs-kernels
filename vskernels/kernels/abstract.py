@@ -19,6 +19,18 @@ __all__ = [
 ]
 
 
+def _default_kernel_radius(cls, self) -> int:
+    if hasattr(self, '_static_kernel_radius'):
+        return ceil(self._static_kernel_radius)
+
+    try:
+        return super(cls, self).kernel_radius
+    except AttributeError:
+        ...
+
+    raise NotImplementedError
+
+
 class BaseScaler:
     @staticmethod
     def from_param(
@@ -120,6 +132,10 @@ class Scaler(vs_object):
 
         return self.scale(clip, dst_width, dst_height, shift, **kwargs)
 
+    @inject_self.property
+    def kernel_radius(self) -> int:
+        return _default_kernel_radius(__class__, self)
+
 
 class Descaler(vs_object):
     @inject_self.cached
@@ -165,6 +181,10 @@ class Descaler(vs_object):
     ) -> Descaler:
         return BaseScaler.ensure_obj(cls, Descaler, descaler, UnknownDescalerError, [], func_except)  # type: ignore
 
+    @inject_self.property
+    def kernel_radius(self) -> int:
+        return _default_kernel_radius(__class__, self)
+
 
 class Resampler(vs_object):
     @inject_self.cached
@@ -185,6 +205,10 @@ class Resampler(vs_object):
         cls: type[Resampler], resampler: ResamplerT | None = None, func_except: FuncExceptT | None = None
     ) -> Resampler:
         return BaseScaler.ensure_obj(cls, Resampler, resampler, UnknownDescalerError, [], func_except)  # type: ignore
+
+    @inject_self.property
+    def kernel_radius(self) -> int:
+        return _default_kernel_radius(__class__, self)
 
 
 class Kernel(Scaler, Descaler, Resampler):
