@@ -269,3 +269,7 @@ class BicubicAuto(ComplexKernel):
             autoc = (self.target - self.b) / 2
 
         return autob, autoc
+
+    @inject_self.property
+    def kernel_size(self) -> int:
+        return Bicubic(*self._get_bc_args()).kernel_size
