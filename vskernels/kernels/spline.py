@@ -1,13 +1,12 @@
 from __future__ import annotations
 
-import re
-from math import ceil, isqrt
+from math import ceil
 from typing import Any
 
 from vstools import core, inject_self
 
-from .zimg import ZimgComplexKernel
 from .fmtconv import FmtConv
+from .zimg import ZimgComplexKernel
 
 __all__ = [
     'Spline',
@@ -15,19 +14,6 @@ __all__ = [
     'Spline36',
     'Spline64',
 ]
-
-
-class _SplineKernelSize:
-    """Spline kernel size sub-class."""
-
-    @inject_self.property
-    def kernel_size(self) -> int:
-        radius = re.search(r'\d+$', self.__class__.__name__)
-
-        if not radius:
-            return 1
-
-        return ceil(isqrt(int(radius.group())) / 2)
 
 
 class Spline(FmtConv):
@@ -43,7 +29,7 @@ class Spline(FmtConv):
         return ceil(self.taps)
 
 
-class Spline16(ZimgComplexKernel, _SplineKernelSize):
+class Spline16(ZimgComplexKernel):
     """
     Built-in spline16 resizer.
 
@@ -55,8 +41,12 @@ class Spline16(ZimgComplexKernel, _SplineKernelSize):
     scale_function = resample_function = core.lazy.resize.Spline16
     descale_function = core.lazy.descale.Despline16
 
+    @inject_self.property
+    def kernel_size(self) -> int:
+        return 2
 
-class Spline36(ZimgComplexKernel, _SplineKernelSize):
+
+class Spline36(ZimgComplexKernel):
     """
     Built-in spline36 resizer.
 
@@ -68,8 +58,12 @@ class Spline36(ZimgComplexKernel, _SplineKernelSize):
     scale_function = resample_function = core.lazy.resize.Spline36
     descale_function = core.lazy.descale.Despline36
 
+    @inject_self.property
+    def kernel_size(self) -> int:
+        return 3
 
-class Spline64(ZimgComplexKernel, _SplineKernelSize):
+
+class Spline64(ZimgComplexKernel):
     """
     Built-in spline64 resizer.
 
@@ -80,3 +74,7 @@ class Spline64(ZimgComplexKernel, _SplineKernelSize):
 
     scale_function = resample_function = core.lazy.resize.Spline64
     descale_function = core.lazy.descale.Despline64
+
+    @inject_self.property
+    def kernel_size(self) -> int:
+        return 4
