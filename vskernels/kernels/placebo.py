@@ -3,7 +3,7 @@ from __future__ import annotations
 from math import ceil
 from typing import TYPE_CHECKING, Any
 
-from vstools import Transfer, TransferT, core, fallback, inject_self, vs
+from vstools import Transfer, TransferT, core, inject_self, vs
 
 from .complex import LinearScaler
 
