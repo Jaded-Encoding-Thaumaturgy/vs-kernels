@@ -18,10 +18,7 @@ class Point(ZimgComplexKernel):
     """Built-in point resizer."""
 
     scale_function = resample_function = descale_function = core.lazy.resize.Point
-
-    @inject_self.property
-    def kernel_size(self) -> int:
-        return 1
+    _static_kernel_size = 1
 
 
 class Bilinear(ZimgComplexKernel):
@@ -29,10 +26,7 @@ class Bilinear(ZimgComplexKernel):
 
     scale_function = resample_function = core.lazy.resize.Bilinear
     descale_function = core.lazy.descale.Debilinear
-
-    @inject_self.property
-    def kernel_size(self) -> int:
-        return 1
+    _static_kernel_size = 1
 
 
 class Lanczos(ZimgComplexKernel):

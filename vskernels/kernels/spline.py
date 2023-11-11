@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from vstools import core, inject_self
+from vstools import core
 
 from .fmtconv import FmtConv
 from .zimg import ZimgComplexKernel
@@ -35,10 +35,7 @@ class Spline16(ZimgComplexKernel):
 
     scale_function = resample_function = core.lazy.resize.Spline16
     descale_function = core.lazy.descale.Despline16
-
-    @inject_self.property
-    def kernel_size(self) -> int:
-        return 2
+    _static_kernel_size = 2
 
 
 class Spline36(ZimgComplexKernel):
@@ -52,10 +49,7 @@ class Spline36(ZimgComplexKernel):
 
     scale_function = resample_function = core.lazy.resize.Spline36
     descale_function = core.lazy.descale.Despline36
-
-    @inject_self.property
-    def kernel_size(self) -> int:
-        return 3
+    _static_kernel_size = 3
 
 
 class Spline64(ZimgComplexKernel):
@@ -69,7 +63,4 @@ class Spline64(ZimgComplexKernel):
 
     scale_function = resample_function = core.lazy.resize.Spline64
     descale_function = core.lazy.descale.Despline64
-
-    @inject_self.property
-    def kernel_size(self) -> int:
-        return 4
+    _static_kernel_size = 4

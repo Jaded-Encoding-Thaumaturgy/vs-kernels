@@ -19,6 +19,18 @@ __all__ = [
 ]
 
 
+def _default_kernel_size(cls, self) -> int:
+    if hasattr(self, '_static_kernel_size'):
+        return ceil(self._static_kernel_size)
+
+    try:
+        return super(cls, self).kernel_size
+    except AttributeError:
+        ...
+
+    raise NotImplementedError
+
+
 class BaseScaler:
     @staticmethod
     def from_param(
@@ -122,10 +134,7 @@ class Scaler(vs_object):
 
     @inject_self.property
     def kernel_size(self) -> int:
-        try:
-            super().kernel_size
-        except AttributeError:
-            raise NotImplementedError
+        return _default_kernel_size(__class__, self)
 
 
 class Descaler(vs_object):
@@ -174,10 +183,7 @@ class Descaler(vs_object):
 
     @inject_self.property
     def kernel_size(self) -> int:
-        try:
-            super().kernel_size
-        except AttributeError:
-            raise NotImplementedError
+        return _default_kernel_size(__class__, self)
 
 
 class Resampler(vs_object):
@@ -202,10 +208,7 @@ class Resampler(vs_object):
 
     @inject_self.property
     def kernel_size(self) -> int:
-        try:
-            super().kernel_size
-        except AttributeError:
-            raise NotImplementedError
+        return _default_kernel_size(__class__, self)
 
 
 class Kernel(Scaler, Descaler, Resampler):
