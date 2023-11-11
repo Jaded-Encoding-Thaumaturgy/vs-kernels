@@ -176,4 +176,4 @@ class FmtConv(Resampler, ComplexScaler):
         if taps_hv is None:
             taps_hv = self.taps
 
-        return ceil(self.taps)
+        return ceil(taps_hv)
