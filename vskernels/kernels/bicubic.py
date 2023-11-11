@@ -3,6 +3,7 @@ from __future__ import annotations
 from math import acos, asinh, cos, sqrt
 from typing import TYPE_CHECKING, Any
 
+from stgpytools import classproperty
 from vstools import CustomValueError, core, vs
 
 from .complex import ComplexKernel
@@ -68,7 +69,7 @@ class Bicubic(ComplexKernel):
             return args | dict(b=self.b, c=self.c)
         return args | dict(filter_param_a=self.b, filter_param_b=self.c)
 
-    @property
+    @classproperty
     def kernel_size(self) -> int:
         return 1 + ((self.b, self.c) != (0, 0))
 

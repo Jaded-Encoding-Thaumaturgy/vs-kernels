@@ -4,6 +4,7 @@ import re
 from math import ceil, isqrt
 from typing import Any
 
+from stgpytools import classproperty
 from vstools import core
 
 from .zimg import ZimgComplexKernel
@@ -20,7 +21,7 @@ __all__ = [
 class _SplineKernelSize:
     """Spline kernel size sub-class."""
 
-    @property
+    @classproperty
     def kernel_size(self) -> int:
         radius = re.search(r'\d+$', self.__class__.__name__)
 
@@ -38,7 +39,7 @@ class Spline(FmtConv):
     def __init__(self, taps: int = 2, **kwargs: Any) -> None:
         super().__init__(taps=taps, **kwargs)
 
-    @property
+    @classproperty
     def kernel_size(self) -> int:
         return ceil(self.taps)
 

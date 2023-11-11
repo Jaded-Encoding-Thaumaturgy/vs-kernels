@@ -3,6 +3,7 @@ from __future__ import annotations
 from math import ceil
 from typing import TYPE_CHECKING, Any
 
+from stgpytools import classproperty
 from vstools import Transfer, TransferT, core, fallback, inject_self, vs
 
 from .complex import LinearScaler
@@ -93,6 +94,6 @@ class Placebo(LinearScaler):
 
         return 1
 
-    @property
+    @classproperty
     def kernel_size(self) -> int:
         return self._kernel_size(self.taps, self.b, self.c)
