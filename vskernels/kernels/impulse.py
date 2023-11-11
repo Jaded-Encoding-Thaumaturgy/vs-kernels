@@ -36,7 +36,7 @@ class Impulse(FmtConv):
     ) -> dict[str, Any]:
         return super().get_params_args(is_descale, clip, width, height, **kwargs)
 
-    def __init__(self, impulse: Sequence[float], oversample: int = 8, taps: int = 1, **kwargs: Any) -> None:
+    def __init__(self, impulse: Sequence[float], oversample: int = 8, taps: float = 1, **kwargs: Any) -> None:
         super().__init__(taps, impulse=[*impulse[::-1], *impulse[:-1]], kovrspl=oversample, **kwargs)
 
     @inject_self.cached

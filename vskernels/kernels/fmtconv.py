@@ -88,7 +88,7 @@ class FmtConv(Resampler, ComplexScaler):
         'sh': 'src_height', 'sy': 'src_top'
     }
 
-    def __init__(self, taps: int = 4, **kwargs: Any) -> None:
+    def __init__(self, taps: float = 4, **kwargs: Any) -> None:
         self.taps = taps
         super().__init__(**kwargs)
 

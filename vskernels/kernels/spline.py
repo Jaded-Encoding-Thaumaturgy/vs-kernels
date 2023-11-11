@@ -20,7 +20,7 @@ class Spline(FmtConv):
 
     _kernel = 'spline'
 
-    def __init__(self, taps: int = 2, **kwargs: Any) -> None:
+    def __init__(self, taps: float = 2, **kwargs: Any) -> None:
         super().__init__(taps=taps, **kwargs)
 
 
