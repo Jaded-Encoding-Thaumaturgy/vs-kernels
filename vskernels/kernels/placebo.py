@@ -3,7 +3,7 @@ from __future__ import annotations
 from math import ceil
 from typing import TYPE_CHECKING, Any
 
-from vstools import Transfer, TransferT, core, inject_self, vs
+from vstools import Transfer, TransferT, core, fallback, inject_self, vs
 
 from .complex import LinearScaler
 
@@ -84,12 +84,12 @@ class Placebo(LinearScaler):
             lut_entries=self.lut_entries, trc=curve.value_libplacebo
         )
 
-    def _kernel_size(self, taps: float | None = None, b: int | None = None, c: int | None = None) -> int:
+    def _kernel_size(self, taps: float | None = None, b: float | None = None, c: float | None = None) -> int:
         if taps:
-            return ceil(self.taps)
+            return ceil(taps)
 
         if b or c:
-            return 1 + ((b if b and b != 0 else 0, c if c and c != 0 else 0.5) != (0, 0))
+            return 1 + ((fallback(b, 0), fallback(c, 0.5)) != (0, 0))
 
         return 1
 
