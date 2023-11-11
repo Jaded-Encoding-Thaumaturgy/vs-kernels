@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import re
+from math import ceil, isqrt
 from typing import Any
 
 from vstools import core
@@ -15,6 +17,19 @@ __all__ = [
 ]
 
 
+class _SplineKernelSize:
+    """Spline kernel size sub-class."""
+
+    @property
+    def kernel_size(self) -> int:
+        radius = re.search(r'\d+$', self.__class__.__name__)
+
+        if not radius:
+            return 1
+
+        return ceil(isqrt(int(radius.group())) / 2)
+
+
 class Spline(FmtConv):
     """fmtconv's spline resizer."""
 
@@ -23,8 +38,12 @@ class Spline(FmtConv):
     def __init__(self, taps: int = 2, **kwargs: Any) -> None:
         super().__init__(taps=taps, **kwargs)
 
+    @property
+    def kernel_size(self) -> int:
+        return ceil(self.taps)
 
-class Spline16(ZimgComplexKernel):
+
+class Spline16(ZimgComplexKernel, _SplineKernelSize):
     """
     Built-in spline16 resizer.
 
@@ -37,7 +56,7 @@ class Spline16(ZimgComplexKernel):
     descale_function = core.lazy.descale.Despline16
 
 
-class Spline36(ZimgComplexKernel):
+class Spline36(ZimgComplexKernel, _SplineKernelSize):
     """
     Built-in spline36 resizer.
 
@@ -50,7 +69,7 @@ class Spline36(ZimgComplexKernel):
     descale_function = core.lazy.descale.Despline36
 
 
-class Spline64(ZimgComplexKernel):
+class Spline64(ZimgComplexKernel, _SplineKernelSize):
     """
     Built-in spline64 resizer.
 

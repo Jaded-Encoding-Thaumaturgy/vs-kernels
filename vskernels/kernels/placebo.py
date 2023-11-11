@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from math import ceil
 from typing import TYPE_CHECKING, Any
 
 from vstools import Transfer, TransferT, core, inject_self, vs
@@ -82,3 +83,16 @@ class Placebo(LinearScaler):
             antiring=self.antiring, cutoff=self.cutoff,
             lut_entries=self.lut_entries, trc=curve.value_libplacebo
         )
+
+    def _kernel_size(self, taps: float | None = None, b: int | None = None, c: int | None = None) -> int
+        if taps:
+            return ceil(self.taps)
+
+        if b or c:
+            return 1 + ((b if b and b != 0 else 0, c if c and c != 0 else 0.5) != (0, 0))
+
+        return 1
+
+    @property
+    def kernel_size(self) -> int:
+        return self._kernel_size(self.taps, self.b, self.c)

@@ -68,6 +68,10 @@ class Bicubic(ComplexKernel):
             return args | dict(b=self.b, c=self.c)
         return args | dict(filter_param_a=self.b, filter_param_b=self.c)
 
+    @property
+    def kernel_size(self) -> int:
+        return 1 + ((self.b, self.c) != (0, 0))
+
 
 class BSpline(Bicubic):
     """Bicubic b=1, c=0"""

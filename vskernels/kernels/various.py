@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from math import log, sqrt
+from math import ceil, log, sqrt
 from typing import Any
 
 from vstools import CustomValueError, to_singleton
@@ -104,10 +104,7 @@ class EwaBicubic(Placebo):
     _kernel = 'ewa_robidoux'
 
     def __init__(self, b: float = 0.0, c: float = 0.5, radius: int | None = None, **kwargs: Any) -> None:
-        radius = kwargs.pop('taps', radius)
-
-        if radius is None:
-            radius = 1 if (b, c) == (0, 0) else 2
+        radius = self._kernel_size(kwargs.pop('taps', radius), b, c)
 
         super().__init__(radius, b, c, **kwargs)
 

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from math import ceil
 from typing import Any
 
 from vstools import core, vs
@@ -24,6 +25,10 @@ class Bilinear(ZimgComplexKernel):
 
     scale_function = resample_function = core.lazy.resize.Bilinear
     descale_function = core.lazy.descale.Debilinear
+
+    @property
+    def kernel_size(self) -> int:
+        return 1
 
 
 class Lanczos(ZimgComplexKernel):
@@ -51,3 +56,7 @@ class Lanczos(ZimgComplexKernel):
         if is_descale:
             return args | dict(taps=self.taps)
         return args | dict(filter_param_a=self.taps)
+
+    @property
+    def kernel_size(self) -> int:
+        return ceil(self.taps)
