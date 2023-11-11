@@ -94,4 +94,4 @@ class Placebo(LinearScaler):
         if self.b or self.c:
             return Bicubic(self.b, self.c).kernel_size
 
-        return 1
+        return 2
