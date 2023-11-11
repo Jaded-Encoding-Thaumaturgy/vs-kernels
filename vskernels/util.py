@@ -17,7 +17,7 @@ from .kernels.bicubic import MemeKernel
 from .kernels.docs import Example
 
 __all__ = [
-    'excluded_kernels',
+    'abstract_kernels', 'excluded_kernels',
     'NoShift', 'NoScale',
 
     'LinearLight',
@@ -106,13 +106,16 @@ class NoScale(NoScaleBase, Bicubic):  # type: ignore
         return inner_no_scale
 
 
+abstract_kernels = [
+    Kernel, FmtConv, Example, Impulse, Placebo, ComplexKernel,
+    ZimgDescaler, ZimgComplexKernel, LinearDescaler
+]
+
+
 @to_singleton
 class excluded_kernels(list[type]):
     def __init__(self) -> None:
-        super().__init__([
-            Kernel, FmtConv, Example, Impulse, Placebo, ComplexKernel,
-            ZimgDescaler, ZimgComplexKernel, LinearDescaler
-        ])
+        super().__init__(abstract_kernels)
 
         self.exclude_sub = [
             NoShiftBase, NoScaleBase, BicubicAuto, MemeKernel
