@@ -19,12 +19,12 @@ __all__ = [
 ]
 
 
-def _default_kernel_size(cls, self) -> int:
-    if hasattr(self, '_static_kernel_size'):
-        return ceil(self._static_kernel_size)
+def _default_kernel_radius(cls, self) -> int:
+    if hasattr(self, '_static_kernel_radius'):
+        return ceil(self._static_kernel_radius)
 
     try:
-        return super(cls, self).kernel_size
+        return super(cls, self).kernel_radius
     except AttributeError:
         ...
 
@@ -133,8 +133,8 @@ class Scaler(vs_object):
         return self.scale(clip, dst_width, dst_height, shift, **kwargs)
 
     @inject_self.property
-    def kernel_size(self) -> int:
-        return _default_kernel_size(__class__, self)
+    def kernel_radius(self) -> int:
+        return _default_kernel_radius(__class__, self)
 
 
 class Descaler(vs_object):
@@ -182,8 +182,8 @@ class Descaler(vs_object):
         return BaseScaler.ensure_obj(cls, Descaler, descaler, UnknownDescalerError, [], func_except)  # type: ignore
 
     @inject_self.property
-    def kernel_size(self) -> int:
-        return _default_kernel_size(__class__, self)
+    def kernel_radius(self) -> int:
+        return _default_kernel_radius(__class__, self)
 
 
 class Resampler(vs_object):
@@ -207,8 +207,8 @@ class Resampler(vs_object):
         return BaseScaler.ensure_obj(cls, Resampler, resampler, UnknownDescalerError, [], func_except)  # type: ignore
 
     @inject_self.property
-    def kernel_size(self) -> int:
-        return _default_kernel_size(__class__, self)
+    def kernel_radius(self) -> int:
+        return _default_kernel_radius(__class__, self)
 
 
 class Kernel(Scaler, Descaler, Resampler):

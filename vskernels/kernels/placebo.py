@@ -85,13 +85,13 @@ class Placebo(LinearScaler):
         )
 
     @inject_self.property
-    def kernel_size(self) -> int:
+    def kernel_radius(self) -> int:
         from .bicubic import Bicubic
 
         if self.taps:
             return ceil(self.taps)
 
         if self.b or self.c:
-            return Bicubic(self.b, self.c).kernel_size
+            return Bicubic(self.b, self.c).kernel_radius
 
         return 2

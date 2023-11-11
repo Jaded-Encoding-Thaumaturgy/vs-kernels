@@ -170,7 +170,7 @@ class FmtConv(Resampler, ComplexScaler):
         return _shift(shifts_top, shifts_left)
 
     @inject_self.property
-    def kernel_size(self) -> int:
+    def kernel_radius(self) -> int:
         taps_hv = self.kwargs.get('taps_h', self.kwargs.get('taps_v', None))
 
         if taps_hv is None:

@@ -109,7 +109,7 @@ class EwaBicubic(Placebo):
         if radius is None:
             from .bicubic import Bicubic
 
-            radius = Bicubic(b, c).kernel_size
+            radius = Bicubic(b, c).kernel_radius
 
         super().__init__(radius, b, c, **kwargs)
 
