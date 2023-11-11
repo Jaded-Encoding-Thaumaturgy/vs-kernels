@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from math import ceil
 from typing import Any
 
 from vstools import core, inject_self
@@ -23,10 +22,6 @@ class Spline(FmtConv):
 
     def __init__(self, taps: float = 2, **kwargs: Any) -> None:
         super().__init__(taps=taps, **kwargs)
-
-    @inject_self.property
-    def kernel_size(self) -> int:
-        return ceil(self.taps)
 
 
 class Spline16(ZimgComplexKernel):
