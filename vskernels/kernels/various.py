@@ -104,7 +104,12 @@ class EwaBicubic(Placebo):
     _kernel = 'ewa_robidoux'
 
     def __init__(self, b: float = 0.0, c: float = 0.5, radius: int | None = None, **kwargs: Any) -> None:
-        radius = self._kernel_size(kwargs.pop('taps', radius), b, c)
+        radius = kwargs.pop('taps', radius)
+
+        if radius is None:
+            from .bicubic import Bicubic
+
+            radius = Bicubic(b, c).kernel_size
 
         super().__init__(radius, b, c, **kwargs)
 
