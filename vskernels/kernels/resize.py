@@ -3,8 +3,7 @@ from __future__ import annotations
 from math import ceil
 from typing import Any
 
-from stgpytools import classproperty
-from vstools import core, vs
+from vstools import core, vs, inject_self
 
 from .zimg import ZimgComplexKernel
 
@@ -27,7 +26,7 @@ class Bilinear(ZimgComplexKernel):
     scale_function = resample_function = core.lazy.resize.Bilinear
     descale_function = core.lazy.descale.Debilinear
 
-    @classproperty
+    @inject_self.property
     def kernel_size(self) -> int:
         return 1
 
@@ -58,6 +57,6 @@ class Lanczos(ZimgComplexKernel):
             return args | dict(taps=self.taps)
         return args | dict(filter_param_a=self.taps)
 
-    @classproperty
+    @inject_self.property
     def kernel_size(self) -> int:
         return ceil(self.taps)
