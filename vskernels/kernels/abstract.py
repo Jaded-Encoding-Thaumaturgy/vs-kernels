@@ -352,9 +352,9 @@ class Kernel(Scaler, Descaler, Resampler):
         cls: type[Kernel], kernel: ScalerT | DescalerT | ResamplerT | KernelT | None = None,
         func_except: FuncExceptT | None = None
     ) -> type[Scaler] | type[Descaler] | type[Resampler] | type[Kernel]:
-        from ..util import excluded_kernels
+        from ..util import abstract_kernels
         return BaseScaler.from_param(
-            cls, Kernel, kernel, UnknownKernelError, excluded_kernels, func_except  # type: ignore
+            cls, Kernel, kernel, UnknownKernelError, abstract_kernels, func_except  # type: ignore
         )
 
     @overload
@@ -390,9 +390,9 @@ class Kernel(Scaler, Descaler, Resampler):
         cls: type[Kernel], kernel: ScalerT | DescalerT | ResamplerT | KernelT | None = None,
         func_except: FuncExceptT | None = None
     ) -> Scaler | Descaler | Resampler | Kernel:
-        from ..util import excluded_kernels
+        from ..util import abstract_kernels
         return BaseScaler.ensure_obj(
-            cls, Kernel, kernel, UnknownKernelError, excluded_kernels, func_except  # type: ignore
+            cls, Kernel, kernel, UnknownKernelError, abstract_kernels, func_except  # type: ignore
         )
 
 
