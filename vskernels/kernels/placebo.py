@@ -84,15 +84,14 @@ class Placebo(LinearScaler):
             lut_entries=self.lut_entries, trc=curve.value_libplacebo
         )
 
-    def _kernel_size(self, taps: float | None = None, b: float | None = None, c: float | None = None) -> int:
-        if taps:
-            return ceil(taps)
-
-        if b or c:
-            return 1 + ((fallback(b, 0), fallback(c, 0.5)) != (0, 0))
-
-        return 1
-
     @inject_self.property
     def kernel_size(self) -> int:
-        return self._kernel_size(self.taps, self.b, self.c)
+        from .bicubic import Bicubic
+
+        if self.taps:
+            return ceil(self.taps)
+
+        if self.b or self.c:
+            return Bicubic(self.b, self.c).kernel_size
+
+        return 1

@@ -70,7 +70,9 @@ class Bicubic(ComplexKernel):
 
     @inject_self.property
     def kernel_size(self) -> int:
-        return 1 + ((self.b, self.c) != (0, 0))
+        if (self.b, self.c) == (0, 0):
+            return 1
+        return 2
 
 
 class BSpline(Bicubic):
