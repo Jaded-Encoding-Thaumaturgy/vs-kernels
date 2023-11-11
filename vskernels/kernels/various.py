@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from math import ceil, log, sqrt
+from math import log, sqrt
 from typing import Any
 
 from vstools import CustomValueError, to_singleton

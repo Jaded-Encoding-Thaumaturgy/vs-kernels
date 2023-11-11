@@ -84,7 +84,7 @@ class Placebo(LinearScaler):
             lut_entries=self.lut_entries, trc=curve.value_libplacebo
         )
 
-    def _kernel_size(self, taps: float | None = None, b: int | None = None, c: int | None = None) -> int
+    def _kernel_size(self, taps: float | None = None, b: int | None = None, c: int | None = None) -> int:
         if taps:
             return ceil(self.taps)
 
