@@ -144,7 +144,7 @@ class Descaler(vs_object):
     ) -> vs.VideoNode:
         check_correct_subsampling(clip, width, height)
 
-        field_based = FieldBased.from_video(clip)
+        field_based = FieldBased.from_param_or_video(kwargs.pop('field_based', None), clip)
 
         clip, bits = expect_bits(clip, 32)
 
