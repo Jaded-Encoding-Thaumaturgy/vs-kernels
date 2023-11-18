@@ -35,7 +35,7 @@ class ZimgComplexKernel(ComplexKernel, ZimgDescaler):
         @inject_self.cached
         def descale(  # type: ignore[override]
             self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (0, 0),
-            *, blur: float = 1.0, border_handling: BorderHandlingT,
+            *, blur: float = 1.0, border_handling: BorderHandlingT, ignore_mask: vs.VideoNode | None = None,
             linear: bool = False, sigmoid: bool | tuple[float, float] = False, **kwargs: Any
         ) -> vs.VideoNode:
             ...
@@ -46,8 +46,8 @@ class ZimgComplexKernel(ComplexKernel, ZimgDescaler):
         args = super().get_params_args(is_descale, clip, width, height, **kwargs)
 
         if not is_descale:
-            args.pop('border_handling', None)
-            args.pop('blur', None)
+            for key in ('blur', 'border_handling', 'ignore_mask', 'force', 'force_h', 'force_v'):
+                args.pop(key, None)
 
         return args
 
