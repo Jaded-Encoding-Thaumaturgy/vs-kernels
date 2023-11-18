@@ -40,8 +40,9 @@ class _BaseLinearOperation:
     def _linear_op(op_name: str) -> Any:
         @inject_kwargs_params
         def func(
-            self: _BaseLinearOperation, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (0, 0),
-            *, linear: bool = False, sigmoid: bool | tuple[float, float] = False, **kwargs: Any
+            self: _BaseLinearOperation, clip: vs.VideoNode, width: int, height: int,
+            shift: tuple[float, float] = (0, 0), *,
+            linear: bool = False, sigmoid: bool | tuple[float, float] = False, **kwargs: Any
         ) -> vs.VideoNode:
             from ..util import LinearLight
 
