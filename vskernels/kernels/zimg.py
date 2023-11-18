@@ -4,8 +4,8 @@ from typing import TYPE_CHECKING, Any
 
 from vstools import CustomIntEnum, inject_self, vs
 
-from .complex import ComplexKernel, Descaler
-
+from .abstract import Descaler
+from .complex import ComplexKernel
 
 __all__ = [
     'BorderHandling',
@@ -30,7 +30,7 @@ class ZimgDescaler(Descaler):
             ...
 
 
-class ZimgComplexKernel(ComplexKernel, ZimgDescaler):
+class ZimgComplexKernel(ComplexKernel, ZimgDescaler):  # type: ignore
     if TYPE_CHECKING:
         @inject_self.cached
         def descale(  # type: ignore[override]

@@ -2,19 +2,18 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from math import exp
-from typing import Any
+from typing import Any, ClassVar, cast
 
 from vstools import (
-    CustomRuntimeError, CustomValueError, HoldsVideoFormatT, Matrix, MatrixT, Transfer, cachedproperty, depth,
-    get_video_format, inject_self, to_singleton, vs
+    ConstantFormatVideoNode, CustomRuntimeError, CustomValueError, HoldsVideoFormatT, Matrix, MatrixT, Transfer,
+    cachedproperty, depth, get_video_format, inject_self, to_singleton, vs
 )
 
 from .kernels import (
-    Bicubic, BicubicAuto, Catrom, ComplexKernel, FmtConv, Impulse, Kernel, KernelT, LinearDescaler, Placebo, Point,
-    Scaler, ZimgComplexKernel, ZimgDescaler
+    Bicubic, BicubicAuto, Catrom, ComplexKernel, Descaler, FmtConv, Impulse, Kernel, KernelT, LinearDescaler, Placebo,
+    Point, Resampler, ResamplerT, Scaler, ZimgComplexKernel, ZimgDescaler
 )
 from .kernels.bicubic import MemeKernel
-from .kernels.docs import Example
 
 __all__ = [
     'abstract_kernels', 'excluded_kernels',
@@ -106,10 +105,10 @@ class NoScale(NoScaleBase, Bicubic):  # type: ignore
         return inner_no_scale
 
 
-abstract_kernels = [
-    Kernel, FmtConv, Example, Impulse, Placebo, ComplexKernel,
+abstract_kernels = list[type[Scaler | Descaler | Resampler | Kernel]]([
+    Kernel, FmtConv, Impulse, Placebo, ComplexKernel,
     ZimgDescaler, ZimgComplexKernel, LinearDescaler
-]
+])
 
 
 @to_singleton
@@ -145,9 +144,11 @@ class LinearLight:
     linear: bool = True
     sigmoid: bool | tuple[float, float] = False
 
-    kernel: KernelT = Catrom
+    resampler: ResamplerT | None = Catrom
 
     out_fmt: vs.VideoFormat | None = None
+
+    _linear: ClassVar[vs.VideoNode]
 
     @dataclass
     class LinearLightProcessing(cachedproperty.baseclass):
@@ -155,10 +156,10 @@ class LinearLight:
 
         @cachedproperty
         def linear(self) -> vs.VideoNode:
-            wclip = self.ll._wclip
+            wclip: vs.VideoNode = self.ll._wclip
 
             if self.ll._wclip.format.color_family is vs.YUV:
-                wclip = self.ll._kernel.resample(wclip, vs.RGBS, None, self.ll._matrix)
+                wclip = self.ll._resampler.resample(wclip, vs.RGBS, None, self.ll._matrix)
             else:
                 wclip = depth(wclip, 32)
 
@@ -174,7 +175,7 @@ class LinearLight:
             return wclip
 
         @linear.setter
-        def linear(self, processed: vs.VideoNode) -> vs.VideoNode:
+        def linear(self, processed: vs.VideoNode) -> None:
             if self.ll._exited:
                 raise CustomRuntimeError('You can\'t set .linear after going out of the context manager!')
             self._linear = processed
@@ -198,7 +199,7 @@ class LinearLight:
             if self.ll.linear:
                 processed = Point.scale_function(processed, transfer_in=Transfer.LINEAR, transfer=self.ll._curve)
 
-            return resample_to(processed, self.ll._fmt, self.ll._matrix, self.ll._kernel)
+            return resample_to(processed, self.ll._fmt, self.ll._matrix, self.ll._resampler)
 
     def __enter__(self) -> LinearLightProcessing:
         self.linear = self.linear or not not self.sigmoid
@@ -218,13 +219,14 @@ class LinearLight:
             self._soffset = 1.0 / (1 + exp(self._sslope * self._scenter))
             self._sscale = 1.0 / (1 + exp(self._sslope * (self._scenter - 1))) - self._soffset
 
-        self._fmt = self.out_fmt or self.clip.format
-        assert self._fmt
+        _fmt = self.out_fmt or self.clip.format
+        assert _fmt
+        self._fmt = _fmt
 
-        self._wclip = depth(self.clip, 32) if self.sigmoid else self.clip
+        self._wclip = cast(ConstantFormatVideoNode, depth(self.clip, 32) if self.sigmoid else self.clip)
         self._curve = Transfer.from_video(self.clip)
         self._matrix = Matrix.from_transfer(self._curve)
-        self._kernel = Catrom.ensure_obj(self.kernel)
+        self._resampler = Catrom.ensure_obj(self.resampler)
 
         self._exited = False
 
@@ -235,12 +237,12 @@ class LinearLight:
 
 
 def resample_to(
-    clip: vs.VideoNode, out_fmt: HoldsVideoFormatT, matrix: MatrixT | None = None, kernel: KernelT = Catrom
+    clip: vs.VideoNode, out_fmt: HoldsVideoFormatT, matrix: MatrixT | None = None, resampler: ResamplerT = Catrom
 ) -> vs.VideoNode:
     out_fmt = get_video_format(out_fmt)
     assert clip.format
 
-    kernel = Kernel.from_param(kernel)
+    resampler = Resampler.from_param(resampler)
 
     if out_fmt == clip.format:
         return clip
@@ -251,4 +253,4 @@ def resample_to(
     if out_fmt.subsampling_w == out_fmt.subsampling_h == 0:
         return Point.resample(clip, out_fmt, matrix)
 
-    return kernel.resample(clip, out_fmt, matrix)
+    return resampler.resample(clip, out_fmt, matrix)

@@ -1,4 +1,3 @@
-from . import docs  # noqa: F401
 from .abstract import *  # noqa: F401, F403
 from .bicubic import *  # noqa: F401, F403
 from .complex import *  # noqa: F401, F403

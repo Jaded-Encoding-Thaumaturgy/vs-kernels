@@ -4,9 +4,9 @@ from math import ceil
 from typing import Any, Sequence, Union, cast, overload
 
 from vstools import (
-    CustomIndexError, CustomValueError, FieldBased, FuncExceptT, GenericVSFunction, HoldsVideoFormatT, Matrix, MatrixT,
-    T, VideoFormatT, check_correct_subsampling, check_variable_resolution, core, depth, expect_bits, get_subclasses,
-    get_video_format, inject_self, vs, vs_object
+    CustomIndexError, CustomValueError, FieldBased, FuncExceptT, GenericVSFunction, HoldsVideoFormatT, KwargsT, Matrix,
+    MatrixT, T, VideoFormatT, check_correct_subsampling, check_variable_resolution, core, depth, expect_bits,
+    get_subclasses, get_video_format, inject_self, vs, vs_object
 )
 
 from ..exceptions import UnknownDescalerError, UnknownKernelError, UnknownScalerError
@@ -19,12 +19,12 @@ __all__ = [
 ]
 
 
-def _default_kernel_radius(cls, self) -> int:
+def _default_kernel_radius(cls: type[T], self: T) -> int:
     if hasattr(self, '_static_kernel_radius'):
-        return ceil(self._static_kernel_radius)
+        return ceil(self._static_kernel_radius)  # type: ignore
 
     try:
-        return super(cls, self).kernel_radius
+        return super(cls, self).kernel_radius  # type: ignore
     except AttributeError:
         ...
 
@@ -65,7 +65,7 @@ class BaseScaler:
         basecls: type[T],
         value: str | type[T] | T | None,
         exception_cls: type[CustomValueError],
-        excluded: Sequence[type[T]] = [],
+        excluded: Sequence[type] = [],
         func_except: FuncExceptT | None = None
     ) -> T:
         new_scaler: T
@@ -92,11 +92,20 @@ class Scaler(vs_object):
     Abstract scaling interface.
     """
 
-    kwargs: dict[str, Any]
+    kwargs: KwargsT
     """Arguments passed to the internal scale function"""
+
+    scale_function: GenericVSFunction
+    """Scale function called internally when scaling/resampling/shifting"""
 
     def __init__(self, **kwargs: Any) -> None:
         self.kwargs = kwargs
+
+    def get_scale_args(
+        self, clip: vs.VideoNode, shift: tuple[float, float] = (0, 0),
+        width: int | None = None, height: int | None = None, **kwargs: Any
+    ) -> KwargsT:
+        return dict(src_top=shift[0], src_left=shift[1]) | self.kwargs | dict(width=width, height=height) | kwargs
 
     @inject_self.cached
     def scale(  # type: ignore[override]
@@ -134,10 +143,16 @@ class Scaler(vs_object):
 
     @inject_self.property
     def kernel_radius(self) -> int:
-        return _default_kernel_radius(__class__, self)
+        return _default_kernel_radius(__class__, self)  # type: ignore
 
 
 class Descaler(vs_object):
+    kwargs: KwargsT
+    """Arguments passed to the internal descale function"""
+
+    descale_function: GenericVSFunction
+    """Descale function called internally when descaling"""
+
     @inject_self.cached
     def descale(  # type: ignore[override]
         self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (0, 0), **kwargs: Any
@@ -154,7 +169,7 @@ class Descaler(vs_object):
             if height % 2:
                 raise CustomIndexError('You can\'t descale to odd resolution when crossconverted!', self.descale)
 
-            top_shift, field_shift = de_kwargs.get('src_top'), 0.125 * height / clip.height
+            top_shift, field_shift = de_kwargs.get('src_top', 0.0), 0.125 * height / clip.height
 
             fields = clip.std.SeparateFields(field_based.is_tff)
 
@@ -183,10 +198,22 @@ class Descaler(vs_object):
 
     @inject_self.property
     def kernel_radius(self) -> int:
-        return _default_kernel_radius(__class__, self)
+        return _default_kernel_radius(__class__, self)  # type: ignore
+
+    def get_descale_args(
+        self, clip: vs.VideoNode, shift: tuple[float, float] = (0, 0),
+        width: int | None = None, height: int | None = None, **kwargs: Any
+    ) -> KwargsT:
+        return dict(src_top=shift[0], src_left=shift[1]) | dict(width=width, height=height) | kwargs
 
 
 class Resampler(vs_object):
+    kwargs: KwargsT
+    """Arguments passed to the internal resampling function"""
+
+    resample_function: GenericVSFunction
+    """Resample function called internally when resampling"""
+
     @inject_self.cached
     def resample(
         self, clip: vs.VideoNode, format: int | VideoFormatT | HoldsVideoFormatT,
@@ -208,10 +235,20 @@ class Resampler(vs_object):
 
     @inject_self.property
     def kernel_radius(self) -> int:
-        return _default_kernel_radius(__class__, self)
+        return _default_kernel_radius(__class__, self)  # type: ignore
+
+    def get_resample_args(
+        self, clip: vs.VideoNode, format: int | VideoFormatT | HoldsVideoFormatT,
+        matrix: MatrixT | None, matrix_in: MatrixT | None, **kwargs: Any
+    ) -> KwargsT:
+        return dict(
+            format=get_video_format(format).id,
+            matrix=Matrix.from_param(matrix),
+            matrix_in=Matrix.from_param(matrix_in)
+        ) | self.kwargs | kwargs
 
 
-class Kernel(Scaler, Descaler, Resampler):
+class Kernel(Scaler, Descaler, Resampler):  # type: ignore
     """
     Abstract scaling kernel interface.
 
@@ -219,19 +256,12 @@ class Kernel(Scaler, Descaler, Resampler):
     resizer, not the descale resizer.
     """
 
-    scale_function: GenericVSFunction
-    """Scale function called internally when scaling/resampling/shifting"""
-    descale_function: GenericVSFunction
-    """Descale function called internally when descaling"""
-    resample_function: GenericVSFunction
-    """Resample function called internally when resampling"""
-
-    @overload
+    @overload  # type: ignore
     @inject_self.cached
     def shift(self, clip: vs.VideoNode, shift: tuple[float, float] = (0, 0), **kwargs: Any) -> vs.VideoNode:
         ...
 
-    @overload
+    @overload  # type: ignore
     @inject_self.cached
     def shift(
         self, clip: vs.VideoNode,
@@ -295,7 +325,7 @@ class Kernel(Scaler, Descaler, Resampler):
 
     def get_params_args(
         self, is_descale: bool, clip: vs.VideoNode, width: int | None = None, height: int | None = None, **kwargs: Any
-    ) -> dict[str, Any]:
+    ) -> KwargsT:
         return dict(width=width, height=height) | kwargs
 
     def get_scale_args(
@@ -338,7 +368,7 @@ class Kernel(Scaler, Descaler, Resampler):
 
     @overload
     @classmethod
-    def from_param(
+    def from_param(  # type: ignore
         cls: type[Kernel], kernel: DescalerT | KernelT | None = None, func_except: FuncExceptT | None = None
     ) -> type[Descaler]:
         ...
@@ -376,7 +406,7 @@ class Kernel(Scaler, Descaler, Resampler):
 
     @overload
     @classmethod
-    def ensure_obj(
+    def ensure_obj(  # type: ignore
         cls: type[Kernel], kernel: DescalerT | KernelT | None = None, func_except: FuncExceptT | None = None
     ) -> Descaler:
         ...
@@ -394,8 +424,8 @@ class Kernel(Scaler, Descaler, Resampler):
         func_except: FuncExceptT | None = None
     ) -> Scaler | Descaler | Resampler | Kernel:
         from ..util import abstract_kernels
-        return BaseScaler.ensure_obj(
-            cls, Kernel, kernel, UnknownKernelError, abstract_kernels, func_except  # type: ignore
+        return BaseScaler.ensure_obj(  # type: ignore
+            cls, Kernel, kernel, UnknownKernelError, abstract_kernels, func_except
         )
 
 

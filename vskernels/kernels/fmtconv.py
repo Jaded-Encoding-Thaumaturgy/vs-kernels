@@ -17,7 +17,7 @@ __all__ = [
 call_wrapT = Callable[..., VSFunction]
 
 
-class FmtConv(Resampler, ComplexScaler):
+class FmtConv(Resampler, ComplexScaler):  # type: ignore
     """
     Abstract fmtconv's resizer.
 
@@ -118,12 +118,12 @@ class FmtConv(Resampler, ComplexScaler):
             kwargs |= dict(sw=width, sh=height)
         return kwargs
 
-    @overload
+    @overload  # type: ignore
     @inject_self.cached
     def shift(self, clip: vs.VideoNode, shift: tuple[float, float] = (0, 0), **kwargs: Any) -> vs.VideoNode:
         ...
 
-    @overload
+    @overload  # type: ignore
     @inject_self.cached
     def shift(
         self, clip: vs.VideoNode,
@@ -170,8 +170,8 @@ class FmtConv(Resampler, ComplexScaler):
         return _shift(shifts_top, shifts_left)
 
     @inject_self.property
-    def kernel_radius(self) -> int:
-        taps_hv = self.kwargs.get('taps_h', self.kwargs.get('taps_v', None))
+    def kernel_radius(self) -> int:  # type: ignore
+        taps_hv: float | None = self.kwargs.get('taps_h', self.kwargs.get('taps_v', None))
 
         if taps_hv is None:
             taps_hv = self.taps

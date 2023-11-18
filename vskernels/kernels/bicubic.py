@@ -69,7 +69,7 @@ class Bicubic(ComplexKernel):
         return args | dict(filter_param_a=self.b, filter_param_b=self.c)
 
     @inject_self.property
-    def kernel_radius(self) -> int:
+    def kernel_radius(self) -> int:  # type: ignore
         if (self.b, self.c) == (0, 0):
             return 1
         return 2
@@ -151,7 +151,7 @@ class RobidouxSharp(Bicubic):
         super().__init__(b=b, c=c, **kwargs)
 
 
-class BicubicDidee(MemeKernel, Bicubic):
+class BicubicDidee(MemeKernel, Bicubic):  # type: ignore
     """
     Kernel inspired by a Didée post.
 
@@ -169,7 +169,7 @@ class BicubicDidee(MemeKernel, Bicubic):
         super().__init__(b=-1 / 2, c=1 / 4, **kwargs)
 
 
-class SetsuCubic(MemeKernel, Bicubic):
+class SetsuCubic(MemeKernel, Bicubic):  # type: ignore
     """
     Schizo (Setsugen's) values calculated from the legendary Pompo-san filterchain.
     Useful for heavy post processed content or ringing in general.
@@ -189,7 +189,7 @@ class SetsuCubic(MemeKernel, Bicubic):
         )
 
 
-class ZewiaCubic(MemeKernel, Bicubic):
+class ZewiaCubic(MemeKernel, Bicubic):  # type: ignore
     """
     Schizo (Zewia's) values he made up for downscaling after prefiltering for anti-aliasing.
 
@@ -202,7 +202,7 @@ class ZewiaCubic(MemeKernel, Bicubic):
         super().__init__(b=-1 / 3, c=1 / 6, **kwargs)
 
 
-class BicubicZopti(MemeKernel, Bicubic):
+class BicubicZopti(MemeKernel, Bicubic):  # type: ignore
     """
     Kernel optimized by Zopti.
 
@@ -217,7 +217,7 @@ class BicubicZopti(MemeKernel, Bicubic):
         super().__init__(b=-0.6, c=0.4, **kwargs)
 
 
-class BicubicZoptiNeutral(MemeKernel, Bicubic):
+class BicubicZoptiNeutral(MemeKernel, Bicubic):  # type: ignore
     """
     Kernel inspired by Zopti.
     Bicubic b=-0.6, c=0.3
@@ -273,5 +273,5 @@ class BicubicAuto(ComplexKernel):
         return autob, autoc
 
     @inject_self.property
-    def kernel_radius(self) -> int:
+    def kernel_radius(self) -> int:  # type: ignore
         return Bicubic(*self._get_bc_args()).kernel_radius

@@ -68,9 +68,9 @@ class Gaussian(FmtConv):
                 if a1 < 1.0 or a1 > 100.0:
                     raise CustomValueError("curve must be in range 1-100! (inclusive)")
         else:
-            a1 = self.sigma.to_fmtc(sigma)
+            a1 = self.sigma.to_fmtc(sigma)  # type: ignore
 
-            low, up = self.sigma.from_fmtc(100), self.sigma.from_fmtc(1)
+            low, up = self.sigma.from_fmtc(100), self.sigma.from_fmtc(1)  # type: ignore
 
             if a1 < 1.0 or a1 > 100.0:
                 raise CustomValueError(f"sigma must be in range {low:.4f}-{up:.4f}! (inclusive)")

@@ -76,7 +76,7 @@ class Example(Kernel):
         return core.resize.Bicubic(
             clip, format=get_video_format(format).id,
             filter_param_a=self.b, filter_param_b=self.c,
-            matrix=matrix, matrix_in=matrix_in, **self.kwargs, **kwargs
+            matrix=matrix, matrix_in=matrix_in, **self.kwargs, **kwargs  # type: ignore
         )
 
     @overload  # type: ignore

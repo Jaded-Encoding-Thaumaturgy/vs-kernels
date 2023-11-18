@@ -3,7 +3,7 @@ from __future__ import annotations
 from math import ceil
 from typing import TYPE_CHECKING, Any
 
-from vstools import Transfer, TransferT, core, inject_self, vs
+from vstools import Transfer, TransferT, core, inject_self, vs, fallback
 
 from .complex import LinearScaler
 
@@ -85,13 +85,13 @@ class Placebo(LinearScaler):
         )
 
     @inject_self.property
-    def kernel_radius(self) -> int:
+    def kernel_radius(self) -> int:  # type: ignore
         from .bicubic import Bicubic
 
         if self.taps:
             return ceil(self.taps)
 
         if self.b or self.c:
-            return Bicubic(self.b, self.c).kernel_radius
+            return Bicubic(fallback(self.b, 0), fallback(self.c, 0.5)).kernel_radius
 
         return 2
