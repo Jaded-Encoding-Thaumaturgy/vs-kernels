@@ -3,6 +3,7 @@ from __future__ import annotations
 from math import ceil
 from typing import Any, Callable, overload
 
+from stgpytools import inject_kwargs_params
 from vstools import VideoFormatT, VSFunction, core, inject_self, vs
 
 from .abstract import Resampler
@@ -102,11 +103,13 @@ class FmtConv(Resampler, ComplexScaler):  # type: ignore
 
     def get_scale_args(
         self, clip: vs.VideoNode, shift: tuple[float, float] = (0, 0),
-        width: int | None = None, height: int | None = None, **kwargs: Any
+        width: int | None = None, height: int | None = None,
+        *funcs: Callable[..., Any], **kwargs: Any
     ) -> dict[str, Any]:
         return self._clean_args(
             sx=shift[1], sy=shift[0], kernel=self._kernel,
-            **self.kwargs, **self.get_params_args(False, clip, width, height, **kwargs)
+            **self.get_clean_kwargs(*funcs),
+            **self.get_params_args(False, clip, width, height, **kwargs)
         )
 
     def get_params_args(
@@ -120,11 +123,13 @@ class FmtConv(Resampler, ComplexScaler):  # type: ignore
 
     @overload  # type: ignore
     @inject_self.cached
+    @inject_kwargs_params
     def shift(self, clip: vs.VideoNode, shift: tuple[float, float] = (0, 0), **kwargs: Any) -> vs.VideoNode:
         ...
 
     @overload  # type: ignore
     @inject_self.cached
+    @inject_kwargs_params
     def shift(
         self, clip: vs.VideoNode,
         shift_top: float | list[float] = 0.0, shift_left: float | list[float] = 0.0, **kwargs: Any
@@ -132,6 +137,7 @@ class FmtConv(Resampler, ComplexScaler):  # type: ignore
         ...
 
     @inject_self.cached  # type: ignore
+    @inject_kwargs_params
     def shift(
         self, clip: vs.VideoNode,
         shifts_or_top: float | tuple[float, float] | list[float] | None = None,
@@ -143,7 +149,8 @@ class FmtConv(Resampler, ComplexScaler):  # type: ignore
 
         def _shift(shift_top: float | list[float] = 0.0, shift_left: float | list[float] = 0.0) -> vs.VideoNode:
             return self.scale_function(
-                clip, sy=shift_top, sx=shift_left, kernel=self._kernel, **self.kwargs, **kwargs
+                clip, sy=shift_top, sx=shift_left, kernel=self._kernel,
+                **self.get_clean_kwargs(), **kwargs
             )
 
         if not shifts_or_top and not shift_left:
@@ -177,3 +184,6 @@ class FmtConv(Resampler, ComplexScaler):  # type: ignore
             taps_hv = self.taps
 
         return ceil(taps_hv)
+
+    def get_implemented_funcs(self) -> tuple[Callable[..., Any]]:
+        return (self.shift, )  # type: ignore

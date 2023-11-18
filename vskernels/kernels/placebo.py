@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 from math import ceil
-from typing import TYPE_CHECKING, Any
+from typing import Any, Callable
 
-from vstools import Transfer, TransferT, core, inject_self, vs, fallback
+from stgpytools import inject_kwargs_params
+from vstools import Transfer, TransferT, core, fallback, inject_self, vs
 
 from .complex import LinearScaler
 
@@ -50,39 +51,41 @@ class Placebo(LinearScaler):
         self.taper = taper
         self.antiring = antiring
         self.cutoff = cutoff
-        super().__init__(**kwargs)
+        super().__init__(**(dict(curve=Transfer.BT709) | kwargs))
 
-    if TYPE_CHECKING:
-        @inject_self.cached
-        def scale(  # type: ignore[override]
-            self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (0, 0),
-            *, linear: bool = True, sigmoid: bool | tuple[float, float] = True, curve: TransferT | None = None,
-            **kwargs: Any
-        ) -> vs.VideoNode:
-            ...
-    else:
-        ...
+    @inject_self.cached
+    @inject_kwargs_params
+    def scale(  # type: ignore[override]
+        self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (0, 0),
+        *, linear: bool = True, sigmoid: bool | tuple[float, float] = True, curve: TransferT | None = None,
+        **kwargs: Any
+    ) -> vs.VideoNode:
+        return super().scale(
+            clip, width, height, shift, linear=linear, sigmoid=sigmoid,
+            trc=Transfer.from_param_or_video(curve, clip).value_libplacebo
+        )
 
     def get_scale_args(
         self, clip: vs.VideoNode, shift: tuple[float, float] = (0, 0),
-        width: int | None = None, height: int | None = None, **kwargs: Any
+        width: int | None = None, height: int | None = None,
+        *funcs: Callable[..., Any], **kwargs: Any
     ) -> dict[str, Any]:
-        return dict(sx=shift[1], sy=shift[0]) | self.kwargs | self.get_params_args(
-            False, clip, width, height, **kwargs
+        return (
+            dict(sx=shift[1], sy=shift[0])
+            | self.get_clean_kwargs(*funcs)
+            | self.get_params_args(False, clip, width, height, **kwargs)
         )
 
     def get_params_args(
         self, is_descale: bool, clip: vs.VideoNode, width: int | None = None, height: int | None = None, **kwargs: Any
     ) -> dict[str, Any]:
-        curve = Transfer.from_param_or_video(kwargs.get('curve', Transfer.BT709), clip)
-
         return dict(
             width=width, height=height, filter=self._kernel,
             radius=self.taps, param1=self.b, param2=self.c,
             clamp=self.clamp, taper=self.taper, blur=self.blur,
             antiring=self.antiring, cutoff=self.cutoff,
-            lut_entries=self.lut_entries, trc=curve.value_libplacebo
-        )
+            lut_entries=self.lut_entries
+        ) | kwargs
 
     @inject_self.property
     def kernel_radius(self) -> int:  # type: ignore

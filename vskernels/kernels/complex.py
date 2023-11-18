@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any, SupportsFloat, TypeVar, Union, cast
 
+from stgpytools import inject_kwargs_params
 from vstools import Dar, KwargsT, Resolution, Sar, VSFunctionAllArgs, check_correct_subsampling, inject_self, vs
 
 from .abstract import Descaler, Kernel, Resampler, Scaler
@@ -35,12 +36,9 @@ def _from_param(cls: type[XarT], value: XarT | bool | float | None, fallback: Xa
 
 
 class _BaseLinearOperation:
-    def __init__(self, **kwargs: Any) -> None:
-        self.orig_kwargs = kwargs
-        self.kwargs = {k: v for k, v in kwargs.items() if k not in ('linear', 'sigmoid')}
-
     @staticmethod
     def _linear_op(op_name: str) -> Any:
+        @inject_kwargs_params
         def func(
             self: _BaseLinearOperation, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (0, 0),
             *, linear: bool = False, sigmoid: bool | tuple[float, float] = False, **kwargs: Any
@@ -52,8 +50,9 @@ class _BaseLinearOperation:
                 VSFunctionAllArgs,
                 getattr(self, f'_linear_{op_name}') if has_custom_op else getattr(super(), op_name)  # type: ignore
             )
-            sigmoid = self.orig_kwargs.get('sigmoid', sigmoid)
-            linear = self.orig_kwargs.get('linear', False) or linear or not not sigmoid
+
+            if sigmoid:
+                linear = True
 
             if not linear and not has_custom_op:
                 return operation(clip, width, height, shift, **kwargs)
@@ -71,6 +70,7 @@ class _BaseLinearOperation:
 class LinearScaler(_BaseLinearOperation, Scaler):
     if TYPE_CHECKING:
         @inject_self.cached
+        @inject_kwargs_params
         def scale(  # type: ignore[override]
             self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (0, 0),
             *, linear: bool = False, sigmoid: bool | tuple[float, float] = False, **kwargs: Any
@@ -83,6 +83,7 @@ class LinearScaler(_BaseLinearOperation, Scaler):
 class LinearDescaler(_BaseLinearOperation, Descaler):
     if TYPE_CHECKING:
         @inject_self.cached
+        @inject_kwargs_params
         def descale(  # type: ignore[override]
             self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (0, 0),
             *, linear: bool = False, sigmoid: bool | tuple[float, float] = False, **kwargs: Any
@@ -158,6 +159,7 @@ class KeepArScaler(Scaler):
         return kwargs, out_shift, out_sar
 
     @inject_self.cached
+    @inject_kwargs_params
     def scale(  # type: ignore[override]
         self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (0, 0), *,
         sar: Sar | float | bool | None = None, dar: Dar | float | bool | None = None, keep_ar: bool = False,
@@ -183,16 +185,18 @@ class KeepArScaler(Scaler):
 
 
 class ComplexScaler(LinearScaler, KeepArScaler):
-    if TYPE_CHECKING:
-        @inject_self.cached
-        def scale(  # type: ignore[override]
-            self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (0, 0),
-            *,
-            sar: Sar | bool | float | None = None, dar: Dar | bool | float | None = None, keep_ar: bool = False,
-            linear: bool = False, sigmoid: bool | tuple[float, float] = False,
-            **kwargs: Any
-        ) -> vs.VideoNode:
-            ...
+    @inject_self.cached
+    @inject_kwargs_params
+    def scale(  # type: ignore[override]
+        self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (0, 0),
+        *,
+        sar: Sar | bool | float | None = None, dar: Dar | bool | float | None = None, keep_ar: bool = False,
+        linear: bool = False, sigmoid: bool | tuple[float, float] = False,
+        **kwargs: Any
+    ) -> vs.VideoNode:
+        return super().scale(
+            clip, width, height, shift, sar=sar, dar=dar, keep_ar=keep_ar, linear=linear, sigmoid=sigmoid, **kwargs
+        )
 
 
 class ComplexKernel(Kernel, LinearDescaler, ComplexScaler):  # type: ignore

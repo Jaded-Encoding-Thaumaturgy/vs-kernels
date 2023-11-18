@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from math import exp
 from typing import Any, ClassVar, cast
 
+from stgpytools import inject_kwargs_params
 from vstools import (
     ConstantFormatVideoNode, CustomRuntimeError, CustomValueError, HoldsVideoFormatT, Matrix, MatrixT, Transfer,
     cachedproperty, depth, get_video_format, inject_self, to_singleton, vs
@@ -82,6 +83,7 @@ class NoShift(Bicubic, NoShiftBase):  # type: ignore
 
 class NoScaleBase(Scaler):
     @inject_self.cached
+    @inject_kwargs_params
     def scale(  # type: ignore
         self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (0, 0), **kwargs: Any
     ) -> vs.VideoNode:

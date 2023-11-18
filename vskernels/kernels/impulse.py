@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import Any, Sequence
 
+from stgpytools import inject_kwargs_params
 from vstools import inject_self, vs
 
 from .fmtconv import FmtConv
@@ -40,6 +41,7 @@ class Impulse(FmtConv):
         super().__init__(taps, impulse=[*impulse[::-1], *impulse[:-1]], kovrspl=oversample, **kwargs)
 
     @inject_self.cached
+    @inject_kwargs_params
     def scale(  # type: ignore[override]
         self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (-0.125, -0.125), **kwargs: Any
     ) -> vs.VideoNode:

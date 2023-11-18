@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+from stgpytools import inject_kwargs_params
 from vstools import CustomIntEnum, inject_self, vs
 
 from .abstract import Descaler
@@ -23,6 +24,7 @@ class BorderHandling(CustomIntEnum):
 class ZimgDescaler(Descaler):
     if TYPE_CHECKING:
         @inject_self.cached
+        @inject_kwargs_params
         def descale(  # type: ignore[override]
             self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (0, 0),
             *, blur: float = 1.0, border_handling: BorderHandlingT = BorderHandling.MIRROR, **kwargs: Any
@@ -33,6 +35,7 @@ class ZimgDescaler(Descaler):
 class ZimgComplexKernel(ComplexKernel, ZimgDescaler):  # type: ignore
     if TYPE_CHECKING:
         @inject_self.cached
+        @inject_kwargs_params
         def descale(  # type: ignore[override]
             self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (0, 0),
             *, blur: float = 1.0, border_handling: BorderHandlingT, ignore_mask: vs.VideoNode | None = None,

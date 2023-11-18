@@ -1,8 +1,11 @@
 from __future__ import annotations
 
+from functools import lru_cache
+from inspect import Signature
 from math import ceil
-from typing import Any, Sequence, Union, cast, overload
+from typing import Any, Callable, Sequence, Union, cast, overload
 
+from stgpytools import inject_kwargs_params
 from vstools import (
     CustomIndexError, CustomValueError, FieldBased, FuncExceptT, GenericVSFunction, HoldsVideoFormatT, KwargsT, Matrix,
     MatrixT, T, VideoFormatT, check_correct_subsampling, check_variable_resolution, core, depth, expect_bits,
@@ -29,6 +32,36 @@ def _default_kernel_radius(cls: type[T], self: T) -> int:
         ...
 
     raise NotImplementedError
+
+
+@lru_cache
+def _get_keywords(_methods: tuple[Callable[..., Any] | None, ...], self: Any) -> set[str]:
+    methods_list = list(_methods)
+
+    for cls in self.__class__.mro():
+        if hasattr(cls, 'get_implemented_funcs'):
+            methods_list.extend(cls.get_implemented_funcs(self))
+
+    methods = {*methods_list} - {None}
+
+    keywords = set[str]()
+
+    for method in methods:
+        try:
+            try:
+                signature = method.__signature__  # type: ignore
+            except Exception:
+                signature = Signature.from_callable(method)  # type: ignore
+
+            keywords.update(signature.parameters.keys())
+        except Exception:
+            ...
+
+    return keywords
+
+
+def _clean_self_kwargs(methods: tuple[Callable[..., Any] | None, ...], self: Any) -> KwargsT:
+    return {k: v for k, v in self.kwargs.items() if k not in _get_keywords(methods, self)}
 
 
 class BaseScaler:
@@ -101,13 +134,8 @@ class Scaler(vs_object):
     def __init__(self, **kwargs: Any) -> None:
         self.kwargs = kwargs
 
-    def get_scale_args(
-        self, clip: vs.VideoNode, shift: tuple[float, float] = (0, 0),
-        width: int | None = None, height: int | None = None, **kwargs: Any
-    ) -> KwargsT:
-        return dict(src_top=shift[0], src_left=shift[1]) | self.kwargs | dict(width=width, height=height) | kwargs
-
     @inject_self.cached
+    @inject_kwargs_params
     def scale(  # type: ignore[override]
         self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (0, 0), **kwargs: Any
     ) -> vs.VideoNode:
@@ -145,6 +173,24 @@ class Scaler(vs_object):
     def kernel_radius(self) -> int:
         return _default_kernel_radius(__class__, self)  # type: ignore
 
+    def get_scale_args(
+        self, clip: vs.VideoNode, shift: tuple[float, float] = (0, 0),
+        width: int | None = None, height: int | None = None,
+        *funcs: Callable[..., Any], **kwargs: Any
+    ) -> KwargsT:
+        return (
+            dict(src_top=shift[0], src_left=shift[1])
+            | self.get_clean_kwargs(*funcs)
+            | dict(width=width, height=height)
+            | kwargs
+        )
+
+    def get_clean_kwargs(self, *funcs: Callable[..., Any] | None) -> KwargsT:
+        return _clean_self_kwargs(funcs, self)
+
+    def get_implemented_funcs(self) -> tuple[Callable[..., Any]]:
+        return (self.scale, self.multi)  # type: ignore
+
 
 class Descaler(vs_object):
     kwargs: KwargsT
@@ -153,7 +199,11 @@ class Descaler(vs_object):
     descale_function: GenericVSFunction
     """Descale function called internally when descaling"""
 
+    def __init__(self, **kwargs: Any) -> None:
+        self.kwargs = kwargs
+
     @inject_self.cached
+    @inject_kwargs_params
     def descale(  # type: ignore[override]
         self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (0, 0), **kwargs: Any
     ) -> vs.VideoNode:
@@ -202,9 +252,20 @@ class Descaler(vs_object):
 
     def get_descale_args(
         self, clip: vs.VideoNode, shift: tuple[float, float] = (0, 0),
-        width: int | None = None, height: int | None = None, **kwargs: Any
+        width: int | None = None, height: int | None = None,
+        *funcs: Callable[..., Any], **kwargs: Any
     ) -> KwargsT:
-        return dict(src_top=shift[0], src_left=shift[1]) | dict(width=width, height=height) | kwargs
+        return (
+            dict(src_top=shift[0], src_left=shift[1])
+            | self.get_clean_kwargs(*funcs)
+            | dict(width=width, height=height) | kwargs
+        )
+
+    def get_clean_kwargs(self, *funcs: Callable[..., Any] | None) -> KwargsT:
+        return _clean_self_kwargs(funcs, self)
+
+    def get_implemented_funcs(self) -> tuple[Callable[..., Any]]:
+        return (self.descale, )
 
 
 class Resampler(vs_object):
@@ -214,7 +275,11 @@ class Resampler(vs_object):
     resample_function: GenericVSFunction
     """Resample function called internally when resampling"""
 
+    def __init__(self, **kwargs: Any) -> None:
+        self.kwargs = kwargs
+
     @inject_self.cached
+    @inject_kwargs_params
     def resample(
         self, clip: vs.VideoNode, format: int | VideoFormatT | HoldsVideoFormatT,
         matrix: MatrixT | None = None, matrix_in: MatrixT | None = None, **kwargs: Any
@@ -239,13 +304,20 @@ class Resampler(vs_object):
 
     def get_resample_args(
         self, clip: vs.VideoNode, format: int | VideoFormatT | HoldsVideoFormatT,
-        matrix: MatrixT | None, matrix_in: MatrixT | None, **kwargs: Any
+        matrix: MatrixT | None, matrix_in: MatrixT | None,
+        *funcs: Callable[..., Any], **kwargs: Any
     ) -> KwargsT:
         return dict(
             format=get_video_format(format).id,
             matrix=Matrix.from_param(matrix),
             matrix_in=Matrix.from_param(matrix_in)
-        ) | self.kwargs | kwargs
+        ) | self.get_clean_kwargs(*funcs) | kwargs
+
+    def get_clean_kwargs(self, *funcs: Callable[..., Any] | None) -> KwargsT:
+        return _clean_self_kwargs(funcs, self)
+
+    def get_implemented_funcs(self) -> tuple[Callable[..., Any]]:
+        return (self.resample, )
 
 
 class Kernel(Scaler, Descaler, Resampler):  # type: ignore
@@ -258,11 +330,13 @@ class Kernel(Scaler, Descaler, Resampler):  # type: ignore
 
     @overload  # type: ignore
     @inject_self.cached
+    @inject_kwargs_params
     def shift(self, clip: vs.VideoNode, shift: tuple[float, float] = (0, 0), **kwargs: Any) -> vs.VideoNode:
         ...
 
     @overload  # type: ignore
     @inject_self.cached
+    @inject_kwargs_params
     def shift(
         self, clip: vs.VideoNode,
         shift_top: float | list[float] = 0.0, shift_left: float | list[float] = 0.0, **kwargs: Any
@@ -270,6 +344,7 @@ class Kernel(Scaler, Descaler, Resampler):  # type: ignore
         ...
 
     @inject_self.cached  # type: ignore
+    @inject_kwargs_params
     def shift(
         self, clip: vs.VideoNode,
         shifts_or_top: float | tuple[float, float] | list[float] | None = None,
@@ -322,35 +397,6 @@ class Kernel(Scaler, Descaler, Resampler):  # type: ignore
         ]
 
         return core.std.ShufflePlanes(shifted_planes, [0, 0, 0], clip.format.color_family)
-
-    def get_params_args(
-        self, is_descale: bool, clip: vs.VideoNode, width: int | None = None, height: int | None = None, **kwargs: Any
-    ) -> KwargsT:
-        return dict(width=width, height=height) | kwargs
-
-    def get_scale_args(
-        self, clip: vs.VideoNode, shift: tuple[float, float] = (0, 0),
-        width: int | None = None, height: int | None = None, **kwargs: Any
-    ) -> dict[str, Any]:
-        return dict(src_top=shift[0], src_left=shift[1]) | self.kwargs | self.get_params_args(
-            False, clip, width, height, **kwargs
-        )
-
-    def get_descale_args(
-        self, clip: vs.VideoNode, shift: tuple[float, float] = (0, 0),
-        width: int | None = None, height: int | None = None, **kwargs: Any
-    ) -> dict[str, Any]:
-        return dict(src_top=shift[0], src_left=shift[1]) | self.get_params_args(True, clip, width, height, **kwargs)
-
-    def get_resample_args(
-        self, clip: vs.VideoNode, format: int | VideoFormatT | HoldsVideoFormatT,
-        matrix: MatrixT | None, matrix_in: MatrixT | None, **kwargs: Any
-    ) -> dict[str, Any]:
-        return dict(
-            format=get_video_format(format).id,
-            matrix=Matrix.from_param(matrix),
-            matrix_in=Matrix.from_param(matrix_in)
-        ) | self.kwargs | self.get_params_args(False, clip, **kwargs)
 
     @overload
     @classmethod
@@ -427,6 +473,50 @@ class Kernel(Scaler, Descaler, Resampler):  # type: ignore
         return BaseScaler.ensure_obj(  # type: ignore
             cls, Kernel, kernel, UnknownKernelError, abstract_kernels, func_except
         )
+
+    def get_params_args(
+        self, is_descale: bool, clip: vs.VideoNode, width: int | None = None, height: int | None = None, **kwargs: Any
+    ) -> KwargsT:
+        return dict(width=width, height=height) | kwargs
+
+    def get_scale_args(
+        self, clip: vs.VideoNode, shift: tuple[float, float] = (0, 0),
+        width: int | None = None, height: int | None = None,
+        *funcs: Callable[..., Any], **kwargs: Any
+    ) -> KwargsT:
+        return (
+            dict(src_top=shift[0], src_left=shift[1])
+            | self.get_clean_kwargs(*funcs)
+            | self.get_params_args(False, clip, width, height, **kwargs)
+        )
+
+    def get_descale_args(
+        self, clip: vs.VideoNode, shift: tuple[float, float] = (0, 0),
+        width: int | None = None, height: int | None = None,
+        *funcs: Callable[..., Any], **kwargs: Any
+    ) -> KwargsT:
+        return (
+            dict(src_top=shift[0], src_left=shift[1])
+            | self.get_clean_kwargs(*funcs)
+            | self.get_params_args(True, clip, width, height, **kwargs)
+        )
+
+    def get_resample_args(
+        self, clip: vs.VideoNode, format: int | VideoFormatT | HoldsVideoFormatT,
+        matrix: MatrixT | None, matrix_in: MatrixT | None,
+        *funcs: Callable[..., Any], **kwargs: Any
+    ) -> KwargsT:
+        return (
+            dict(
+                format=get_video_format(format).id, matrix=Matrix.from_param(matrix),
+                matrix_in=Matrix.from_param(matrix_in)
+            )
+            | self.get_clean_kwargs(*funcs)
+            | self.get_params_args(False, clip, **kwargs)
+        )
+
+    def get_implemented_funcs(self) -> tuple[Callable[..., Any]]:
+        return (self.shift, )  # type: ignore
 
 
 ScalerT = Union[str, type[Scaler], Scaler]
