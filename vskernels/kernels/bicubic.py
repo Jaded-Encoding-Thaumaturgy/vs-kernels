@@ -120,14 +120,14 @@ class AdobeBicubic(Bicubic):
 
 
 class AdobeBicubicSharper(Bicubic):
-    """Bicuboc b=0, c=1, blur=1.05; Adobe's "Bicubic Sharper" interpolation preset."""
+    """Bicubic b=0, c=1, blur=1.05; Adobe's "Bicubic Sharper" interpolation preset."""
 
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(b=0, c=1, blur=1.05, **kwargs)
 
 
 class AdobeBicubicSmoother(Bicubic):
-    """Bicuboc b=0, c=0.625, blur=1.15 ; Adobe's "Bicubic Smoother" interpolation preset."""
+    """Bicubic b=0, c=0.625, blur=1.15 ; Adobe's "Bicubic Smoother" interpolation preset."""
 
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(b=0, c=5 / 8, blur=1.15, **kwargs)
