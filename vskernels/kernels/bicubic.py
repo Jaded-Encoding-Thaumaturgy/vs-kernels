@@ -13,7 +13,7 @@ __all__ = [
     'Hermite',
     'Mitchell',
     'Catrom',
-    'FFmpegBicubic',
+    'SwscaleBicubic',
     'AdobeBicubic',
     'AdobeBicubicSharper',
     'AdobeBicubicSmoother',
@@ -105,7 +105,7 @@ class Catrom(Bicubic):
         super().__init__(b=0, c=1 / 2, **kwargs)
 
 
-class FFmpegBicubic(Bicubic):
+class SwscaleBicubic(Bicubic):
     """Bicubic b=0, c=0.6; FFmpeg's swscale default"""
 
     def __init__(self, **kwargs: Any) -> None:
