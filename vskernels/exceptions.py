@@ -7,6 +7,7 @@ from vstools import CustomValueError, FuncExceptT
 __all__ = [
     'UnknownScalerError',
     'UnknownDescalerError',
+    'UnknownResamplerError',
     'UnknownKernelError'
 ]
 
@@ -29,6 +30,16 @@ class UnknownDescalerError(CustomValueError):
         **kwargs: Any
     ) -> None:
         super().__init__(message, func, descaler=descaler, **kwargs)
+
+
+class UnknownResamplerError(CustomValueError):
+    """Raised when an unknown resampler is passed."""
+
+    def __init__(
+        self, func: FuncExceptT, resampler: str, message: str = 'Unknown concrete resampler "{resampler}"!',
+        **kwargs: Any
+    ) -> None:
+        super().__init__(message, func, resampler=resampler, **kwargs)
 
 
 class UnknownKernelError(CustomValueError):
