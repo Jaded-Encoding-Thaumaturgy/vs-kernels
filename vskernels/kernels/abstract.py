@@ -3,7 +3,7 @@ from __future__ import annotations
 from functools import lru_cache
 from inspect import Signature
 from math import ceil
-from typing import Any, Callable, Sequence, Union, cast, overload
+from typing import Any, Callable, ClassVar, Sequence, TypeVar, Union, cast, overload
 
 from stgpytools import inject_kwargs_params
 from vstools import (
@@ -12,7 +12,7 @@ from vstools import (
     get_subclasses, get_video_format, inject_self, vs, vs_object
 )
 
-from ..exceptions import UnknownDescalerError, UnknownKernelError, UnknownScalerError
+from ..exceptions import UnknownDescalerError, UnknownKernelError, UnknownResamplerError, UnknownScalerError
 
 __all__ = [
     'Scaler', 'ScalerT',
@@ -67,7 +67,7 @@ def _clean_self_kwargs(methods: tuple[Callable[..., Any] | None, ...], self: Any
 def _base_from_param(
     cls: type[T],
     basecls: type[T],
-    value: str | type[T] | T,
+    value: str | type[T] | T | None,
     exception_cls: type[CustomValueError],
     excluded: Sequence[type[T]] = [],
     func_except: FuncExceptT | None = None
@@ -118,19 +118,57 @@ def _base_ensure_obj(
     return new_scaler
 
 
-class Scaler(vs_object):
+class BaseScaler(vs_object):
     """
-    Abstract scaling interface.
+    Base abstract scaling interface.
     """
 
     kwargs: KwargsT
     """Arguments passed to the internal scale function"""
 
-    scale_function: GenericVSFunction
-    """Scale function called internally when scaling/resampling/shifting"""
+    _err_class: ClassVar[type[CustomValueError]]
 
     def __init__(self, **kwargs: Any) -> None:
         self.kwargs = kwargs
+
+    @classmethod
+    def from_param(
+        cls: type[BaseScalerT], scaler: str | type[BaseScalerT] | BaseScalerT | None = None, /,
+        func_except: FuncExceptT | None = None
+    ) -> type[BaseScalerT]:
+        return _base_from_param(
+            cls, (mro := cls.mro())[mro.index(BaseScaler) - 1], scaler, cls._err_class, [], func_except
+        )
+
+    @classmethod
+    def ensure_obj(
+        cls: type[BaseScalerT], scaler: str | type[BaseScalerT] | BaseScalerT | None = None, /,
+        func_except: FuncExceptT | None = None
+    ) -> BaseScalerT:
+        return _base_ensure_obj(
+            cls, (mro := cls.mro())[mro.index(BaseScaler) - 1], scaler, cls._err_class, [], func_except
+        )
+
+    @inject_self.property
+    def kernel_radius(self) -> int:
+        return _default_kernel_radius(__class__, self)  # type: ignore
+
+    def get_clean_kwargs(self, *funcs: Callable[..., Any] | None) -> KwargsT:
+        return _clean_self_kwargs(funcs, self)
+
+
+BaseScalerT = TypeVar('BaseScalerT', bound=BaseScaler)
+
+
+class Scaler(BaseScaler):
+    """
+    Abstract scaling interface.
+    """
+
+    _err_class = UnknownScalerError
+
+    scale_function: GenericVSFunction
+    """Scale function called internally when scaling"""
 
     @inject_self.cached
     @inject_kwargs_params
@@ -139,18 +177,6 @@ class Scaler(vs_object):
     ) -> vs.VideoNode:
         check_correct_subsampling(clip, width, height)
         return self.scale_function(clip, **self.get_scale_args(clip, shift, width, height, **kwargs))
-
-    @classmethod
-    def from_param(
-        cls: type[Scaler], scaler: ScalerT | None = None, func_except: FuncExceptT | None = None
-    ) -> type[Scaler]:
-        return _base_from_param(cls, Scaler, scaler, UnknownScalerError, [], func_except)  # type: ignore
-
-    @classmethod
-    def ensure_obj(
-        cls: type[Scaler], scaler: ScalerT | None = None, func_except: FuncExceptT | None = None
-    ) -> Scaler:
-        return _base_ensure_obj(cls, Scaler, scaler, UnknownScalerError, [], func_except)  # type: ignore
 
     @inject_self.cached
     def multi(
@@ -167,38 +193,34 @@ class Scaler(vs_object):
 
         return self.scale(clip, dst_width, dst_height, shift, **kwargs)
 
-    @inject_self.property
-    def kernel_radius(self) -> int:
-        return _default_kernel_radius(__class__, self)  # type: ignore
-
     def get_scale_args(
         self, clip: vs.VideoNode, shift: tuple[float, float] = (0, 0),
         width: int | None = None, height: int | None = None,
         *funcs: Callable[..., Any], **kwargs: Any
     ) -> KwargsT:
         return (
-            dict(src_top=shift[0], src_left=shift[1])
+            dict(
+                src_top=shift[0],
+                src_left=shift[1]
+            )
             | self.get_clean_kwargs(*funcs)
             | dict(width=width, height=height)
             | kwargs
         )
 
-    def get_clean_kwargs(self, *funcs: Callable[..., Any] | None) -> KwargsT:
-        return _clean_self_kwargs(funcs, self)
-
     def get_implemented_funcs(self) -> tuple[Callable[..., Any]]:
         return (self.scale, self.multi)  # type: ignore
 
 
-class Descaler(vs_object):
-    kwargs: KwargsT
-    """Arguments passed to the internal descale function"""
+class Descaler(BaseScaler):
+    """
+    Abstract descaling interface.
+    """
+
+    _err_class = UnknownDescalerError
 
     descale_function: GenericVSFunction
     """Descale function called internally when descaling"""
-
-    def __init__(self, **kwargs: Any) -> None:
-        self.kwargs = kwargs
 
     @inject_self.cached
     @inject_kwargs_params
@@ -232,49 +254,34 @@ class Descaler(vs_object):
 
         return depth(descaled, bits)
 
-    @classmethod
-    def from_param(
-        cls: type[Descaler], descaler: DescalerT | None = None, func_except: FuncExceptT | None = None
-    ) -> type[Descaler]:
-        return _base_from_param(cls, Descaler, descaler, UnknownDescalerError, [], func_except)  # type: ignore
-
-    @classmethod
-    def ensure_obj(
-        cls: type[Descaler], descaler: DescalerT | None = None, func_except: FuncExceptT | None = None
-    ) -> Descaler:
-        return _base_ensure_obj(cls, Descaler, descaler, UnknownDescalerError, [], func_except)  # type: ignore
-
-    @inject_self.property
-    def kernel_radius(self) -> int:
-        return _default_kernel_radius(__class__, self)  # type: ignore
-
     def get_descale_args(
         self, clip: vs.VideoNode, shift: tuple[float, float] = (0, 0),
         width: int | None = None, height: int | None = None,
         *funcs: Callable[..., Any], **kwargs: Any
     ) -> KwargsT:
         return (
-            dict(src_top=shift[0], src_left=shift[1])
+            dict(
+                src_top=shift[0],
+                src_left=shift[1]
+            )
             | self.get_clean_kwargs(*funcs)
-            | dict(width=width, height=height) | kwargs
+            | dict(width=width, height=height)
+            | kwargs
         )
-
-    def get_clean_kwargs(self, *funcs: Callable[..., Any] | None) -> KwargsT:
-        return _clean_self_kwargs(funcs, self)
 
     def get_implemented_funcs(self) -> tuple[Callable[..., Any]]:
         return (self.descale, )
 
 
-class Resampler(vs_object):
-    kwargs: KwargsT
-    """Arguments passed to the internal resampling function"""
+class Resampler(BaseScaler):
+    """
+    Abstract resampling interface.
+    """
+
+    _err_class = UnknownResamplerError
 
     resample_function: GenericVSFunction
     """Resample function called internally when resampling"""
-
-    def __init__(self, **kwargs: Any) -> None:
-        self.kwargs = kwargs
 
     @inject_self.cached
     @inject_kwargs_params
@@ -284,35 +291,20 @@ class Resampler(vs_object):
     ) -> vs.VideoNode:
         return self.resample_function(clip, **self.get_resample_args(clip, format, matrix, matrix_in, **kwargs))
 
-    @classmethod
-    def from_param(
-        cls: type[Resampler], resampler: ResamplerT | None = None, func_except: FuncExceptT | None = None
-    ) -> type[Resampler]:
-        return _base_from_param(cls, Resampler, resampler, UnknownDescalerError, [], func_except)  # type: ignore
-
-    @classmethod
-    def ensure_obj(
-        cls: type[Resampler], resampler: ResamplerT | None = None, func_except: FuncExceptT | None = None
-    ) -> Resampler:
-        return _base_ensure_obj(cls, Resampler, resampler, UnknownDescalerError, [], func_except)  # type: ignore
-
-    @inject_self.property
-    def kernel_radius(self) -> int:
-        return _default_kernel_radius(__class__, self)  # type: ignore
-
     def get_resample_args(
         self, clip: vs.VideoNode, format: int | VideoFormatT | HoldsVideoFormatT,
         matrix: MatrixT | None, matrix_in: MatrixT | None,
         *funcs: Callable[..., Any], **kwargs: Any
     ) -> KwargsT:
-        return dict(
-            format=get_video_format(format).id,
-            matrix=Matrix.from_param(matrix),
-            matrix_in=Matrix.from_param(matrix_in)
-        ) | self.get_clean_kwargs(*funcs) | kwargs
-
-    def get_clean_kwargs(self, *funcs: Callable[..., Any] | None) -> KwargsT:
-        return _clean_self_kwargs(funcs, self)
+        return (
+            dict(
+                format=get_video_format(format).id,
+                matrix=Matrix.from_param(matrix),
+                matrix_in=Matrix.from_param(matrix_in)
+            )
+            | self.get_clean_kwargs(*funcs)
+            | kwargs
+        )
 
     def get_implemented_funcs(self) -> tuple[Callable[..., Any]]:
         return (self.resample, )
@@ -320,11 +312,10 @@ class Resampler(vs_object):
 
 class Kernel(Scaler, Descaler, Resampler):  # type: ignore
     """
-    Abstract scaling kernel interface.
-
-    Additional kwargs supplied to constructor are passed only to the internal
-    resizer, not the descale resizer.
+    Abstract kernel interface.
     """
+
+    _err_class = UnknownKernelError  # type: ignore
 
     @overload  # type: ignore
     @inject_self.cached
@@ -506,7 +497,8 @@ class Kernel(Scaler, Descaler, Resampler):  # type: ignore
     ) -> KwargsT:
         return (
             dict(
-                format=get_video_format(format).id, matrix=Matrix.from_param(matrix),
+                format=get_video_format(format).id,
+                matrix=Matrix.from_param(matrix),
                 matrix_in=Matrix.from_param(matrix_in)
             )
             | self.get_clean_kwargs(*funcs)
