@@ -64,60 +64,58 @@ def _clean_self_kwargs(methods: tuple[Callable[..., Any] | None, ...], self: Any
     return {k: v for k, v in self.kwargs.items() if k not in _get_keywords(methods, self)}
 
 
-class BaseScaler:
-    @staticmethod
-    def from_param(
-        cls: type[T],
-        basecls: type[T],
-        value: str | type[T] | T,
-        exception_cls: type[CustomValueError],
-        excluded: Sequence[type[T]] = [],
-        func_except: FuncExceptT | None = None
-    ) -> type[T]:
-        if isinstance(value, str):
-            all_scalers = get_subclasses(Kernel, excluded)
-            search_str = value.lower().strip()
+def _base_from_param(
+    cls: type[T],
+    basecls: type[T],
+    value: str | type[T] | T,
+    exception_cls: type[CustomValueError],
+    excluded: Sequence[type[T]] = [],
+    func_except: FuncExceptT | None = None
+) -> type[T]:
+    if isinstance(value, str):
+        all_scalers = get_subclasses(Kernel, excluded)
+        search_str = value.lower().strip()
 
-            for scaler_cls in all_scalers:
-                if scaler_cls.__name__.lower() == search_str:
-                    return scaler_cls  # type: ignore
+        for scaler_cls in all_scalers:
+            if scaler_cls.__name__.lower() == search_str:
+                return scaler_cls  # type: ignore
 
-            raise exception_cls(func_except or cls.from_param, value)  # type: ignore
+        raise exception_cls(func_except or cls.from_param, value)  # type: ignore
 
-        if isinstance(value, type) and issubclass(value, basecls):
-            return value
+    if isinstance(value, type) and issubclass(value, basecls):
+        return value
 
-        if isinstance(value, cls):
-            return value.__class__
+    if isinstance(value, cls):
+        return value.__class__
 
-        return cls
+    return cls
 
-    @staticmethod
-    def ensure_obj(
-        cls: type[T],
-        basecls: type[T],
-        value: str | type[T] | T | None,
-        exception_cls: type[CustomValueError],
-        excluded: Sequence[type] = [],
-        func_except: FuncExceptT | None = None
-    ) -> T:
-        new_scaler: T
 
-        if value is None:
-            new_scaler = cls()
-        elif isinstance(value, cls) or isinstance(value, basecls):
-            new_scaler = value
-        else:
-            new_scaler = cls.from_param(value, func_except)()  # type: ignore
+def _base_ensure_obj(
+    cls: type[T],
+    basecls: type[T],
+    value: str | type[T] | T | None,
+    exception_cls: type[CustomValueError],
+    excluded: Sequence[type] = [],
+    func_except: FuncExceptT | None = None
+) -> T:
+    new_scaler: T
 
-        if new_scaler.__class__ in excluded:
-            raise exception_cls(
-                func_except or cls.ensure_obj, new_scaler.__class__,  # type: ignore
-                'This {cls_name} can\'t be instantiated to be used!',
-                cls_name=new_scaler.__class__
-            )
+    if value is None:
+        new_scaler = cls()
+    elif isinstance(value, cls) or isinstance(value, basecls):
+        new_scaler = value
+    else:
+        new_scaler = cls.from_param(value, func_except)()  # type: ignore
 
-        return new_scaler
+    if new_scaler.__class__ in excluded:
+        raise exception_cls(
+            func_except or cls.ensure_obj, new_scaler.__class__,  # type: ignore
+            'This {cls_name} can\'t be instantiated to be used!',
+            cls_name=new_scaler.__class__
+        )
+
+    return new_scaler
 
 
 class Scaler(vs_object):
@@ -146,13 +144,13 @@ class Scaler(vs_object):
     def from_param(
         cls: type[Scaler], scaler: ScalerT | None = None, func_except: FuncExceptT | None = None
     ) -> type[Scaler]:
-        return BaseScaler.from_param(cls, Scaler, scaler, UnknownScalerError, [], func_except)  # type: ignore
+        return _base_from_param(cls, Scaler, scaler, UnknownScalerError, [], func_except)  # type: ignore
 
     @classmethod
     def ensure_obj(
         cls: type[Scaler], scaler: ScalerT | None = None, func_except: FuncExceptT | None = None
     ) -> Scaler:
-        return BaseScaler.ensure_obj(cls, Scaler, scaler, UnknownScalerError, [], func_except)  # type: ignore
+        return _base_ensure_obj(cls, Scaler, scaler, UnknownScalerError, [], func_except)  # type: ignore
 
     @inject_self.cached
     def multi(
@@ -238,13 +236,13 @@ class Descaler(vs_object):
     def from_param(
         cls: type[Descaler], descaler: DescalerT | None = None, func_except: FuncExceptT | None = None
     ) -> type[Descaler]:
-        return BaseScaler.from_param(cls, Descaler, descaler, UnknownDescalerError, [], func_except)  # type: ignore
+        return _base_from_param(cls, Descaler, descaler, UnknownDescalerError, [], func_except)  # type: ignore
 
     @classmethod
     def ensure_obj(
         cls: type[Descaler], descaler: DescalerT | None = None, func_except: FuncExceptT | None = None
     ) -> Descaler:
-        return BaseScaler.ensure_obj(cls, Descaler, descaler, UnknownDescalerError, [], func_except)  # type: ignore
+        return _base_ensure_obj(cls, Descaler, descaler, UnknownDescalerError, [], func_except)  # type: ignore
 
     @inject_self.property
     def kernel_radius(self) -> int:
@@ -290,13 +288,13 @@ class Resampler(vs_object):
     def from_param(
         cls: type[Resampler], resampler: ResamplerT | None = None, func_except: FuncExceptT | None = None
     ) -> type[Resampler]:
-        return BaseScaler.from_param(cls, Resampler, resampler, UnknownDescalerError, [], func_except)  # type: ignore
+        return _base_from_param(cls, Resampler, resampler, UnknownDescalerError, [], func_except)  # type: ignore
 
     @classmethod
     def ensure_obj(
         cls: type[Resampler], resampler: ResamplerT | None = None, func_except: FuncExceptT | None = None
     ) -> Resampler:
-        return BaseScaler.ensure_obj(cls, Resampler, resampler, UnknownDescalerError, [], func_except)  # type: ignore
+        return _base_ensure_obj(cls, Resampler, resampler, UnknownDescalerError, [], func_except)  # type: ignore
 
     @inject_self.property
     def kernel_radius(self) -> int:
@@ -432,7 +430,7 @@ class Kernel(Scaler, Descaler, Resampler):  # type: ignore
         func_except: FuncExceptT | None = None
     ) -> type[Scaler] | type[Descaler] | type[Resampler] | type[Kernel]:
         from ..util import abstract_kernels
-        return BaseScaler.from_param(
+        return _base_from_param(
             cls, Kernel, kernel, UnknownKernelError, abstract_kernels, func_except  # type: ignore
         )
 
@@ -470,7 +468,7 @@ class Kernel(Scaler, Descaler, Resampler):  # type: ignore
         func_except: FuncExceptT | None = None
     ) -> Scaler | Descaler | Resampler | Kernel:
         from ..util import abstract_kernels
-        return BaseScaler.ensure_obj(  # type: ignore
+        return _base_ensure_obj(  # type: ignore
             cls, Kernel, kernel, UnknownKernelError, abstract_kernels, func_except
         )
 
