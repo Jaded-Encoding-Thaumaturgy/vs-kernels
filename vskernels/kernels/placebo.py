@@ -6,6 +6,7 @@ from typing import Any, Callable
 from stgpytools import inject_kwargs_params
 from vstools import Transfer, TransferT, core, fallback, inject_self, vs
 
+from ..types import Center, LeftShift, Slope, TopShift
 from .complex import LinearScaler
 
 __all__ = [
@@ -56,8 +57,8 @@ class Placebo(LinearScaler):
     @inject_self.cached
     @inject_kwargs_params
     def scale(  # type: ignore[override]
-        self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (0, 0),
-        *, linear: bool = True, sigmoid: bool | tuple[float, float] = True, curve: TransferT | None = None,
+        self, clip: vs.VideoNode, width: int, height: int, shift: tuple[TopShift, LeftShift] = (0, 0),
+        *, linear: bool = True, sigmoid: bool | tuple[Slope, Center] = True, curve: TransferT | None = None,
         **kwargs: Any
     ) -> vs.VideoNode:
         return super().scale(
@@ -66,7 +67,7 @@ class Placebo(LinearScaler):
         )
 
     def get_scale_args(
-        self, clip: vs.VideoNode, shift: tuple[float, float] = (0, 0),
+        self, clip: vs.VideoNode, shift: tuple[TopShift, LeftShift] = (0, 0),
         width: int | None = None, height: int | None = None,
         *funcs: Callable[..., Any], **kwargs: Any
     ) -> dict[str, Any]:

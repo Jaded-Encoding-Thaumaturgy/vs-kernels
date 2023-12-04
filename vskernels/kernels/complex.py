@@ -5,6 +5,7 @@ from typing import TYPE_CHECKING, Any, SupportsFloat, TypeVar, Union, cast
 from stgpytools import inject_kwargs_params
 from vstools import Dar, KwargsT, Resolution, Sar, VSFunctionAllArgs, check_correct_subsampling, inject_self, vs
 
+from ..types import Center, LeftShift, Slope, TopShift
 from .abstract import Descaler, Kernel, Resampler, Scaler
 
 __all__ = [
@@ -41,8 +42,8 @@ class _BaseLinearOperation:
         @inject_kwargs_params
         def func(
             self: _BaseLinearOperation, clip: vs.VideoNode, width: int, height: int,
-            shift: tuple[float, float] = (0, 0), *,
-            linear: bool = False, sigmoid: bool | tuple[float, float] = False, **kwargs: Any
+            shift: tuple[TopShift, LeftShift] = (0, 0), *,
+            linear: bool = False, sigmoid: bool | tuple[Slope, Center] = False, **kwargs: Any
         ) -> vs.VideoNode:
             from ..util import LinearLight
 
@@ -73,8 +74,8 @@ class LinearScaler(_BaseLinearOperation, Scaler):
         @inject_self.cached
         @inject_kwargs_params
         def scale(  # type: ignore[override]
-            self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (0, 0),
-            *, linear: bool = False, sigmoid: bool | tuple[float, float] = False, **kwargs: Any
+            self, clip: vs.VideoNode, width: int, height: int, shift: tuple[TopShift, LeftShift] = (0, 0),
+            *, linear: bool = False, sigmoid: bool | tuple[Slope, Center] = False, **kwargs: Any
         ) -> vs.VideoNode:
             ...
     else:
@@ -86,8 +87,8 @@ class LinearDescaler(_BaseLinearOperation, Descaler):
         @inject_self.cached
         @inject_kwargs_params
         def descale(  # type: ignore[override]
-            self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (0, 0),
-            *, linear: bool = False, sigmoid: bool | tuple[float, float] = False, **kwargs: Any
+            self, clip: vs.VideoNode, width: int, height: int, shift: tuple[TopShift, LeftShift] = (0, 0),
+            *, linear: bool = False, sigmoid: bool | tuple[Slope, Center] = False, **kwargs: Any
         ) -> vs.VideoNode:
             ...
     else:
@@ -116,9 +117,9 @@ class KeepArScaler(Scaler):
         return kwargs
 
     def _handle_crop_resize_kwargs(  # type: ignore[override]
-        self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float],
+        self, clip: vs.VideoNode, width: int, height: int, shift: tuple[TopShift, LeftShift],
         sar: Sar | bool | float | None, dar: Dar | bool | float | None, **kwargs: Any
-    ) -> tuple[KwargsT, tuple[float, float], Sar | None]:
+    ) -> tuple[KwargsT, tuple[TopShift, LeftShift], Sar | None]:
         kwargs.setdefault('src_top', kwargs.pop('sy', shift[0]))
         kwargs.setdefault('src_left', kwargs.pop('sx', shift[1]))
         kwargs.setdefault('src_width', kwargs.pop('sw', clip.width))
@@ -162,7 +163,7 @@ class KeepArScaler(Scaler):
     @inject_self.cached
     @inject_kwargs_params
     def scale(  # type: ignore[override]
-        self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (0, 0), *,
+        self, clip: vs.VideoNode, width: int, height: int, shift: tuple[TopShift, LeftShift] = (0, 0), *,
         sar: Sar | float | bool | None = None, dar: Dar | float | bool | None = None, keep_ar: bool = False,
         **kwargs: Any
     ) -> vs.VideoNode:
@@ -189,10 +190,10 @@ class ComplexScaler(LinearScaler, KeepArScaler):
     @inject_self.cached
     @inject_kwargs_params
     def scale(  # type: ignore[override]
-        self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (0, 0),
+        self, clip: vs.VideoNode, width: int, height: int, shift: tuple[TopShift, LeftShift] = (0, 0),
         *,
         sar: Sar | bool | float | None = None, dar: Dar | bool | float | None = None, keep_ar: bool = False,
-        linear: bool = False, sigmoid: bool | tuple[float, float] = False,
+        linear: bool = False, sigmoid: bool | tuple[Slope, Center] = False,
         **kwargs: Any
     ) -> vs.VideoNode:
         return super().scale(

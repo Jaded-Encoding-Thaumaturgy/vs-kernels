@@ -5,6 +5,7 @@ from typing import Any, Sequence
 from stgpytools import inject_kwargs_params
 from vstools import inject_self, vs
 
+from ..types import LeftShift, TopShift
 from .fmtconv import FmtConv
 
 __all__ = [
@@ -43,7 +44,7 @@ class Impulse(FmtConv):
     @inject_self.cached
     @inject_kwargs_params
     def scale(  # type: ignore[override]
-        self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (-0.125, -0.125), **kwargs: Any
+        self, clip: vs.VideoNode, width: int, height: int, shift: tuple[TopShift, LeftShift] = (-0.125, -0.125), **kwargs: Any
     ) -> vs.VideoNode:
         return super().scale(clip, width, height, shift, **kwargs)
 

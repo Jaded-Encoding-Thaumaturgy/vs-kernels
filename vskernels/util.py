@@ -15,6 +15,7 @@ from .kernels import (
     Point, Resampler, ResamplerT, Scaler, ZimgComplexKernel, ZimgDescaler
 )
 from .kernels.bicubic import MemeKernel
+from .types import Center, LeftShift, Slope, TopShift
 
 __all__ = [
     'abstract_kernels', 'excluded_kernels',
@@ -85,7 +86,7 @@ class NoScaleBase(Scaler):
     @inject_self.cached
     @inject_kwargs_params
     def scale(  # type: ignore
-        self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (0, 0), **kwargs: Any
+        self, clip: vs.VideoNode, width: int, height: int, shift: tuple[TopShift, LeftShift] = (0, 0), **kwargs: Any
     ) -> vs.VideoNode:
         try:
             return super().scale(clip, clip.width, clip.height, shift, **kwargs)  # type: ignore
@@ -144,7 +145,7 @@ class LinearLight:
     clip: vs.VideoNode
 
     linear: bool = True
-    sigmoid: bool | tuple[float, float] = False
+    sigmoid: bool | tuple[Slope, Center] = False
 
     resampler: ResamplerT | None = Catrom
 
@@ -176,7 +177,7 @@ class LinearLight:
 
             return wclip
 
-        @linear.setter
+        @linear.setter  # type: ignore
         def linear(self, processed: vs.VideoNode) -> None:
             if self.ll._exited:
                 raise CustomRuntimeError('You can\'t set .linear after going out of the context manager!')
@@ -190,7 +191,7 @@ class LinearLight:
             if not hasattr(self, '_linear'):
                 raise CustomValueError('You need to set .linear before getting .out!', self.__class__)
 
-            processed = self._linear
+            processed = self._linear  # type: ignore
 
             if self.ll.sigmoid:
                 processed = processed.std.Expr(

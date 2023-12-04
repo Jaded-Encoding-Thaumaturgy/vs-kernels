@@ -6,6 +6,7 @@ from typing import Any, Callable, overload
 from stgpytools import inject_kwargs_params
 from vstools import VideoFormatT, VSFunction, core, inject_self, vs
 
+from ..types import LeftShift, TopShift
 from .abstract import Resampler
 from .bicubic import Bicubic
 from .complex import ComplexScaler
@@ -102,7 +103,7 @@ class FmtConv(Resampler, ComplexScaler):  # type: ignore
         return kwargs
 
     def get_scale_args(
-        self, clip: vs.VideoNode, shift: tuple[float, float] = (0, 0),
+        self, clip: vs.VideoNode, shift: tuple[TopShift, LeftShift] = (0, 0),
         width: int | None = None, height: int | None = None,
         *funcs: Callable[..., Any], **kwargs: Any
     ) -> dict[str, Any]:
@@ -124,7 +125,7 @@ class FmtConv(Resampler, ComplexScaler):  # type: ignore
     @overload  # type: ignore
     @inject_self.cached
     @inject_kwargs_params
-    def shift(self, clip: vs.VideoNode, shift: tuple[float, float] = (0, 0), **kwargs: Any) -> vs.VideoNode:
+    def shift(self, clip: vs.VideoNode, shift: tuple[TopShift, LeftShift] = (0, 0), **kwargs: Any) -> vs.VideoNode:
         ...
 
     @overload  # type: ignore

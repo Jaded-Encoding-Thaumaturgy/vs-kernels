@@ -13,6 +13,7 @@ from vstools import (
 )
 
 from ..exceptions import UnknownDescalerError, UnknownKernelError, UnknownResamplerError, UnknownScalerError
+from ..types import LeftShift, TopShift
 
 __all__ = [
     'Scaler', 'ScalerT',
@@ -173,14 +174,14 @@ class Scaler(BaseScaler):
     @inject_self.cached
     @inject_kwargs_params
     def scale(  # type: ignore[override]
-        self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (0, 0), **kwargs: Any
+        self, clip: vs.VideoNode, width: int, height: int, shift: tuple[TopShift, LeftShift] = (0, 0), **kwargs: Any
     ) -> vs.VideoNode:
         check_correct_subsampling(clip, width, height)
         return self.scale_function(clip, **self.get_scale_args(clip, shift, width, height, **kwargs))
 
     @inject_self.cached
     def multi(
-        self, clip: vs.VideoNode, multi: float = 2, shift: tuple[float, float] = (0, 0), **kwargs: Any
+        self, clip: vs.VideoNode, multi: float = 2, shift: tuple[TopShift, LeftShift] = (0, 0), **kwargs: Any
     ) -> vs.VideoNode:
         assert check_variable_resolution(clip, self.multi)
 
@@ -194,7 +195,7 @@ class Scaler(BaseScaler):
         return self.scale(clip, dst_width, dst_height, shift, **kwargs)
 
     def get_scale_args(
-        self, clip: vs.VideoNode, shift: tuple[float, float] = (0, 0),
+        self, clip: vs.VideoNode, shift: tuple[TopShift, LeftShift] = (0, 0),
         width: int | None = None, height: int | None = None,
         *funcs: Callable[..., Any], **kwargs: Any
     ) -> KwargsT:
@@ -225,7 +226,7 @@ class Descaler(BaseScaler):
     @inject_self.cached
     @inject_kwargs_params
     def descale(  # type: ignore[override]
-        self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (0, 0), **kwargs: Any
+        self, clip: vs.VideoNode, width: int, height: int, shift: tuple[TopShift, LeftShift] = (0, 0), **kwargs: Any
     ) -> vs.VideoNode:
         check_correct_subsampling(clip, width, height)
 
@@ -255,7 +256,7 @@ class Descaler(BaseScaler):
         return depth(descaled, bits)
 
     def get_descale_args(
-        self, clip: vs.VideoNode, shift: tuple[float, float] = (0, 0),
+        self, clip: vs.VideoNode, shift: tuple[TopShift, LeftShift] = (0, 0),
         width: int | None = None, height: int | None = None,
         *funcs: Callable[..., Any], **kwargs: Any
     ) -> KwargsT:
@@ -320,7 +321,7 @@ class Kernel(Scaler, Descaler, Resampler):  # type: ignore
     @overload  # type: ignore
     @inject_self.cached
     @inject_kwargs_params
-    def shift(self, clip: vs.VideoNode, shift: tuple[float, float] = (0, 0), **kwargs: Any) -> vs.VideoNode:
+    def shift(self, clip: vs.VideoNode, shift: tuple[TopShift, LeftShift] = (0, 0), **kwargs: Any) -> vs.VideoNode:
         ...
 
     @overload  # type: ignore
@@ -343,7 +344,7 @@ class Kernel(Scaler, Descaler, Resampler):  # type: ignore
 
         n_planes = clip.format.num_planes
 
-        def _shift(src: vs.VideoNode, shift: tuple[float, float] = (0, 0)) -> vs.VideoNode:
+        def _shift(src: vs.VideoNode, shift: tuple[TopShift, LeftShift] = (0, 0)) -> vs.VideoNode:
             return self.scale_function(src, **self.get_scale_args(src, shift, **kwargs))
 
         if not shifts_or_top and not shift_left:
@@ -469,7 +470,7 @@ class Kernel(Scaler, Descaler, Resampler):  # type: ignore
         return dict(width=width, height=height) | kwargs
 
     def get_scale_args(
-        self, clip: vs.VideoNode, shift: tuple[float, float] = (0, 0),
+        self, clip: vs.VideoNode, shift: tuple[TopShift, LeftShift] = (0, 0),
         width: int | None = None, height: int | None = None,
         *funcs: Callable[..., Any], **kwargs: Any
     ) -> KwargsT:
@@ -480,7 +481,7 @@ class Kernel(Scaler, Descaler, Resampler):  # type: ignore
         )
 
     def get_descale_args(
-        self, clip: vs.VideoNode, shift: tuple[float, float] = (0, 0),
+        self, clip: vs.VideoNode, shift: tuple[TopShift, LeftShift] = (0, 0),
         width: int | None = None, height: int | None = None,
         *funcs: Callable[..., Any], **kwargs: Any
     ) -> KwargsT:
