@@ -102,6 +102,7 @@ class FmtConv(Resampler, ComplexScaler):  # type: ignore
 
         return kwargs
 
+    @inject_kwargs_params
     def get_scale_args(
         self, clip: vs.VideoNode, shift: tuple[TopShift, LeftShift] = (0, 0),
         width: int | None = None, height: int | None = None,

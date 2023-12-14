@@ -66,6 +66,7 @@ class Placebo(LinearScaler):
             trc=Transfer.from_param_or_video(curve, clip).value_libplacebo
         )
 
+    @inject_kwargs_params
     def get_scale_args(
         self, clip: vs.VideoNode, shift: tuple[TopShift, LeftShift] = (0, 0),
         width: int | None = None, height: int | None = None,
