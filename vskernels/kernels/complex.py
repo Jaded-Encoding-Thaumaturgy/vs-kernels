@@ -1,10 +1,11 @@
 from __future__ import annotations
 
+from functools import lru_cache
 from typing import TYPE_CHECKING, Any, SupportsFloat, TypeVar, Union, cast
 
 from stgpytools import inject_kwargs_params
 from vstools import (
-    CustomIntEnum, Dar, KwargsT, Resolution, Sar, VSFunctionAllArgs, check_correct_subsampling, inject_self, vs
+    CustomIntEnum, Dar, KwargsT, Resolution, Sar, VSFunctionAllArgs, check_correct_subsampling, inject_self, padder, vs
 )
 
 from ..types import Center, LeftShift, Slope, TopShift
@@ -28,6 +29,31 @@ class BorderHandling(CustomIntEnum):
     MIRROR = 0
     ZERO = 1
     REPEAT = 2
+
+    def prepare_clip(self, clip: vs.VideoNode, min_pad: int = 2) -> vs.VideoNode:
+        pad_w, pad_h = (
+            self.pad_amount(size, min_pad) for size in (clip.width, clip.height)
+        )
+
+        if pad_w == pad_h == 0:
+            return clip
+
+        args = (clip, pad_w, pad_w, pad_h, pad_h)
+
+        match self:
+            case BorderHandling.MIRROR:
+                return padder.MIRROR(*args)
+            case BorderHandling.ZERO:
+                return padder.COLOR(*args)
+            case BorderHandling.REPEAT:
+                return padder.REPEAT(*args)
+
+    @lru_cache
+    def pad_amount(self, size: int, min_amount: int = 2) -> int:
+        if self is BorderHandling.MIRROR:
+            return 0
+
+        return (((size + min_amount) + 7) & -8) - size
 
 
 def _from_param(cls: type[XarT], value: XarT | bool | float | None, fallback: XarT) -> XarT | None:
@@ -72,7 +98,7 @@ class _BaseLinearOperation:
             resampler: Resampler | None = self if isinstance(self, Resampler) else None
 
             with LinearLight(clip, linear, sigmoid, resampler, kwargs.pop('format', None)) as ll:
-                ll.linear = operation(ll.linear, width, height, shift, **kwargs)
+                ll.linear = operation(ll.linear, width, height, shift, **kwargs)  # type: ignore
 
             return ll.out
 
@@ -174,6 +200,7 @@ class KeepArScaler(Scaler):
     @inject_kwargs_params
     def scale(  # type: ignore[override]
         self, clip: vs.VideoNode, width: int, height: int, shift: tuple[TopShift, LeftShift] = (0, 0), *,
+        border_handling: BorderHandling = BorderHandling.MIRROR,
         sar: Sar | float | bool | None = None, dar: Dar | float | bool | None = None, keep_ar: bool = False,
         **kwargs: Any
     ) -> vs.VideoNode:
@@ -185,6 +212,12 @@ class KeepArScaler(Scaler):
             kwargs = self._get_kwargs_keep_ar(sar, dar, keep_ar, **kwargs)
 
             kwargs, shift, out_sar = self._handle_crop_resize_kwargs(clip, width, height, shift, **kwargs)
+
+            padded = border_handling.prepare_clip(clip, self.kernel_radius)
+
+            shift = tuple(  # type: ignore
+                s + p - c for s, p, c in zip(shift, *((x.width, x.height) for x in (clip, padded)))
+            )
 
         kwargs = self.get_scale_args(clip, shift, width, height, **kwargs)
 
@@ -202,12 +235,15 @@ class ComplexScaler(LinearScaler, KeepArScaler):
     def scale(  # type: ignore[override]
         self, clip: vs.VideoNode, width: int, height: int, shift: tuple[TopShift, LeftShift] = (0, 0),
         *,
+        border_handling: BorderHandling = BorderHandling.MIRROR,
         sar: Sar | bool | float | None = None, dar: Dar | bool | float | None = None, keep_ar: bool = False,
         linear: bool = False, sigmoid: bool | tuple[Slope, Center] = False,
         **kwargs: Any
     ) -> vs.VideoNode:
         return super().scale(
-            clip, width, height, shift, sar=sar, dar=dar, keep_ar=keep_ar, linear=linear, sigmoid=sigmoid, **kwargs
+            clip, width, height, shift, sar=sar, dar=dar, keep_ar=keep_ar,
+            linear=linear, sigmoid=sigmoid, border_handling=border_handling,
+            **kwargs
         )
 
 
