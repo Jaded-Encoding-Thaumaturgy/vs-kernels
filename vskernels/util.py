@@ -257,3 +257,8 @@ def resample_to(
         return Point.resample(clip, out_fmt, matrix)
 
     return resampler.resample(clip, out_fmt, matrix)
+
+
+if True:
+    from .kernels import abstract
+    abstract._finished_loading_abstract = True

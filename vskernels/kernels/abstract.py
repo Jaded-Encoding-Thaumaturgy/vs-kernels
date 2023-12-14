@@ -7,9 +7,9 @@ from typing import Any, Callable, ClassVar, Sequence, TypeVar, Union, cast, over
 
 from stgpytools import inject_kwargs_params
 from vstools import (
-    CustomIndexError, CustomValueError, FieldBased, FuncExceptT, GenericVSFunction, HoldsVideoFormatT, KwargsT, Matrix,
-    MatrixT, T, VideoFormatT, check_correct_subsampling, check_variable_resolution, core, depth, expect_bits,
-    get_subclasses, get_video_format, inject_self, vs, vs_object
+    CustomIndexError, CustomRuntimeError, CustomValueError, FieldBased, FuncExceptT, GenericVSFunction,
+    HoldsVideoFormatT, KwargsT, Matrix, MatrixT, T, VideoFormatT, check_correct_subsampling, check_variable_resolution,
+    core, depth, expect_bits, get_subclasses, get_video_format, inject_self, vs, vs_object
 )
 
 from ..exceptions import UnknownDescalerError, UnknownKernelError, UnknownResamplerError, UnknownScalerError
@@ -22,17 +22,14 @@ __all__ = [
     'Kernel', 'KernelT'
 ]
 
+_finished_loading_abstract = False
+
 
 def _default_kernel_radius(cls: type[T], self: T) -> int:
     if hasattr(self, '_static_kernel_radius'):
         return ceil(self._static_kernel_radius)  # type: ignore
 
-    try:
-        return super(cls, self).kernel_radius  # type: ignore
-    except AttributeError:
-        ...
-
-    raise NotImplementedError
+    return super(cls, self).kernel_radius  # type: ignore
 
 
 @lru_cache
@@ -131,6 +128,43 @@ class BaseScaler(vs_object):
 
     def __init__(self, **kwargs: Any) -> None:
         self.kwargs = kwargs
+
+    def __init_subclass__(cls) -> None:
+        if not _finished_loading_abstract:
+            return
+
+        from .zimg import ZimgComplexKernel
+        from ..util import abstract_kernels
+
+        if cls in abstract_kernels:
+            return
+
+        import sys
+
+        module = sys.modules[cls.__module__]
+
+        if hasattr(module, '__abstract__'):
+            if cls.__name__ in module.__abstract__:
+                abstract_kernels.append(cls)  # type: ignore
+                return
+
+        if 'kernel_radius' in cls.__dict__.keys():
+            return
+
+        mro = [cls, *({*cls.mro()} - {*ZimgComplexKernel.mro()})]
+
+        for sub_cls in mro:
+            if hasattr(sub_cls, '_static_kernel_radius'):
+                break
+
+            try:
+                if hasattr(sub_cls, 'kernel_radius'):
+                    break
+            except Exception:
+                ...
+        else:
+            if mro:
+                raise CustomRuntimeError('You must implement kernel_radius when inheriting BaseScaler!', reason=cls)
 
     @classmethod
     def from_param(
