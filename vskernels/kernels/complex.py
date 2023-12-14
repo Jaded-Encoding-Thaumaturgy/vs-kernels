@@ -3,12 +3,16 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any, SupportsFloat, TypeVar, Union, cast
 
 from stgpytools import inject_kwargs_params
-from vstools import Dar, KwargsT, Resolution, Sar, VSFunctionAllArgs, check_correct_subsampling, inject_self, vs
+from vstools import (
+    CustomIntEnum, Dar, KwargsT, Resolution, Sar, VSFunctionAllArgs, check_correct_subsampling, inject_self, vs
+)
 
 from ..types import Center, LeftShift, Slope, TopShift
 from .abstract import Descaler, Kernel, Resampler, Scaler
 
 __all__ = [
+    'BorderHandling',
+
     'LinearScaler', 'LinearDescaler',
 
     'KeepArScaler',
@@ -18,6 +22,12 @@ __all__ = [
 ]
 
 XarT = TypeVar('XarT', Sar, Dar)
+
+
+class BorderHandling(CustomIntEnum):
+    MIRROR = 0
+    ZERO = 1
+    REPEAT = 2
 
 
 def _from_param(cls: type[XarT], value: XarT | bool | float | None, fallback: XarT) -> XarT | None:

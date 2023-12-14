@@ -3,23 +3,16 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from stgpytools import inject_kwargs_params
-from vstools import CustomIntEnum, inject_self, vs
+from vstools import inject_self, vs
 
 from ..types import Center, LeftShift, Slope, TopShift
 from .abstract import Descaler
-from .complex import ComplexKernel
+from .complex import ComplexKernel, BorderHandling
 
 __all__ = [
-    'BorderHandling',
     'ZimgDescaler',
     'ZimgComplexKernel'
 ]
-
-
-class BorderHandling(CustomIntEnum):
-    MIRROR = 0
-    ZERO = 1
-    REPEAT = 2
 
 
 class ZimgDescaler(Descaler):
@@ -28,7 +21,7 @@ class ZimgDescaler(Descaler):
         @inject_kwargs_params
         def descale(  # type: ignore[override]
             self, clip: vs.VideoNode, width: int, height: int, shift: tuple[TopShift, LeftShift] = (0, 0),
-            *, blur: float = 1.0, border_handling: BorderHandlingT = BorderHandling.MIRROR, **kwargs: Any
+            *, blur: float = 1.0, border_handling: BorderHandling = BorderHandling.MIRROR, **kwargs: Any
         ) -> vs.VideoNode:
             ...
 
@@ -39,7 +32,7 @@ class ZimgComplexKernel(ComplexKernel, ZimgDescaler):  # type: ignore
         @inject_kwargs_params
         def descale(  # type: ignore[override]
             self, clip: vs.VideoNode, width: int, height: int, shift: tuple[TopShift, LeftShift] = (0, 0),
-            *, blur: float = 1.0, border_handling: BorderHandlingT, ignore_mask: vs.VideoNode | None = None,
+            *, blur: float = 1.0, border_handling: BorderHandling, ignore_mask: vs.VideoNode | None = None,
             linear: bool = False, sigmoid: bool | tuple[Slope, Center] = False, **kwargs: Any
         ) -> vs.VideoNode:
             ...
@@ -54,6 +47,3 @@ class ZimgComplexKernel(ComplexKernel, ZimgDescaler):  # type: ignore
                 args.pop(key, None)
 
         return args
-
-
-BorderHandlingT = BorderHandling | int
