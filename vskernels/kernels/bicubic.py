@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, Any
 
 from vstools import CustomValueError, core, vs, inject_self
 
-from .complex import ComplexKernel
+from .zimg import ZimgComplexKernel
 
 __all__ = [
     'Bicubic',
@@ -38,7 +38,7 @@ class MemeKernel:
             super().__init__(*args, **kwargs)
 
 
-class Bicubic(ComplexKernel):
+class Bicubic(ZimgComplexKernel):
     """
     Built-in bicubic resizer.
 
@@ -231,7 +231,7 @@ class BicubicZoptiNeutral(MemeKernel, Bicubic):  # type: ignore
         super().__init__(b=-0.6, c=0.3, **kwargs)
 
 
-class BicubicAuto(ComplexKernel):
+class BicubicAuto(ZimgComplexKernel):
     """
     Kernel that follows the rule of:
     b + 2c = target
