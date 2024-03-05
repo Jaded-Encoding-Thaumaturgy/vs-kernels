@@ -36,5 +36,5 @@ Dependencies
 
 The following VapourSynth libraries are required:
 
-* `descale <https://github.com/Irrational-Encoding-Wizardry/descale>`_
-* `fmtconv <https://github.com/EleonoreMizo/fmtconv>`_
+* `vsresize2 <https://github.com/Jaded-Encoding-Thaumaturgy/vsresize2>`_
+* `descale <https://github.com/Jaded-Encoding-Thaumaturgy/descale>`_

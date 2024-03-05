@@ -133,7 +133,7 @@ class BaseScaler(vs_object):
         if not _finished_loading_abstract:
             return
 
-        from .zimg import ZimgComplexKernel
+        from .complex import CustomComplexKernel
         from ..util import abstract_kernels
 
         if cls in abstract_kernels:
@@ -151,7 +151,7 @@ class BaseScaler(vs_object):
         if 'kernel_radius' in cls.__dict__.keys():
             return
 
-        mro = [cls, *({*cls.mro()} - {*ZimgComplexKernel.mro()})]
+        mro = [cls, *({*cls.mro()} - {*CustomComplexKernel.mro()})]
 
         for sub_cls in mro:
             if hasattr(sub_cls, '_static_kernel_radius'):

@@ -13,7 +13,7 @@ readme = Path('README.md').read_text()
 requirements = Path('requirements.txt').read_text()
 
 # stubs comand
-# vsgenstubs4 std resize descale fmtc placebo -o stubs
+# vsgenstubs4 std vsresize2 descale placebo -o stubs
 
 
 setuptools.setup(
