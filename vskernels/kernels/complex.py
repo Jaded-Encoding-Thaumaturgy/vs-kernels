@@ -219,9 +219,8 @@ class KeepArScaler(Scaler):
                 s + ((p - c) // 2) for s, c, p in zip(shift, *((x.width, x.height) for x in (clip, padded)))
             ), padded
 
-        kwargs = self.get_scale_args(clip, shift, width, height, **kwargs)
 
-        clip = self.scale_function(clip, **kwargs)
+        clip = Scaler.scale(self, clip, width, height, shift, **kwargs)
 
         if const_size and out_sar:
             clip = out_sar.apply(clip)

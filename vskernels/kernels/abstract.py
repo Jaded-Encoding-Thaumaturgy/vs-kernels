@@ -8,8 +8,8 @@ from typing import Any, Callable, ClassVar, Sequence, TypeVar, Union, cast, over
 from stgpytools import inject_kwargs_params
 from vstools import (
     CustomIndexError, CustomRuntimeError, CustomValueError, FieldBased, FuncExceptT, GenericVSFunction,
-    HoldsVideoFormatT, KwargsT, Matrix, MatrixT, T, VideoFormatT, check_correct_subsampling, check_variable_resolution,
-    core, depth, expect_bits, get_subclasses, get_video_format, inject_self, vs, vs_object
+    HoldsVideoFormatT, KwargsT, Matrix, MatrixT, PropEnum, T, VideoFormatT, check_correct_subsampling,
+    check_variable_resolution, core, depth, expect_bits, get_subclasses, get_video_format, inject_self, vs, vs_object
 )
 
 from ..exceptions import UnknownDescalerError, UnknownKernelError, UnknownResamplerError, UnknownScalerError
@@ -30,6 +30,15 @@ def _default_kernel_radius(cls: type[T], self: T) -> int:
         return ceil(self._static_kernel_radius)  # type: ignore
 
     return super(cls, self).kernel_radius  # type: ignore
+
+
+def _norm_props_enums(kwargs: KwargsT) -> KwargsT:
+    return {
+        key: (
+            (value.value_zimg if hasattr(value, 'value_zimg') else int(value))
+            if isinstance(value, PropEnum) else value
+        ) for key, value in kwargs.items()
+    }
 
 
 @lru_cache
@@ -211,7 +220,7 @@ class Scaler(BaseScaler):
         self, clip: vs.VideoNode, width: int, height: int, shift: tuple[TopShift, LeftShift] = (0, 0), **kwargs: Any
     ) -> vs.VideoNode:
         check_correct_subsampling(clip, width, height)
-        return self.scale_function(clip, **self.get_scale_args(clip, shift, width, height, **kwargs))
+        return self.scale_function(clip, **_norm_props_enums(self.get_scale_args(clip, shift, width, height, **kwargs)))
 
     @inject_self.cached
     def multi(
@@ -280,13 +289,14 @@ class Descaler(BaseScaler):
             fields = clip.std.SeparateFields(field_based.is_tff)
 
             interleaved = core.std.Interleave([
-                self.descale_function(fields[offset::2], **(de_kwargs | dict(src_top=top_shift + (field_shift * mult))))
+                self.descale_function(fields[offset::2], **_norm_props_enums(
+                    de_kwargs | dict(src_top=top_shift + (field_shift * mult))))
                 for offset, mult in [(0, 1), (1, -1)]
             ])
 
             descaled = interleaved.std.DoubleWeave(field_based.is_tff)[::2]
         else:
-            descaled = self.descale_function(clip, **de_kwargs)
+            descaled = self.descale_function(clip, **_norm_props_enums(de_kwargs))
 
         return depth(descaled, bits)
 
@@ -326,7 +336,7 @@ class Resampler(BaseScaler):
         self, clip: vs.VideoNode, format: int | VideoFormatT | HoldsVideoFormatT,
         matrix: MatrixT | None = None, matrix_in: MatrixT | None = None, **kwargs: Any
     ) -> vs.VideoNode:
-        return self.resample_function(clip, **self.get_resample_args(clip, format, matrix, matrix_in, **kwargs))
+        return self.resample_function(clip, **_norm_props_enums(self.get_resample_args(clip, format, matrix, matrix_in, **kwargs)))
 
     def get_resample_args(
         self, clip: vs.VideoNode, format: int | VideoFormatT | HoldsVideoFormatT,
@@ -381,7 +391,7 @@ class Kernel(Scaler, Descaler, Resampler):  # type: ignore
         n_planes = clip.format.num_planes
 
         def _shift(src: vs.VideoNode, shift: tuple[TopShift, LeftShift] = (0, 0)) -> vs.VideoNode:
-            return self.scale_function(src, **self.get_scale_args(src, shift, **kwargs))
+            return Scaler.scale(self, clip, **kwargs)
 
         if not shifts_or_top and not shift_left:
             return _shift(clip)

@@ -151,8 +151,7 @@ class FmtConv(Resampler, ComplexScaler):  # type: ignore
 
         def _shift(shift_top: float | list[float] = 0.0, shift_left: float | list[float] = 0.0) -> vs.VideoNode:
             return self.scale_function(
-                clip, sy=shift_top, sx=shift_left, kernel=self._kernel,
-                **self.get_clean_kwargs(), **kwargs
+                clip, sy=shift_top, sx=shift_left, kernel=self._kernel, **self.get_clean_kwargs(), **kwargs
             )
 
         if not shifts_or_top and not shift_left:
