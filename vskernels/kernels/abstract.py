@@ -142,8 +142,8 @@ class BaseScaler(vs_object):
         if not _finished_loading_abstract:
             return
 
-        from .zimg import ZimgComplexKernel
         from ..util import abstract_kernels
+        from .zimg import ZimgComplexKernel
 
         if cls in abstract_kernels:
             return
@@ -336,7 +336,9 @@ class Resampler(BaseScaler):
         self, clip: vs.VideoNode, format: int | VideoFormatT | HoldsVideoFormatT,
         matrix: MatrixT | None = None, matrix_in: MatrixT | None = None, **kwargs: Any
     ) -> vs.VideoNode:
-        return self.resample_function(clip, **_norm_props_enums(self.get_resample_args(clip, format, matrix, matrix_in, **kwargs)))
+        return self.resample_function(
+            clip, **_norm_props_enums(self.get_resample_args(clip, format, matrix, matrix_in, **kwargs))
+        )
 
     def get_resample_args(
         self, clip: vs.VideoNode, format: int | VideoFormatT | HoldsVideoFormatT,
