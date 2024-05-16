@@ -43,7 +43,8 @@ class Example(Kernel):
 
     @inject_self.cached
     def descale(  # type: ignore[override]
-        self, clip: vs.VideoNode, width: int | None, height: int | None, shift: tuple[float, float] = (0, 0), **kwargs: Any
+        self, clip: vs.VideoNode, width: int | None, height: int | None,
+        shift: tuple[float, float] = (0, 0), **kwargs: Any
     ) -> vs.VideoNode:
         """
         Perform a regular descaling operation.

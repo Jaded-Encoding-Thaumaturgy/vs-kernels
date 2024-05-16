@@ -100,14 +100,14 @@ def _base_from_param(
 
 
 def _base_ensure_obj(
-    cls: type[T],
-    basecls: type[T],
-    value: str | type[T] | T | None,
+    cls: type[BaseScalerT],
+    basecls: type[BaseScalerT],
+    value: str | type[BaseScalerT] | BaseScalerT | None,
     exception_cls: type[CustomValueError],
     excluded: Sequence[type] = [],
     func_except: FuncExceptT | None = None
-) -> T:
-    new_scaler: T
+) -> BaseScalerT:
+    new_scaler: BaseScalerT
 
     if value is None:
         new_scaler = cls()
@@ -277,7 +277,8 @@ class Descaler(BaseScaler):
     @inject_self.cached
     @inject_kwargs_params
     def descale(  # type: ignore[override]
-        self, clip: vs.VideoNode, width: int | None, height: int | None, shift: tuple[TopShift, LeftShift] = (0, 0), **kwargs: Any
+        self, clip: vs.VideoNode, width: int | None, height: int | None,
+        shift: tuple[TopShift, LeftShift] = (0, 0), **kwargs: Any
     ) -> vs.VideoNode:
         width, height = self._wh_norm(clip, width, height)
 
