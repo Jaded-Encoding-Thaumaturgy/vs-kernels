@@ -77,7 +77,8 @@ class _BaseLinearOperation:
     def _linear_op(op_name: str) -> Any:
         @inject_kwargs_params
         def func(
-            self: _BaseLinearOperation, clip: vs.VideoNode, width: int, height: int,
+            self: _BaseLinearOperation, clip: vs.VideoNode, width: int | None = None, height: int | None = None,
+
             shift: tuple[TopShift, LeftShift] = (0, 0), *,
             linear: bool = False, sigmoid: bool | tuple[Slope, Center] = False, **kwargs: Any
         ) -> vs.VideoNode:
@@ -110,7 +111,8 @@ class LinearScaler(_BaseLinearOperation, Scaler):
         @inject_self.cached
         @inject_kwargs_params
         def scale(  # type: ignore[override]
-            self, clip: vs.VideoNode, width: int, height: int, shift: tuple[TopShift, LeftShift] = (0, 0),
+            self, clip: vs.VideoNode, width: int | None = None, height: int | None = None, 
+            shift: tuple[TopShift, LeftShift] = (0, 0),
             *, linear: bool = False, sigmoid: bool | tuple[Slope, Center] = False, **kwargs: Any
         ) -> vs.VideoNode:
             ...
@@ -123,7 +125,8 @@ class LinearDescaler(_BaseLinearOperation, Descaler):
         @inject_self.cached
         @inject_kwargs_params
         def descale(  # type: ignore[override]
-            self, clip: vs.VideoNode, width: int, height: int, shift: tuple[TopShift, LeftShift] = (0, 0),
+            self, clip: vs.VideoNode, width: int | None = None, height: int | None = None,
+            shift: tuple[TopShift, LeftShift] = (0, 0),
             *, linear: bool = False, sigmoid: bool | tuple[Slope, Center] = False, **kwargs: Any
         ) -> vs.VideoNode:
             ...
@@ -153,7 +156,7 @@ class KeepArScaler(Scaler):
         return kwargs
 
     def _handle_crop_resize_kwargs(  # type: ignore[override]
-        self, clip: vs.VideoNode, width: int, height: int, shift: tuple[TopShift, LeftShift],
+        self, clip: vs.VideoNode, width: int | None, height: int | None, shift: tuple[TopShift, LeftShift],
         sar: Sar | bool | float | None, dar: Dar | bool | float | None, **kwargs: Any
     ) -> tuple[KwargsT, tuple[TopShift, LeftShift], Sar | None]:
         kwargs.setdefault('src_top', kwargs.pop('sy', shift[0]))
@@ -199,11 +202,14 @@ class KeepArScaler(Scaler):
     @inject_self.cached
     @inject_kwargs_params
     def scale(  # type: ignore[override]
-        self, clip: vs.VideoNode, width: int, height: int, shift: tuple[TopShift, LeftShift] = (0, 0), *,
+        self, clip: vs.VideoNode, width: int | None = None, height: int | None = None, 
+        shift: tuple[TopShift, LeftShift] = (0, 0), *,
         border_handling: BorderHandling = BorderHandling.MIRROR,
         sar: Sar | float | bool | None = None, dar: Dar | float | bool | None = None, keep_ar: bool = False,
         **kwargs: Any
     ) -> vs.VideoNode:
+        width, height = Scaler._wh_norm(clip, width, height)
+
         check_correct_subsampling(clip, width, height)
 
         const_size = 0 not in (clip.width, clip.height)
@@ -231,13 +237,15 @@ class ComplexScaler(LinearScaler, KeepArScaler):
     @inject_self.cached
     @inject_kwargs_params
     def scale(  # type: ignore[override]
-        self, clip: vs.VideoNode, width: int, height: int, shift: tuple[TopShift, LeftShift] = (0, 0),
+        self, clip: vs.VideoNode, width: int | None = None, height: int | None = None, 
+        shift: tuple[TopShift, LeftShift] = (0, 0),
         *,
         border_handling: BorderHandling = BorderHandling.MIRROR,
         sar: Sar | bool | float | None = None, dar: Dar | bool | float | None = None, keep_ar: bool = False,
         linear: bool = False, sigmoid: bool | tuple[Slope, Center] = False,
         **kwargs: Any
     ) -> vs.VideoNode:
+        width, height = Scaler._wh_norm(clip, width, height)
         return super().scale(
             clip, width, height, shift, sar=sar, dar=dar, keep_ar=keep_ar,
             linear=linear, sigmoid=sigmoid, border_handling=border_handling,

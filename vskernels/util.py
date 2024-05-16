@@ -86,9 +86,11 @@ class NoScaleBase(Scaler):
     @inject_self.cached
     @inject_kwargs_params
     def scale(  # type: ignore
-        self, clip: vs.VideoNode, width: int, height: int, shift: tuple[TopShift, LeftShift] = (0, 0), **kwargs: Any
+        self, clip: vs.VideoNode, width: int | None = None, height: int | None = None,
+        shift: tuple[TopShift, LeftShift] = (0, 0), **kwargs: Any
     ) -> vs.VideoNode:
         try:
+            width, height = Scaler._wh_norm(clip, width, height)
             return super().scale(clip, clip.width, clip.height, shift, **kwargs)  # type: ignore
         except Exception:
             return clip

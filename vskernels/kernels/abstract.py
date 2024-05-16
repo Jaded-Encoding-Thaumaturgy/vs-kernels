@@ -9,7 +9,8 @@ from stgpytools import inject_kwargs_params
 from vstools import (
     CustomIndexError, CustomRuntimeError, CustomValueError, FieldBased, FuncExceptT, GenericVSFunction,
     HoldsVideoFormatT, KwargsT, Matrix, MatrixT, PropEnum, T, VideoFormatT, check_correct_subsampling,
-    check_variable_resolution, core, depth, expect_bits, get_subclasses, get_video_format, inject_self, vs, vs_object
+    check_variable_resolution, core, depth, expect_bits, fallback, get_subclasses, get_video_format, inject_self, vs,
+    vs_object
 )
 
 from ..exceptions import UnknownDescalerError, UnknownKernelError, UnknownResamplerError, UnknownScalerError
@@ -175,6 +176,10 @@ class BaseScaler(vs_object):
             if mro:
                 raise CustomRuntimeError('You must implement kernel_radius when inheriting BaseScaler!', reason=cls)
 
+    @staticmethod
+    def _wh_norm(clip: vs.VideoNode, width: int | None = None, height: int | None = None) -> tuple[int, int]:
+        return (fallback(width, clip.width), fallback(height, clip.height))
+
     @classmethod
     def from_param(
         cls: type[BaseScalerT], scaler: str | type[BaseScalerT] | BaseScalerT | None = None, /,
@@ -217,8 +222,10 @@ class Scaler(BaseScaler):
     @inject_self.cached
     @inject_kwargs_params
     def scale(  # type: ignore[override]
-        self, clip: vs.VideoNode, width: int, height: int, shift: tuple[TopShift, LeftShift] = (0, 0), **kwargs: Any
+        self, clip: vs.VideoNode, width: int | None = None, height: int | None = None,
+        shift: tuple[TopShift, LeftShift] = (0, 0), **kwargs: Any
     ) -> vs.VideoNode:
+        width, height = Scaler._wh_norm(clip, width, height)
         check_correct_subsampling(clip, width, height)
         return self.scale_function(clip, **_norm_props_enums(self.get_scale_args(clip, shift, width, height, **kwargs)))
 
@@ -270,8 +277,10 @@ class Descaler(BaseScaler):
     @inject_self.cached
     @inject_kwargs_params
     def descale(  # type: ignore[override]
-        self, clip: vs.VideoNode, width: int, height: int, shift: tuple[TopShift, LeftShift] = (0, 0), **kwargs: Any
+        self, clip: vs.VideoNode, width: int | None, height: int | None, shift: tuple[TopShift, LeftShift] = (0, 0), **kwargs: Any
     ) -> vs.VideoNode:
+        width, height = self._wh_norm(clip, width, height)
+
         check_correct_subsampling(clip, width, height)
 
         field_based = FieldBased.from_param_or_video(kwargs.pop('field_based', None), clip)

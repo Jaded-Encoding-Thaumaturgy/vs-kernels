@@ -7,7 +7,7 @@ from vstools import inject_self, vs
 
 from ..types import Center, LeftShift, Slope, TopShift
 from .abstract import Descaler
-from .complex import ComplexKernel, BorderHandling
+from .complex import BorderHandling, ComplexKernel
 
 __all__ = [
     'ZimgDescaler',
@@ -20,7 +20,7 @@ class ZimgDescaler(Descaler):
         @inject_self.cached
         @inject_kwargs_params
         def descale(  # type: ignore[override]
-            self, clip: vs.VideoNode, width: int, height: int, shift: tuple[TopShift, LeftShift] = (0, 0),
+            self, clip: vs.VideoNode, width: int | None, height: int | None, shift: tuple[TopShift, LeftShift] = (0, 0),
             *, blur: float = 1.0, border_handling: BorderHandling = BorderHandling.MIRROR, **kwargs: Any
         ) -> vs.VideoNode:
             ...
@@ -31,7 +31,7 @@ class ZimgComplexKernel(ComplexKernel, ZimgDescaler):  # type: ignore
         @inject_self.cached
         @inject_kwargs_params
         def descale(  # type: ignore[override]
-            self, clip: vs.VideoNode, width: int, height: int, shift: tuple[TopShift, LeftShift] = (0, 0),
+            self, clip: vs.VideoNode, width: int | None, height: int | None, shift: tuple[TopShift, LeftShift] = (0, 0),
             *, blur: float = 1.0, border_handling: BorderHandling, ignore_mask: vs.VideoNode | None = None,
             linear: bool = False, sigmoid: bool | tuple[Slope, Center] = False, **kwargs: Any
         ) -> vs.VideoNode:

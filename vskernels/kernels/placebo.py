@@ -57,10 +57,11 @@ class Placebo(LinearScaler):
     @inject_self.cached
     @inject_kwargs_params
     def scale(  # type: ignore[override]
-        self, clip: vs.VideoNode, width: int, height: int, shift: tuple[TopShift, LeftShift] = (0, 0),
-        *, linear: bool = True, sigmoid: bool | tuple[Slope, Center] = True, curve: TransferT | None = None,
-        **kwargs: Any
+        self, clip: vs.VideoNode, width: int | None = None, height: int | None = None,
+        shift: tuple[TopShift, LeftShift] = (0, 0), *,
+        linear: bool = True, sigmoid: bool | tuple[Slope, Center] = True, curve: TransferT | None = None, **kwargs: Any
     ) -> vs.VideoNode:
+        width, height = self._wh_norm(clip, width, height)
         return super().scale(
             clip, width, height, shift, linear=linear, sigmoid=sigmoid,
             trc=Transfer.from_param_or_video(curve, clip).value_libplacebo
