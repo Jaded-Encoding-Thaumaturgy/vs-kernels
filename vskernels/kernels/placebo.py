@@ -15,6 +15,14 @@ __all__ = [
 
 
 class Placebo(LinearScaler):
+    """
+    Abstract Placebo scaler.
+
+    Dependencies:
+
+    * vs-placebo <https://github.com/sgt0/vs-placebo>`_
+    """
+
     _kernel: str
     """Name of the placebo kernel"""
 
@@ -30,10 +38,6 @@ class Placebo(LinearScaler):
 
     # Quality settings
     antiring: float
-    cutoff: float
-
-    # Other settings
-    lut_entries: int = 64
 
     scale_function = core.lazy.placebo.Resample
 
@@ -41,7 +45,7 @@ class Placebo(LinearScaler):
         self,
         taps: float | None = None, b: float | None = None, c: float | None = None,
         clamp: float = 0.0, blur: float = 0.0, taper: float = 0.0,
-        antiring: float = 0.0, cutoff: float = 0.001,
+        antiring: float = 0.0,
         **kwargs: Any
     ) -> None:
         self.taps = taps
@@ -51,7 +55,6 @@ class Placebo(LinearScaler):
         self.blur = blur
         self.taper = taper
         self.antiring = antiring
-        self.cutoff = cutoff
         super().__init__(**(dict(curve=Transfer.BT709) | kwargs))
 
     @inject_self.cached
@@ -86,8 +89,7 @@ class Placebo(LinearScaler):
             width=width, height=height, filter=self._kernel,
             radius=self.taps, param1=self.b, param2=self.c,
             clamp=self.clamp, taper=self.taper, blur=self.blur,
-            antiring=self.antiring, cutoff=self.cutoff,
-            lut_entries=self.lut_entries
+            antiring=self.antiring,
         ) | kwargs
 
     @inject_self.property
