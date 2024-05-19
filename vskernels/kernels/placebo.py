@@ -32,9 +32,6 @@ class Placebo(LinearScaler):
     antiring: float
     cutoff: float
 
-    # Other settings
-    lut_entries: int = 64
-
     scale_function = core.lazy.placebo.Resample
 
     def __init__(
@@ -87,7 +84,6 @@ class Placebo(LinearScaler):
             radius=self.taps, param1=self.b, param2=self.c,
             clamp=self.clamp, taper=self.taper, blur=self.blur,
             antiring=self.antiring, cutoff=self.cutoff,
-            lut_entries=self.lut_entries
         ) | kwargs
 
     @inject_self.property
