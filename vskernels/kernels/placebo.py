@@ -15,6 +15,14 @@ __all__ = [
 
 
 class Placebo(LinearScaler):
+    """
+    Abstract Placebo scaler.
+
+    Dependencies:
+
+    * vs-placebo <https://github.com/sgt0/vs-placebo>`_
+    """
+
     _kernel: str
     """Name of the placebo kernel"""
 
