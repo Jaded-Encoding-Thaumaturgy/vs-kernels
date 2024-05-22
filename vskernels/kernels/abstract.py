@@ -403,7 +403,7 @@ class Kernel(Scaler, Descaler, Resampler):  # type: ignore
         n_planes = clip.format.num_planes
 
         def _shift(src: vs.VideoNode, shift: tuple[TopShift, LeftShift] = (0, 0)) -> vs.VideoNode:
-            return Scaler.scale(self, src, **kwargs)
+            return Scaler.scale(self, src, src.width, src.height, shift, **kwargs)
 
         if not shifts_or_top and not shift_left:
             return _shift(clip)
