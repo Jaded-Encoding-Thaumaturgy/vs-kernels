@@ -230,7 +230,7 @@ class LinearLight:
 
         self._wclip = cast(ConstantFormatVideoNode, depth(self.clip, 32) if self.sigmoid else self.clip)
         self._curve = Transfer.from_video(self.clip)
-        self._matrix = Matrix.from_transfer(self._curve)
+        self._matrix = Matrix.from_video(self.clip)
         self._resampler = Catrom.ensure_obj(self.resampler)
 
         self._exited = False
