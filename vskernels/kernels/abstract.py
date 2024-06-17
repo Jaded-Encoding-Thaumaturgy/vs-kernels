@@ -14,7 +14,7 @@ from vstools import (
 )
 
 from ..exceptions import UnknownDescalerError, UnknownKernelError, UnknownResamplerError, UnknownScalerError
-from ..types import LeftShift, TopShift
+from ..types import BotFieldLeftShift, BotFieldTopShift, LeftShift, TopFieldLeftShift, TopFieldTopShift, TopShift
 
 __all__ = [
     'Scaler', 'ScalerT',
@@ -278,7 +278,10 @@ class Descaler(BaseScaler):
     @inject_kwargs_params
     def descale(  # type: ignore[override]
         self, clip: vs.VideoNode, width: int | None, height: int | None,
-        shift: tuple[TopShift, LeftShift] = (0, 0), **kwargs: Any
+        shift: tuple[TopShift, LeftShift] | tuple[
+            TopShift | tuple[TopFieldTopShift, BotFieldTopShift],
+            LeftShift | tuple[TopFieldLeftShift, BotFieldLeftShift]
+        ] = (0, 0), **kwargs: Any
     ) -> vs.VideoNode:
         width, height = self._wh_norm(clip, width, height)
 
@@ -288,24 +291,35 @@ class Descaler(BaseScaler):
 
         clip, bits = expect_bits(clip, 32)
 
-        de_kwargs = self.get_descale_args(clip, shift, width, height // (1 + field_based.is_inter), **kwargs)
+        de_base_args = (width, height // (1 + field_based.is_inter))
 
         if field_based.is_inter:
+            shift_y, shift_x = tuple[tuple[float, float], ...](sh if isinstance(sh, tuple) else (sh, sh) for sh in shift)
+
+            de_kwargs_tf = self.get_descale_args(clip, (shift_y[0], shift_x[0]), *de_base_args, **kwargs)
+            de_kwargs_bf = self.get_descale_args(clip, (shift_y[1], shift_x[1]), *de_base_args, **kwargs)
+
             if height % 2:
                 raise CustomIndexError('You can\'t descale to odd resolution when crossconverted!', self.descale)
 
-            top_shift, field_shift = de_kwargs.get('src_top', 0.0), 0.125 * height / clip.height
+            field_shift = 0.125 * height / clip.height
 
             fields = clip.std.SeparateFields(field_based.is_tff)
 
             interleaved = core.std.Interleave([
                 self.descale_function(fields[offset::2], **_norm_props_enums(
-                    de_kwargs | dict(src_top=top_shift + (field_shift * mult))))
-                for offset, mult in [(0, 1), (1, -1)]
+                    de_kwargs | dict(src_top=de_kwargs.get('src_top', 0.0) + (field_shift * mult))
+                ))
+                for offset, mult, de_kwargs in [(0, 1, de_kwargs_tf), (1, -1, de_kwargs_bf)]
             ])
 
             descaled = interleaved.std.DoubleWeave(field_based.is_tff)[::2]
         else:
+            if any(isinstance(sh, tuple) for sh in shift):
+                raise CustomValueError('You can\'t descale per-field when the input is progressive!', self.descale)
+
+            de_kwargs = self.get_descale_args(clip, shift, *de_base_args, **kwargs)  # type: ignore
+
             descaled = self.descale_function(clip, **_norm_props_enums(de_kwargs))
 
         return depth(descaled, bits)
