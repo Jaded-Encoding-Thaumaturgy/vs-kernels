@@ -169,8 +169,8 @@ class KeepArScaler(Scaler):
         src_sar = float(_from_param(Sar, sar, Sar(1, 1)) or Sar.from_clip(clip))
         out_sar = None
 
-        src_dar = float(Dar.from_size(clip, False))
-        out_dar = float(_from_param(Dar, dar, src_dar) or Dar.from_size(width, height))  # type: ignore
+        src_dar = float(_from_param(Dar, dar, Dar.from_size(clip, False)) or Dar.from_size(clip, False))
+        out_dar = float(Dar.from_size(width, height))
 
         if src_sar != 1.0:
             if src_sar > 1.0:
