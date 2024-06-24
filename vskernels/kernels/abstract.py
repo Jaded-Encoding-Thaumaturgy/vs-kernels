@@ -294,7 +294,9 @@ class Descaler(BaseScaler):
         de_base_args = (width, height // (1 + field_based.is_inter))
 
         if field_based.is_inter:
-            shift_y, shift_x = tuple[tuple[float, float], ...](sh if isinstance(sh, tuple) else (sh, sh) for sh in shift)
+            shift_y, shift_x = tuple[tuple[float, float], ...](
+                sh if isinstance(sh, tuple) else (sh, sh) for sh in shift
+            )
 
             de_kwargs_tf = self.get_descale_args(clip, (shift_y[0], shift_x[0]), *de_base_args, **kwargs)
             de_kwargs_bf = self.get_descale_args(clip, (shift_y[1], shift_x[1]), *de_base_args, **kwargs)
