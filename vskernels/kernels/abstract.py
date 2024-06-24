@@ -8,10 +8,10 @@ from typing import Any, Callable, ClassVar, Sequence, TypeVar, Union, cast, over
 from stgpytools import inject_kwargs_params
 from vstools import (
     CustomIndexError, CustomRuntimeError, CustomValueError, FieldBased, FuncExceptT, GenericVSFunction,
-    HoldsVideoFormatT, KwargsT, Matrix, MatrixT, PropEnum, T, VideoFormatT, check_correct_subsampling,
-    check_variable_resolution, core, depth, expect_bits, fallback, get_subclasses, get_video_format, inject_self, vs,
-    vs_object
+    HoldsVideoFormatT, KwargsT, Matrix, MatrixT, T, VideoFormatT, check_correct_subsampling, check_variable_resolution,
+    core, depth, expect_bits, fallback, get_subclasses, get_video_format, inject_self, vs, vs_object
 )
+from vstools.enums.color import _norm_props_enums
 
 from ..exceptions import UnknownDescalerError, UnknownKernelError, UnknownResamplerError, UnknownScalerError
 from ..types import BotFieldLeftShift, BotFieldTopShift, LeftShift, TopFieldLeftShift, TopFieldTopShift, TopShift
@@ -31,15 +31,6 @@ def _default_kernel_radius(cls: type[T], self: T) -> int:
         return ceil(self._static_kernel_radius)  # type: ignore
 
     return super(cls, self).kernel_radius  # type: ignore
-
-
-def _norm_props_enums(kwargs: KwargsT) -> KwargsT:
-    return {
-        key: (
-            (value.value_zimg if hasattr(value, 'value_zimg') else int(value))
-            if isinstance(value, PropEnum) else value
-        ) for key, value in kwargs.items()
-    }
 
 
 @lru_cache
