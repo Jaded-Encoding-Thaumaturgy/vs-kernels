@@ -177,8 +177,6 @@ class KeepArScaler(Scaler):
         out_dar = float(_from_param(Dar, dar, None) or Dar.from_size(width, height))  # type: ignore
         src_dar = float(fallback(_from_param(Dar, dar_in, out_dar), Dar.from_size(clip, False)))
 
-        print(src_dar, out_dar)
-
         if src_sar != 1.0:
             if src_sar > 1.0:
                 out_dar = (width / src_sar) / height
