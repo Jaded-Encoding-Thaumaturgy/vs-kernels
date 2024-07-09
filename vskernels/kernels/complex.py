@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from functools import lru_cache
 from typing import TYPE_CHECKING, Any, SupportsFloat, TypeVar, Union, cast
-
+from math import ceil
 from stgpytools import inject_kwargs_params
 from vstools import (
     CustomIntEnum, Dar, KwargsT, Resolution, Sar, VSFunctionAllArgs, check_correct_subsampling, inject_self, padder, vs
@@ -10,6 +10,7 @@ from vstools import (
 
 from ..types import Center, LeftShift, Slope, TopShift
 from .abstract import Descaler, Kernel, Resampler, Scaler
+from .custom import CustomKernel
 
 __all__ = [
     'BorderHandling',
@@ -19,7 +20,10 @@ __all__ = [
     'KeepArScaler',
 
     'ComplexScaler', 'ComplexScalerT',
-    'ComplexKernel', 'ComplexKernelT'
+    'ComplexKernel', 'ComplexKernelT',
+
+    'CustomComplexKernel',
+    'CustomComplexTapsKernel'
 ]
 
 XarT = TypeVar('XarT', Sar, Dar)
@@ -86,7 +90,7 @@ class _BaseLinearOperation:
             has_custom_op = hasattr(self, f'_linear_{op_name}')
             operation = cast(
                 VSFunctionAllArgs,
-                getattr(self, f'_linear_{op_name}') if has_custom_op else getattr(super(), op_name)  # type: ignore
+                getattr(self, f'_linear_{op_name}') if has_custom_op else getattr(super(), op_name)
             )
 
             if sigmoid:
@@ -152,7 +156,7 @@ class KeepArScaler(Scaler):
 
         return kwargs
 
-    def _handle_crop_resize_kwargs(  # type: ignore[override]
+    def _handle_crop_resize_kwargs(
         self, clip: vs.VideoNode, width: int, height: int, shift: tuple[TopShift, LeftShift],
         sar: Sar | bool | float | None, dar: Dar | bool | float | None, **kwargs: Any
     ) -> tuple[KwargsT, tuple[TopShift, LeftShift], Sar | None]:
@@ -215,7 +219,7 @@ class KeepArScaler(Scaler):
 
             padded = border_handling.prepare_clip(clip, self.kernel_radius)
 
-            shift, clip = tuple(  # type: ignore
+            shift, clip = tuple(
                 s + ((p - c) // 2) for s, c, p in zip(shift, *((x.width, x.height) for x in (clip, padded)))
             ), padded
 
@@ -249,6 +253,28 @@ class ComplexScaler(LinearScaler, KeepArScaler):
 
 class ComplexKernel(Kernel, LinearDescaler, ComplexScaler):  # type: ignore
     ...
+
+
+class CustomComplexKernel(CustomKernel, ComplexKernel):  # type: ignore
+    if TYPE_CHECKING:
+        @inject_self.cached
+        @inject_kwargs_params
+        def descale(  # type: ignore[override]
+            self, clip: vs.VideoNode, width: int, height: int, shift: tuple[TopShift, LeftShift] = (0, 0),
+            *, blur: float = 1.0, border_handling: BorderHandling, ignore_mask: vs.VideoNode | None = None,
+            linear: bool = False, sigmoid: bool | tuple[Slope, Center] = False, **kwargs: Any
+        ) -> vs.VideoNode:
+            ...
+
+
+class CustomComplexTapsKernel(CustomComplexKernel):
+    def __init__(self, taps: float, **kwargs: Any) -> None:
+        self.taps = taps
+        super().__init__(**kwargs)
+
+    @inject_self.property
+    def kernel_radius(self) -> int:  # type: ignore
+        return ceil(self.taps)
 
 
 ComplexScalerT = Union[str, type[ComplexScaler], ComplexScaler]
