@@ -85,10 +85,12 @@ class NoScaleBase(Scaler):
     @inject_self.cached
     @inject_kwargs_params
     def scale(  # type: ignore
-        self, clip: vs.VideoNode, width: int, height: int, shift: tuple[TopShift, LeftShift] = (0, 0), **kwargs: Any
+        self, clip: vs.VideoNode, width: int | None = None, height: int | None = None,
+        shift: tuple[TopShift, LeftShift] = (0, 0), **kwargs: Any
     ) -> vs.VideoNode:
         try:
-            return super().scale(clip, clip.width, clip.height, shift, **kwargs)
+            width, height = Scaler._wh_norm(clip, width, height)
+            return super().scale(clip, clip.width, clip.height, shift, **kwargs)  # type: ignore
         except Exception:
             return clip
 
@@ -226,7 +228,7 @@ class LinearLight:
 
         self._wclip = cast(ConstantFormatVideoNode, depth(self.clip, 32) if self.sigmoid else self.clip)
         self._curve = Transfer.from_video(self.clip)
-        self._matrix = Matrix.from_transfer(self._curve)
+        self._matrix = Matrix.from_video(self.clip)
         self._resampler = Catrom.ensure_obj(self.resampler)
 
         self._exited = False

@@ -21,7 +21,8 @@ class Example(Kernel):
 
     @inject_self.cached
     def scale(  # type: ignore[override]
-        self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (0, 0), **kwargs: Any
+        self, clip: vs.VideoNode, width: int | None = None, height: int | None = None,
+        shift: tuple[float, float] = (0, 0), **kwargs: Any
     ) -> vs.VideoNode:
         """
         Perform a regular scaling operation.
@@ -34,6 +35,7 @@ class Example(Kernel):
 
         :rtype:             ``VideoNode``
         """
+        width, height = self._wh_norm(clip, width, height)
         return core.resize.Bicubic(
             clip, width, height, src_top=shift[0], src_left=shift[1],
             filter_param_a=self.b, filter_param_b=self.c, **self.kwargs, **kwargs
@@ -41,7 +43,8 @@ class Example(Kernel):
 
     @inject_self.cached
     def descale(  # type: ignore[override]
-        self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float] = (0, 0), **kwargs: Any
+        self, clip: vs.VideoNode, width: int | None, height: int | None,
+        shift: tuple[float, float] = (0, 0), **kwargs: Any
     ) -> vs.VideoNode:
         """
         Perform a regular descaling operation.
@@ -54,6 +57,7 @@ class Example(Kernel):
 
         :rtype:             ``VideoNode``
         """
+        width, height = self._wh_norm(clip, width, height)
         return depth(core.descale.Debicubic(
             depth(clip, 32), width, height, b=self.b, c=self.c, src_top=shift[0], src_left=shift[1], **kwargs
         ), clip)

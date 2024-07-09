@@ -9,11 +9,12 @@ from stgpytools import inject_kwargs_params
 from vstools import (
     CustomIndexError, CustomRuntimeError, CustomValueError, FieldBased, FuncExceptT, GenericVSFunction,
     HoldsVideoFormatT, KwargsT, Matrix, MatrixT, T, VideoFormatT, check_correct_subsampling, check_variable_resolution,
-    core, depth, expect_bits, get_subclasses, get_video_format, inject_self, vs, vs_object
+    core, depth, expect_bits, fallback, get_subclasses, get_video_format, inject_self, vs, vs_object
 )
+from vstools.enums.color import _norm_props_enums
 
 from ..exceptions import UnknownDescalerError, UnknownKernelError, UnknownResamplerError, UnknownScalerError
-from ..types import LeftShift, TopShift
+from ..types import BotFieldLeftShift, BotFieldTopShift, LeftShift, TopFieldLeftShift, TopFieldTopShift, TopShift
 
 __all__ = [
     'Scaler', 'ScalerT',
@@ -90,14 +91,14 @@ def _base_from_param(
 
 
 def _base_ensure_obj(
-    cls: type[T],
-    basecls: type[T],
-    value: str | type[T] | T | None,
+    cls: type[BaseScalerT],
+    basecls: type[BaseScalerT],
+    value: str | type[BaseScalerT] | BaseScalerT | None,
     exception_cls: type[CustomValueError],
     excluded: Sequence[type] = [],
     func_except: FuncExceptT | None = None
-) -> T:
-    new_scaler: T
+) -> BaseScalerT:
+    new_scaler: BaseScalerT
 
     if value is None:
         new_scaler = cls()
@@ -166,6 +167,10 @@ class BaseScaler(vs_object):
             if mro:
                 raise CustomRuntimeError('You must implement kernel_radius when inheriting BaseScaler!', reason=cls)
 
+    @staticmethod
+    def _wh_norm(clip: vs.VideoNode, width: int | None = None, height: int | None = None) -> tuple[int, int]:
+        return (fallback(width, clip.width), fallback(height, clip.height))
+
     @classmethod
     def from_param(
         cls: type[BaseScalerT], scaler: str | type[BaseScalerT] | BaseScalerT | None = None, /,
@@ -208,10 +213,12 @@ class Scaler(BaseScaler):
     @inject_self.cached
     @inject_kwargs_params
     def scale(  # type: ignore[override]
-        self, clip: vs.VideoNode, width: int, height: int, shift: tuple[TopShift, LeftShift] = (0, 0), **kwargs: Any
+        self, clip: vs.VideoNode, width: int | None = None, height: int | None = None,
+        shift: tuple[TopShift, LeftShift] = (0, 0), **kwargs: Any
     ) -> vs.VideoNode:
+        width, height = Scaler._wh_norm(clip, width, height)
         check_correct_subsampling(clip, width, height)
-        return self.scale_function(clip, **self.get_scale_args(clip, shift, width, height, **kwargs))
+        return self.scale_function(clip, **_norm_props_enums(self.get_scale_args(clip, shift, width, height, **kwargs)))
 
     @inject_self.cached
     def multi(
@@ -261,32 +268,52 @@ class Descaler(BaseScaler):
     @inject_self.cached
     @inject_kwargs_params
     def descale(  # type: ignore[override]
-        self, clip: vs.VideoNode, width: int, height: int, shift: tuple[TopShift, LeftShift] = (0, 0), **kwargs: Any
+        self, clip: vs.VideoNode, width: int | None, height: int | None,
+        shift: tuple[TopShift, LeftShift] | tuple[
+            TopShift | tuple[TopFieldTopShift, BotFieldTopShift],
+            LeftShift | tuple[TopFieldLeftShift, BotFieldLeftShift]
+        ] = (0, 0), **kwargs: Any
     ) -> vs.VideoNode:
+        width, height = self._wh_norm(clip, width, height)
+
         check_correct_subsampling(clip, width, height)
 
         field_based = FieldBased.from_param_or_video(kwargs.pop('field_based', None), clip)
 
         clip, bits = expect_bits(clip, 32)
 
-        de_kwargs = self.get_descale_args(clip, shift, width, height // (1 + field_based.is_inter), **kwargs)
+        de_base_args = (width, height // (1 + field_based.is_inter))
 
         if field_based.is_inter:
+            shift_y, shift_x = tuple[tuple[float, float], ...](
+                sh if isinstance(sh, tuple) else (sh, sh) for sh in shift
+            )
+
+            de_kwargs_tf = self.get_descale_args(clip, (shift_y[0], shift_x[0]), *de_base_args, **kwargs)
+            de_kwargs_bf = self.get_descale_args(clip, (shift_y[1], shift_x[1]), *de_base_args, **kwargs)
+
             if height % 2:
                 raise CustomIndexError('You can\'t descale to odd resolution when crossconverted!', self.descale)
 
-            top_shift, field_shift = de_kwargs.get('src_top', 0.0), 0.125 * height / clip.height
+            field_shift = 0.125 * height / clip.height
 
             fields = clip.std.SeparateFields(field_based.is_tff)
 
             interleaved = core.std.Interleave([
-                self.descale_function(fields[offset::2], **(de_kwargs | dict(src_top=top_shift + (field_shift * mult))))
-                for offset, mult in [(0, 1), (1, -1)]
+                self.descale_function(fields[offset::2], **_norm_props_enums(
+                    de_kwargs | dict(src_top=de_kwargs.get('src_top', 0.0) + (field_shift * mult))
+                ))
+                for offset, mult, de_kwargs in [(0, 1, de_kwargs_tf), (1, -1, de_kwargs_bf)]
             ])
 
             descaled = interleaved.std.DoubleWeave(field_based.is_tff)[::2]
         else:
-            descaled = self.descale_function(clip, **de_kwargs)
+            if any(isinstance(sh, tuple) for sh in shift):
+                raise CustomValueError('You can\'t descale per-field when the input is progressive!', self.descale)
+
+            de_kwargs = self.get_descale_args(clip, shift, *de_base_args, **kwargs)  # type: ignore
+
+            descaled = self.descale_function(clip, **_norm_props_enums(de_kwargs))
 
         return depth(descaled, bits)
 
@@ -326,7 +353,9 @@ class Resampler(BaseScaler):
         self, clip: vs.VideoNode, format: int | VideoFormatT | HoldsVideoFormatT,
         matrix: MatrixT | None = None, matrix_in: MatrixT | None = None, **kwargs: Any
     ) -> vs.VideoNode:
-        return self.resample_function(clip, **self.get_resample_args(clip, format, matrix, matrix_in, **kwargs))
+        return self.resample_function(
+            clip, **_norm_props_enums(self.get_resample_args(clip, format, matrix, matrix_in, **kwargs))
+        )
 
     def get_resample_args(
         self, clip: vs.VideoNode, format: int | VideoFormatT | HoldsVideoFormatT,
@@ -381,7 +410,7 @@ class Kernel(Scaler, Descaler, Resampler):  # type: ignore
         n_planes = clip.format.num_planes
 
         def _shift(src: vs.VideoNode, shift: tuple[TopShift, LeftShift] = (0, 0)) -> vs.VideoNode:
-            return self.scale_function(src, **self.get_scale_args(src, shift, **kwargs))
+            return Scaler.scale(self, src, src.width, src.height, shift, **kwargs)
 
         if not shifts_or_top and not shift_left:
             return _shift(clip)
