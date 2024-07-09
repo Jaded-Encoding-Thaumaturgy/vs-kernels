@@ -8,4 +8,3 @@ from .placebo import *  # noqa: F401, F403
 from .resize import *  # noqa: F401, F403
 from .spline import *  # noqa: F401, F403
 from .various import *  # noqa: F401, F403
-from .zimg import *  # noqa: F401, F403

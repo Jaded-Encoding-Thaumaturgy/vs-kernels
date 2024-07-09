@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from math import ceil
 from typing import Any
 
-from vstools import core, vs, inject_self
+from vstools import inject_self
 
-from .zimg import ZimgComplexKernel
+from .helpers import sinc
+from .complex import CustomComplexKernel, CustomComplexTapsKernel
 
 __all__ = [
     'Point',
@@ -14,47 +14,38 @@ __all__ = [
 ]
 
 
-class Point(ZimgComplexKernel):
+class Point(CustomComplexKernel):
     """Built-in point resizer."""
 
-    scale_function = resample_function = descale_function = core.lazy.resize.Point
     _static_kernel_radius = 1
 
+    @inject_self
+    def kernel(self, *, x: float) -> float:  # type: ignore
+        return 1.0
 
-class Bilinear(ZimgComplexKernel):
+
+class Bilinear(CustomComplexKernel):
     """Built-in bilinear resizer."""
 
-    scale_function = resample_function = core.lazy.resize.Bilinear
-    descale_function = core.lazy.descale.Debilinear
     _static_kernel_radius = 1
 
+    @inject_self
+    def kernel(self, *, x: float) -> float:  # type: ignore
+        return max(1.0 - abs(x), 0.0)
 
-class Lanczos(ZimgComplexKernel):
+
+class Lanczos(CustomComplexTapsKernel):
     """
-    Built-in lanczos resizer.
-
-    Dependencies:
-
-    * VapourSynth-descale
+    Lanczos resizer.
 
     :param taps: taps param for lanczos kernel
     """
 
-    scale_function = resample_function = core.lazy.resize.Lanczos
-    descale_function = core.lazy.descale.Delanczos
-
     def __init__(self, taps: int = 3, **kwargs: Any) -> None:
-        self.taps = taps
-        super().__init__(**kwargs)
+        super().__init__(taps, **kwargs)
 
-    def get_params_args(
-        self, is_descale: bool, clip: vs.VideoNode, width: int | None = None, height: int | None = None, **kwargs: Any
-    ) -> dict[str, Any]:
-        args = super().get_params_args(is_descale, clip, width, height, **kwargs)
-        if is_descale:
-            return args | dict(taps=self.taps)
-        return args | dict(filter_param_a=self.taps)
+    @inject_self
+    def kernel(self, *, x: float) -> float:  # type: ignore
+        x, taps = abs(x), self.kernel_radius
 
-    @inject_self.property
-    def kernel_radius(self) -> int:  # type: ignore
-        return ceil(self.taps)
+        return sinc(x) * sinc(x / taps) if x < taps else 0.0
