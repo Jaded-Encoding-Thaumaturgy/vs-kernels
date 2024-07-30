@@ -1,5 +1,6 @@
 from __future__ import annotations
 from stgpytools import inject_self
+from inspect import Signature
 
 from vstools import vs, core
 from typing import Any
@@ -18,13 +19,28 @@ class CustomKernel(Kernel):
     def kernel(self: CustomKernelT, *, x: float) -> float:
         raise NotImplementedError
 
-    def scale_function(self, clip: vs.VideoNode, width: int, height: int, *args: Any, blur: float = 1.0, **kwargs: Any) -> vs.VideoNode:
-        return core.resize2.Custom(clip, self.kernel, self.kernel_radius, width, height, *args, **kwargs)
+    def _modify_kernel_func(self, *, blur: float = 1.0, **kwargs: Any):
+        support = self.kernel_radius * blur
+
+        if blur != 1.0:
+            def kernel(x: float) -> float:
+                return self.kernel(x=x / blur)
+
+            return kernel, support
+
+        return self.kernel, support
+
+    @inject_self
+    def scale_function(self, clip: vs.VideoNode, width: int | None = None, height: int | None = None, *args: Any, **kwargs: Any) -> vs.VideoNode:
+        clean_kwargs = {k: v for k, v in kwargs.items() if k not in Signature.from_callable(self._modify_kernel_func).parameters.keys()}
+        return core.resize2.Custom(clip, *self._modify_kernel_func(**kwargs), width, height, *args, **clean_kwargs)
 
     resample_function = scale_function
 
+    @inject_self
     def descale_function(self, clip: vs.VideoNode, width: int, height: int, *args: Any, **kwargs: Any) -> vs.VideoNode:
-        return core.descale.Decustom(clip, width, height, self.kernel, self.kernel_radius, *args, **kwargs)
+        clean_kwargs = {k: v for k, v in kwargs.items() if k not in Signature.from_callable(self._modify_kernel_func).parameters.keys()}
+        return core.descale.Decustom(clip, width, height, *self._modify_kernel_func(**kwargs), *args, **clean_kwargs)
 
     def get_params_args(
         self, is_descale: bool, clip: vs.VideoNode, width: int | None = None, height: int | None = None, **kwargs: Any
