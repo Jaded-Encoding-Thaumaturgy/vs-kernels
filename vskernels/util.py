@@ -173,8 +173,8 @@ class LinearLight:
 
             if self.ll.sigmoid:
                 wclip = wclip.std.Expr(
-                    f'{self.ll._scenter} 1 x {self.ll._sscale} * {self.ll._soffset} + / '
-                    f'1 - log {self.ll._sslope} / - 0 max 1 min'
+                    f'{self.ll._scenter} 1 {self.ll._sslope} / 1 x 0 max 1 min {self.ll._sscale} * '
+                    f'{self.ll._soffset} + / 1 - log * -'
                 )
 
             return wclip
@@ -197,8 +197,8 @@ class LinearLight:
 
             if self.ll.sigmoid:
                 processed = processed.std.Expr(
-                    f'1 1 {self.ll._sslope} {self.ll._scenter} x - * exp + / '
-                    f'{self.ll._soffset} - {self.ll._sscale} / 0 max 1 min'
+                    f'1 1 {self.ll._sslope} {self.ll._scenter} x 0 max 1 min - * exp + /'
+                    f' {self.ll._soffset} - {self.ll._sscale} /'
                 )
 
             if self.ll.linear:
