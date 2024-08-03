@@ -4,9 +4,9 @@ from math import ceil
 from typing import Any, Callable
 
 from stgpytools import inject_kwargs_params
-from vstools import Transfer, TransferT, core, fallback, inject_self, vs
+from vstools import core, fallback, inject_self, vs
 
-from ..types import Center, LeftShift, Slope, TopShift
+from ..types import LeftShift, TopShift
 from .complex import LinearScaler
 
 __all__ = [

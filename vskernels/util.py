@@ -119,9 +119,7 @@ class excluded_kernels(list[type]):
     def __init__(self) -> None:
         super().__init__(abstract_kernels)
 
-        self.exclude_sub = [
-            NoShiftBase, NoScaleBase, BicubicAuto
-        ]
+        self.exclude_sub = [NoShiftBase, NoScaleBase, BicubicAuto]
 
     def __contains__(self, key: object) -> bool:
         if not isinstance(key, type):
