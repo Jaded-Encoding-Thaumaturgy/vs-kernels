@@ -14,7 +14,6 @@ from .kernels import (
     Bicubic, BicubicAuto, Catrom, ComplexKernel, Descaler, FmtConv, Impulse, Kernel, KernelT, LinearDescaler, Placebo,
     Point, Resampler, ResamplerT, Scaler, ZimgComplexKernel, ZimgDescaler
 )
-from .kernels.bicubic import MemeKernel
 from .types import Center, LeftShift, Slope, TopShift
 
 __all__ = [
@@ -121,9 +120,7 @@ class excluded_kernels(list[type]):
     def __init__(self) -> None:
         super().__init__(abstract_kernels)
 
-        self.exclude_sub = [
-            NoShiftBase, NoScaleBase, BicubicAuto, MemeKernel
-        ]
+        self.exclude_sub = [NoShiftBase, NoScaleBase, BicubicAuto]
 
     def __contains__(self, key: object) -> bool:
         if not isinstance(key, type):
