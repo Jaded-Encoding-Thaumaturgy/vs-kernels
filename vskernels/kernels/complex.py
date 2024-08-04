@@ -1,21 +1,18 @@
 from __future__ import annotations
 
-from functools import lru_cache
-from typing import TYPE_CHECKING, Any, SupportsFloat, TypeVar, Union, cast
 from math import ceil
+from typing import TYPE_CHECKING, Any, SupportsFloat, TypeVar, Union, cast
+
 from stgpytools import inject_kwargs_params
 from vstools import (
-    CustomIntEnum, Dar, KwargsT, Resolution, Sar, VSFunctionAllArgs, check_correct_subsampling, fallback, inject_self,
-    padder, vs
+    Dar, KwargsT, Resolution, Sar, VSFunctionAllArgs, check_correct_subsampling, fallback, inject_self, vs
 )
 
-from ..types import Center, LeftShift, Slope, TopShift
+from ..types import BorderHandling, Center, LeftShift, SampleGridModel, Slope, TopShift
 from .abstract import Descaler, Kernel, Resampler, Scaler
 from .custom import CustomKernel
 
 __all__ = [
-    'BorderHandling',
-
     'LinearScaler', 'LinearDescaler',
 
     'KeepArScaler',
@@ -28,37 +25,6 @@ __all__ = [
 ]
 
 XarT = TypeVar('XarT', Sar, Dar)
-
-
-class BorderHandling(CustomIntEnum):
-    MIRROR = 0
-    ZERO = 1
-    REPEAT = 2
-
-    def prepare_clip(self, clip: vs.VideoNode, min_pad: int = 2) -> vs.VideoNode:
-        pad_w, pad_h = (
-            self.pad_amount(size, min_pad) for size in (clip.width, clip.height)
-        )
-
-        if pad_w == pad_h == 0:
-            return clip
-
-        args = (clip, pad_w, pad_w, pad_h, pad_h)
-
-        match self:
-            case BorderHandling.MIRROR:
-                return padder.MIRROR(*args)
-            case BorderHandling.ZERO:
-                return padder.COLOR(*args)
-            case BorderHandling.REPEAT:
-                return padder.REPEAT(*args)
-
-    @lru_cache
-    def pad_amount(self, size: int, min_amount: int = 2) -> int:
-        if self is BorderHandling.MIRROR:
-            return 0
-
-        return (((size + min_amount) + 7) & -8) - size
 
 
 def _from_param(cls: type[XarT], value: XarT | bool | float | None, fallback: XarT) -> XarT | None:
@@ -214,6 +180,7 @@ class KeepArScaler(Scaler):
         self, clip: vs.VideoNode, width: int | None = None, height: int | None = None,
         shift: tuple[TopShift, LeftShift] = (0, 0), *,
         border_handling: BorderHandling = BorderHandling.MIRROR,
+        sample_grid_model: SampleGridModel = SampleGridModel.MATCH_EDGES,
         sar: Sar | float | bool | None = None, dar: Dar | float | bool | None = None,
         dar_in: Dar | bool | float | None = None, keep_ar: bool | None = None,
         **kwargs: Any
@@ -228,6 +195,8 @@ class KeepArScaler(Scaler):
             kwargs = self._get_kwargs_keep_ar(sar, dar, dar_in, keep_ar, **kwargs)
 
             kwargs, shift, out_sar = self._handle_crop_resize_kwargs(clip, width, height, shift, **kwargs)
+
+            kwargs, shift = sample_grid_model.for_scale(clip, width, height, shift, **kwargs)
 
             padded = border_handling.prepare_clip(clip, self.kernel_radius)
 
@@ -251,6 +220,7 @@ class ComplexScaler(LinearScaler, KeepArScaler):
         shift: tuple[TopShift, LeftShift] = (0, 0),
         *,
         border_handling: BorderHandling = BorderHandling.MIRROR,
+        sample_grid_model: SampleGridModel = SampleGridModel.MATCH_EDGES,
         sar: Sar | bool | float | None = None, dar: Dar | bool | float | None = None, keep_ar: bool | None = None,
         linear: bool = False, sigmoid: bool | tuple[Slope, Center] = False,
         **kwargs: Any
@@ -259,7 +229,7 @@ class ComplexScaler(LinearScaler, KeepArScaler):
         return super().scale(
             clip, width, height, shift, sar=sar, dar=dar, keep_ar=keep_ar,
             linear=linear, sigmoid=sigmoid, border_handling=border_handling,
-            **kwargs
+            sample_grid_model=sample_grid_model, **kwargs
         )
 
 
@@ -273,8 +243,10 @@ class CustomComplexKernel(CustomKernel, ComplexKernel):  # type: ignore
         @inject_kwargs_params
         def descale(  # type: ignore[override]
             self, clip: vs.VideoNode, width: int, height: int, shift: tuple[TopShift, LeftShift] = (0, 0),
-            *, blur: float = 1.0, border_handling: BorderHandling, ignore_mask: vs.VideoNode | None = None,
-            linear: bool = False, sigmoid: bool | tuple[Slope, Center] = False, **kwargs: Any
+            *, blur: float = 1.0, border_handling: BorderHandling,
+            sample_grid_model: SampleGridModel = SampleGridModel.MATCH_EDGES,
+            ignore_mask: vs.VideoNode | None = None, linear: bool = False,
+            sigmoid: bool | tuple[Slope, Center] = False, **kwargs: Any
         ) -> vs.VideoNode:
             ...
 
