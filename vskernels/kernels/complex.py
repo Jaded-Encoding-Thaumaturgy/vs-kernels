@@ -284,7 +284,7 @@ class CustomComplexTapsKernel(CustomComplexKernel):
         self.taps = taps
         super().__init__(**kwargs)
 
-    @inject_self.property
+    @inject_self.cached.property
     def kernel_radius(self) -> int:  # type: ignore
         return ceil(self.taps)
 

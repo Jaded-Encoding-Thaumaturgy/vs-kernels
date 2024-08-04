@@ -15,7 +15,7 @@ __all__ = [
 
 
 class CustomKernel(Kernel):
-    @inject_self
+    @inject_self.cached
     def kernel(self: CustomKernelT, *, x: float) -> float:
         raise NotImplementedError
 

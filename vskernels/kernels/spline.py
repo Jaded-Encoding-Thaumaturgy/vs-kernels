@@ -72,7 +72,7 @@ class Spline(CustomComplexTapsKernel):
 
         return coeffs
 
-    @inject_self
+    @inject_self.cached
     def kernel(self, x: float) -> float:  # type: ignore
         x, taps = abs(x), self.kernel_radius
 

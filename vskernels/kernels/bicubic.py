@@ -41,7 +41,7 @@ class Bicubic(CustomComplexKernel):
         self.c = c
         super().__init__(**kwargs)
 
-    @inject_self
+    @inject_self.cached
     def kernel(self, *, x: float) -> float:  # type: ignore
         x, b, c = abs(x), self.b, self.c
 
@@ -53,7 +53,7 @@ class Bicubic(CustomComplexKernel):
 
         return 0.0
 
-    @inject_self.property
+    @inject_self.cached.property
     def kernel_radius(self) -> int:  # type: ignore
         if (self.b, self.c) == (0, 0):
             return 1

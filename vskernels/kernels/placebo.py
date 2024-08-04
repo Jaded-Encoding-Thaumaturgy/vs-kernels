@@ -87,7 +87,7 @@ class Placebo(LinearScaler):
             antiring=self.antiring,
         ) | kwargs
 
-    @inject_self.property
+    @inject_self.cached.property
     def kernel_radius(self) -> int:  # type: ignore
         from .bicubic import Bicubic
 

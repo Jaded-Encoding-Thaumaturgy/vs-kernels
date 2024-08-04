@@ -189,7 +189,7 @@ class BaseScaler(vs_object):
             cls, (mro := cls.mro())[mro.index(BaseScaler) - 1], scaler, cls._err_class, [], func_except
         )
 
-    @inject_self.property
+    @inject_self.cached.property
     def kernel_radius(self) -> int:
         return _default_kernel_radius(__class__, self)  # type: ignore
 
