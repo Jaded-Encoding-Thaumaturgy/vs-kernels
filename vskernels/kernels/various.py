@@ -9,6 +9,9 @@ from .complex import CustomComplexKernel, CustomComplexTapsKernel
 from .helpers import sinc
 
 __all__ = [
+    'Point',
+    'Bilinear',
+    'Lanczos',
     'Gaussian',
     'Box',
     'BlackMan',
@@ -44,15 +47,48 @@ class gauss_sigma(float):
         return 4 * (sigma ** 2)
 
 
+class Point(CustomComplexKernel):
+    """Point resizer."""
+
+    _static_kernel_radius = 1
+
+    @inject_self
+    def kernel(self, *, x: float) -> float:  # type: ignore
+        return 1.0
+
+
+class Bilinear(CustomComplexKernel):
+    """Bilinear resizer."""
+
+    _static_kernel_radius = 1
+
+    @inject_self
+    def kernel(self, *, x: float) -> float:  # type: ignore
+        return max(1.0 - abs(x), 0.0)
+
+
+class Lanczos(CustomComplexTapsKernel):
+    """
+    Lanczos resizer.
+
+    :param taps: taps param for lanczos kernel
+    """
+
+    def __init__(self, taps: int = 3, **kwargs: Any) -> None:
+        super().__init__(taps, **kwargs)
+
+    @inject_self
+    def kernel(self, *, x: float) -> float:  # type: ignore
+        x, taps = abs(x), self.kernel_radius
+
+        return sinc(x) * sinc(x / taps) if x < taps else 0.0
+
+
 class Gaussian(CustomComplexTapsKernel):
     """Gaussian resizer."""
 
     def __init__(self, sigma: float = 0.5, taps: int = 2, **kwargs: Any) -> None:
-        """
-        Sigma is imagemagick's sigma scaling.
-
-        You can specify "curve" to override sigma and specify the original `a1` value.
-        """
+        """Sigma is the same as imagemagick's sigma scaling."""
 
         self._sigma = sigma
 
