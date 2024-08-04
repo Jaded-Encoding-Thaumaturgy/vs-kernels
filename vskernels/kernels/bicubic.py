@@ -16,6 +16,8 @@ __all__ = [
     'Catrom',
     'FFmpegBicubic',
     'AdobeBicubic',
+    'AdobeBicubicSharper',
+    'AdobeBicubicSmoother',
     'BicubicSharp',
     'RobidouxSoft',
     'Robidoux',
@@ -98,6 +100,20 @@ class AdobeBicubic(Bicubic):
 
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(b=0, c=3 / 4, **kwargs)
+
+
+class AdobeBicubicSharper(Bicubic):
+    """Bicubic b=0, c=1, blur=1.05; Adobe's "Bicubic Sharper" interpolation preset."""
+
+    def __init__(self, **kwargs: Any) -> None:
+        super().__init__(b=0, c=1, blur=1.05, **kwargs)
+
+
+class AdobeBicubicSmoother(Bicubic):
+    """Bicubic b=0, c=0.625, blur=1.15; Adobe's "Bicubic Smoother" interpolation preset."""
+
+    def __init__(self, **kwargs: Any) -> None:
+        super().__init__(b=0, c=5 / 8, blur=1.15, **kwargs)
 
 
 class BicubicSharp(Bicubic):
