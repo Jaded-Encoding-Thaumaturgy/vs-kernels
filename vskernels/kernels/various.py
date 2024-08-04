@@ -1,163 +1,215 @@
 from __future__ import annotations
 
-from math import log, sqrt
+from math import cos, exp, log, pi, sqrt
 from typing import Any
 
-from vstools import CustomValueError, to_singleton
+from vstools import inject_self
 
-from .fmtconv import FmtConv
-from .placebo import Placebo
+from .complex import CustomComplexKernel, CustomComplexTapsKernel
+from .helpers import sinc
 
 __all__ = [
+    'Point',
+    'Bilinear',
+    'Lanczos',
+    'Gaussian',
     'Box',
     'BlackMan',
     'BlackManMinLobe',
     'Sinc',
-    'Gaussian',
-    'EwaBicubic',
-    'EwaJinc',
-    'EwaLanczos',
-    'EwaGinseng',
-    'EwaHann',
-    'EwaHannSoft',
-    'EwaRobidoux',
-    'EwaRobidouxSharp',
+    'Hann',
+    'Hamming',
+    'Welch',
+    'Bohman',
+    'Cosine',
 ]
 
 
-class Box(FmtConv):
-    """fmtconv's box resizer."""
+class gauss_sigma(float):
+    def from_fmtc(self, curve: float) -> float:
+        if not curve:
+            return 0.0
+        return sqrt(1.0 / (2.0 * (curve / 10.0) * log(2)))
 
-    _kernel = 'box'
+    def to_fmtc(self, sigma: float) -> float:
+        if not sigma:
+            return 0.0
+        return 10 / (2 * log(2) * (sigma ** 2))
 
+    def from_libplacebo(self, sigma: float) -> float:
+        if not sigma:
+            return 0.0
+        return sqrt(sigma / 4)
 
-class BlackMan(FmtConv):
-    """fmtconv's blackman resizer."""
-
-    _kernel = 'blackman'
-
-
-class BlackManMinLobe(FmtConv):
-    """fmtconv's blackmanminlobe resizer."""
-
-    _kernel = 'blackmanminlobe'
-
-
-class Sinc(FmtConv):
-    """fmtconv's sinc resizer."""
-
-    _kernel = 'sinc'
+    def to_libplacebo(self, sigma: float) -> float:
+        if not sigma:
+            return 0.0
+        return 4 * (sigma ** 2)
 
 
-class Gaussian(FmtConv):
-    """fmtconv's gaussian resizer."""
+class Point(CustomComplexKernel):
+    """Point resizer."""
 
-    _kernel = 'gaussian'
+    _static_kernel_radius = 1
+
+    @inject_self.cached
+    def kernel(self, *, x: float) -> float:  # type: ignore
+        return 1.0
+
+
+class Bilinear(CustomComplexKernel):
+    """Bilinear resizer."""
+
+    _static_kernel_radius = 1
+
+    @inject_self.cached
+    def kernel(self, *, x: float) -> float:  # type: ignore
+        return max(1.0 - abs(x), 0.0)
+
+
+class Lanczos(CustomComplexTapsKernel):
+    """
+    Lanczos resizer.
+
+    :param taps: taps param for lanczos kernel
+    """
+
+    def __init__(self, taps: int = 3, **kwargs: Any) -> None:
+        super().__init__(taps, **kwargs)
+
+    @inject_self.cached
+    def kernel(self, *, x: float) -> float:  # type: ignore
+        x, taps = abs(x), self.kernel_radius
+
+        return sinc(x) * sinc(x / taps) if x < taps else 0.0
+
+
+class Gaussian(CustomComplexTapsKernel):
+    """Gaussian resizer."""
 
     def __init__(self, sigma: float = 0.5, taps: int = 2, **kwargs: Any) -> None:
-        """
-        Sigma is imagemagick's sigma scaling.
-        This will internally be scaled to fmtc's curve.
+        """Sigma is the same as imagemagick's sigma scaling."""
 
-        You can specify "curve" to override sigma and specify the original `a1` value.
-        """
-        if 'curve' in kwargs:
-            a1 = kwargs.pop('curve')
+        self._sigma = sigma
 
-            if a1 is not None:
-                if a1 < 1.0 or a1 > 100.0:
-                    raise CustomValueError("curve must be in range 1-100! (inclusive)")
-        else:
-            a1 = self.sigma.to_fmtc(sigma)  # type: ignore
+        super().__init__(taps, **kwargs)
 
-            low, up = self.sigma.from_fmtc(100), self.sigma.from_fmtc(1)  # type: ignore
+    @inject_self.property
+    def sigma(self) -> gauss_sigma:
+        return gauss_sigma(self._sigma)
 
-            if a1 < 1.0 or a1 > 100.0:
-                raise CustomValueError(f"sigma must be in range {low:.4f}-{up:.4f}! (inclusive)")
-
-        super().__init__(taps, a1=a1, **kwargs)
-
-    @to_singleton
-    class sigma:
-        def from_fmtc(self, curve: float) -> float:
-            if not curve:
-                return 0.0
-            return sqrt(1.0 / (2.0 * (curve / 10.0) * log(2)))
-
-        def to_fmtc(self, sigma: float) -> float:
-            if not sigma:
-                return 0.0
-            return 10 / (2 * log(2) * (sigma ** 2))
-
-        def from_libplacebo(self, sigma: float) -> float:
-            if not sigma:
-                return 0.0
-            return sqrt(sigma / 4)
-
-        def to_libplacebo(self, sigma: float) -> float:
-            if not sigma:
-                return 0.0
-            return 4 * (sigma ** 2)
+    @inject_self.cached
+    def kernel(self, *, x: float) -> float:  # type: ignore
+        return 1 / (self._sigma * sqrt(2 * pi)) * exp(-x ** 2 / (2 * self._sigma ** 2))
 
 
-class EwaBicubic(Placebo):
-    _kernel = 'ewa_robidoux'
+class Box(CustomComplexKernel):
+    """Box resizer."""
 
-    def __init__(self, b: float = 0.0, c: float = 0.5, radius: int | None = None, **kwargs: Any) -> None:
-        radius = kwargs.pop('taps', radius)
+    _static_kernel_radius = 1
 
-        if radius is None:
-            from .bicubic import Bicubic
-
-            radius = Bicubic(b, c).kernel_radius
-
-        super().__init__(radius, b, c, **kwargs)
+    @inject_self.cached
+    def kernel(self, *, x: float) -> float:  # type: ignore
+        return 1.0 if x >= -0.5 and x < 0.5 else 0.0
 
 
-class EwaLanczos(Placebo):
-    _kernel = 'ewa_lanczos'
+class BlackMan(CustomComplexTapsKernel):
+    """Blackman resizer."""
 
-    def __init__(self, taps: float = 3.2383154841662362076499, **kwargs: Any) -> None:
-        super().__init__(taps, None, None, **kwargs)
+    def __init__(self, taps: int = 4, **kwargs: Any) -> None:
+        super().__init__(taps, **kwargs)
 
+    def _win_coef(self, x: float) -> float:
+        w_x = x * (pi / self.kernel_radius)
 
-class EwaJinc(Placebo):
-    _kernel = 'ewa_jinc'
+        return 0.42 + 0.50 * cos(w_x) + 0.08 * cos(w_x * 2)
 
-    def __init__(self, taps: float = 3.2383154841662362076499, **kwargs: Any) -> None:
-        super().__init__(taps, None, None, **kwargs)
+    @inject_self.cached
+    def kernel(self, *, x: float) -> float:  # type: ignore
+        if x >= self.kernel_radius:
+            return 0.0
 
-
-class EwaGinseng(Placebo):
-    _kernel = 'ewa_ginseng'
-
-    def __init__(self, taps: float = 3.2383154841662362076499, **kwargs: Any) -> None:
-        super().__init__(taps, None, None, **kwargs)
+        return sinc(x) * self._win_coef(x)
 
 
-class EwaHann(Placebo):
-    _kernel = 'ewa_hann'
+class BlackManMinLobe(BlackMan):
+    """Blackmanminlobe resizer."""
 
-    def __init__(self, taps: float = 3.2383154841662362076499, **kwargs: Any) -> None:
-        super().__init__(taps, None, None, **kwargs)
+    def _win_coef(self, x: float) -> float:
+        w_x = x * (pi / self.kernel_radius)
 
-
-class EwaHannSoft(Placebo):
-    _kernel = 'haasnsoft'
-
-    def __init__(self, taps: float = 3.2383154841662362076499, **kwargs: Any) -> None:
-        super().__init__(taps, None, None, **kwargs)
+        return 0.355768 + 0.487396 * cos(w_x) + 0.144232 * cos(w_x * 2) + 0.012604 * cos(w_x * 3)
 
 
-class EwaRobidoux(Placebo):
-    _kernel = 'ewa_robidoux'
+class Sinc(CustomComplexTapsKernel):
+    """Sinc resizer."""
 
-    def __init__(self, **kwargs: Any) -> None:
-        super().__init__(None, None, None, **kwargs)
+    def __init__(self, taps: int = 4, **kwargs: Any) -> None:
+        super().__init__(taps, **kwargs)
+
+    @inject_self.cached
+    def kernel(self, *, x: float) -> float:  # type: ignore
+        if x >= self.kernel_radius:
+            return 0.0
+
+        return sinc(x)
 
 
-class EwaRobidouxSharp(Placebo):
-    _kernel = 'ewa_robidouxsharp'
+class Hann(CustomComplexTapsKernel):
+    """Hann kernel."""
 
-    def __init__(self, **kwargs: Any) -> None:
-        super().__init__(None, None, None, **kwargs)
+    @inject_self.cached
+    def kernel(self, *, x: float) -> float:  # type: ignore
+        if x >= self.kernel_radius:
+            return 0.0
+
+        return 0.5 + 0.5 * cos(pi * x)
+
+
+class Hamming(CustomComplexTapsKernel):
+    """Hamming kernel."""
+
+    @inject_self.cached
+    def kernel(self, *, x: float) -> float:  # type: ignore
+        if x >= self.kernel_radius:
+            return 0.0
+
+        return 0.54 + 0.46 * cos(pi * x)
+
+
+class Welch(CustomComplexTapsKernel):
+    """Welch kernel."""
+
+    @inject_self.cached
+    def kernel(self, *, x: float) -> float:  # type: ignore
+        if abs(x) >= 1.0:
+            return 0.0
+
+        return 1.0 - x * x
+
+
+class Cosine(CustomComplexTapsKernel):
+    """Cosine kernel."""
+
+    @inject_self.cached
+    def kernel(self, *, x: float) -> float:  # type: ignore
+        if x >= self.kernel_radius:
+            return 0.0
+
+        cosine = cos(pi * x)
+
+        return 0.34 + cosine * (0.5 + cosine * 0.16)
+
+
+class Bohman(CustomComplexTapsKernel):
+    """Bohman kernel."""
+
+    @inject_self.cached
+    def kernel(self, *, x: float) -> float:  # type: ignore
+        if x >= self.kernel_radius:
+            return 0.0
+
+        cosine = cos(pi * x)
+        sine = sqrt(1.0 - cosine * cosine)
+
+        return (1.0 - x) * cosine + (1.0 / pi) * sine

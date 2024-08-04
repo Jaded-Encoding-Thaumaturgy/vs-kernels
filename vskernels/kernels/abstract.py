@@ -14,7 +14,10 @@ from vstools import (
 from vstools.enums.color import _norm_props_enums
 
 from ..exceptions import UnknownDescalerError, UnknownKernelError, UnknownResamplerError, UnknownScalerError
-from ..types import BotFieldLeftShift, BotFieldTopShift, LeftShift, TopFieldLeftShift, TopFieldTopShift, TopShift
+from ..types import (
+    BorderHandling, BotFieldLeftShift, BotFieldTopShift, LeftShift, SampleGridModel, TopFieldLeftShift,
+    TopFieldTopShift, TopShift
+)
 
 __all__ = [
     'Scaler', 'ScalerT',
@@ -135,7 +138,7 @@ class BaseScaler(vs_object):
             return
 
         from ..util import abstract_kernels
-        from .zimg import ZimgComplexKernel
+        from .complex import CustomComplexKernel
 
         if cls in abstract_kernels:
             return
@@ -152,7 +155,7 @@ class BaseScaler(vs_object):
         if 'kernel_radius' in cls.__dict__.keys():
             return
 
-        mro = [cls, *({*cls.mro()} - {*ZimgComplexKernel.mro()})]
+        mro = [cls, *({*cls.mro()} - {*CustomComplexKernel.mro()})]
 
         for sub_cls in mro:
             if hasattr(sub_cls, '_static_kernel_radius'):
@@ -189,7 +192,7 @@ class BaseScaler(vs_object):
             cls, (mro := cls.mro())[mro.index(BaseScaler) - 1], scaler, cls._err_class, [], func_except
         )
 
-    @inject_self.property
+    @inject_self.cached.property
     def kernel_radius(self) -> int:
         return _default_kernel_radius(__class__, self)  # type: ignore
 
@@ -272,25 +275,33 @@ class Descaler(BaseScaler):
         shift: tuple[TopShift, LeftShift] | tuple[
             TopShift | tuple[TopFieldTopShift, BotFieldTopShift],
             LeftShift | tuple[TopFieldLeftShift, BotFieldLeftShift]
-        ] = (0, 0), **kwargs: Any
+        ] = (0, 0), *,
+        border_handling: BorderHandling = BorderHandling.MIRROR,
+        sample_grid_model: SampleGridModel = SampleGridModel.MATCH_EDGES,
+        field_based: FieldBased | None = None,
+        **kwargs: Any
     ) -> vs.VideoNode:
         width, height = self._wh_norm(clip, width, height)
 
         check_correct_subsampling(clip, width, height)
 
-        field_based = FieldBased.from_param_or_video(kwargs.pop('field_based', None), clip)
+        field_based = FieldBased.from_param_or_video(field_based, clip)
 
         clip, bits = expect_bits(clip, 32)
 
         de_base_args = (width, height // (1 + field_based.is_inter))
+        kwargs |= dict(border_handling=border_handling)
 
         if field_based.is_inter:
             shift_y, shift_x = tuple[tuple[float, float], ...](
                 sh if isinstance(sh, tuple) else (sh, sh) for sh in shift
             )
 
-            de_kwargs_tf = self.get_descale_args(clip, (shift_y[0], shift_x[0]), *de_base_args, **kwargs)
-            de_kwargs_bf = self.get_descale_args(clip, (shift_y[1], shift_x[1]), *de_base_args, **kwargs)
+            kwargs_tf, shift = sample_grid_model.for_descale(clip, width, height, (shift_y[0], shift_x[0]), **kwargs)
+            kwargs_bf, shift = sample_grid_model.for_descale(clip, width, height, (shift_y[1], shift_x[1]), **kwargs)
+
+            de_kwargs_tf = self.get_descale_args(clip, (shift_y[0], shift_x[0]), *de_base_args, **kwargs_tf)
+            de_kwargs_bf = self.get_descale_args(clip, (shift_y[1], shift_x[1]), *de_base_args, **kwargs_bf)
 
             if height % 2:
                 raise CustomIndexError('You can\'t descale to odd resolution when crossconverted!', self.descale)
@@ -310,6 +321,8 @@ class Descaler(BaseScaler):
         else:
             if any(isinstance(sh, tuple) for sh in shift):
                 raise CustomValueError('You can\'t descale per-field when the input is progressive!', self.descale)
+
+            kwargs, shift = sample_grid_model.for_descale(clip, width, height, shift, **kwargs)  # type: ignore
 
             de_kwargs = self.get_descale_args(clip, shift, *de_base_args, **kwargs)  # type: ignore
 

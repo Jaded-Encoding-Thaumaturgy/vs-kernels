@@ -11,8 +11,8 @@ from vstools import (
 )
 
 from .kernels import (
-    Bicubic, BicubicAuto, Catrom, ComplexKernel, Descaler, FmtConv, Impulse, Kernel, KernelT, LinearDescaler, Placebo,
-    Point, Resampler, ResamplerT, Scaler, ZimgComplexKernel, ZimgDescaler
+    Bicubic, BicubicAuto, Catrom, ComplexKernel, CustomComplexKernel, Descaler, Kernel, KernelT, LinearDescaler,
+    Placebo, Point, Resampler, ResamplerT, Scaler
 )
 from .types import Center, LeftShift, Slope, TopShift
 
@@ -110,8 +110,7 @@ class NoScale(NoScaleBase, Bicubic):  # type: ignore
 
 
 abstract_kernels = list[type[Scaler | Descaler | Resampler | Kernel]]([
-    Kernel, FmtConv, Impulse, Placebo, ComplexKernel,
-    ZimgDescaler, ZimgComplexKernel, LinearDescaler
+    Kernel, Placebo, ComplexKernel, CustomComplexKernel, LinearDescaler
 ])
 
 
