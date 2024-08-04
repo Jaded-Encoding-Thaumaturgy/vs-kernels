@@ -40,9 +40,20 @@ class Spline(CustomComplexTapsKernel):
         # right value = sample
         eqns += [[0] * (4 * i) + [(i + 1) ** 3, (i + 1) ** 2, i + 1, 1] + [0] * (4 * (n - i - 1)) for i in range(n)]
         # derivatives match
-        eqns += [[0] * (4 * i) + [3 * (i + 1) ** 2, 2 * (i + 1), 1, 0] + [-3 * (i + 1) ** 2, -2 * (i + 1), -1, 0] + [0] * (4 * (n - i - 2)) for i in range(n - 1)]
+        eqns += [
+            (
+                [0] * (4 * i) +
+                [3 * (i + 1) ** 2, 2 * (i + 1), 1, 0] +
+                [-3 * (i + 1) ** 2, -2 * (i + 1), -1, 0] +
+                [0] * (4 * (n - i - 2))
+            )
+            for i in range(n - 1)
+        ]
         # second derivatives match
-        eqns += [[0] * (4 * i) + [6 * (i + 1), 2, 0, 0] + [-6 * (i + 1), -2, 0, 0] + [0] * (4 * (n - i - 2)) for i in range(n - 1)]
+        eqns += [
+            [0] * (4 * i) + [6 * (i + 1), 2, 0, 0] + [-6 * (i + 1), -2, 0, 0] + [0] * (4 * (n - i - 2))
+            for i in range(n - 1)
+        ]
         eqns += [[0, 2, 0, 0] + [0] * (4 * (n - 1))]
         eqns += [[0] * (4 * (n - 1)) + [6 * n ** 2, 2 * n, 0, 0]]
 
@@ -57,7 +68,8 @@ class Spline(CustomComplexTapsKernel):
 
         def _shiftPolynomial(coeffs: list[float], shift: float) -> list[float]:
             return [
-                sum(c * comb(k, m) * (-shift) ** max(0, k - m) for k, c in enumerate(coeffs[::-1])) for m in range(len(coeffs))
+                sum(c * comb(k, m) * (-shift) ** max(0, k - m) for k, c in enumerate(coeffs[::-1]))
+                for m in range(len(coeffs))
             ][::-1]
 
         for i in range(taps):

@@ -31,15 +31,25 @@ class CustomKernel(Kernel):
         return self.kernel, support
 
     @inject_self
-    def scale_function(self, clip: vs.VideoNode, width: int | None = None, height: int | None = None, *args: Any, **kwargs: Any) -> vs.VideoNode:
-        clean_kwargs = {k: v for k, v in kwargs.items() if k not in Signature.from_callable(self._modify_kernel_func).parameters.keys()}
+    def scale_function(
+        self, clip: vs.VideoNode, width: int | None = None, height: int | None = None, *args: Any, **kwargs: Any
+    ) -> vs.VideoNode:
+        clean_kwargs = {
+            k: v for k, v in kwargs.items()
+            if k not in Signature.from_callable(self._modify_kernel_func).parameters.keys()
+        }
         return core.resize2.Custom(clip, *self._modify_kernel_func(**kwargs), width, height, *args, **clean_kwargs)
 
     resample_function = scale_function
 
     @inject_self
-    def descale_function(self, clip: vs.VideoNode, width: int, height: int, *args: Any, **kwargs: Any) -> vs.VideoNode:
-        clean_kwargs = {k: v for k, v in kwargs.items() if k not in Signature.from_callable(self._modify_kernel_func).parameters.keys()}
+    def descale_function(
+        self, clip: vs.VideoNode, width: int, height: int, *args: Any, **kwargs: Any
+    ) -> vs.VideoNode:
+        clean_kwargs = {
+            k: v for k, v in kwargs.items()
+            if k not in Signature.from_callable(self._modify_kernel_func).parameters.keys()
+        }
         return core.descale.Decustom(clip, width, height, *self._modify_kernel_func(**kwargs), *args, **clean_kwargs)
 
     def get_params_args(
