@@ -1,7 +1,7 @@
 .eggs/
 .mypy_cache/
 .vscode/
-.vspreview/
+.vsjet/
 *.glsl
 *.pyc
 *.vpy
