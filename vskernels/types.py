@@ -46,9 +46,8 @@ class SampleGridModel(CustomIntEnum):
     MATCH_CENTERS = 1
 
     def __call__(
-        self, width: int, height: int, src_width: int, src_height: int, shift: tuple[float, float]
+        self, width: int, height: int, src_width: int, src_height: int, shift: tuple[float, float], **kwargs: Any
     ) -> tuple[KwargsT, tuple[float, float]]:
-        kwargs = KwargsT()
 
         if self is SampleGridModel.MATCH_CENTERS:
             src_width = src_width * (width - 1) / (src_width - 1)
@@ -64,10 +63,10 @@ class SampleGridModel(CustomIntEnum):
     def for_scale(
         self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float], **kwargs: Any
     ) -> tuple[KwargsT, tuple[float, float]]:
-        src_width = kwargs.get('src_width', width)
-        src_height = kwargs.get('src_height', height)
+        src_width = kwargs.pop('src_width', width)
+        src_height = kwargs.pop('src_height', height)
 
-        return self(src_width, src_height, width, height, shift)
+        return self(src_width, src_height, width, height, shift, **kwargs)
 
     def for_descale(
         self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float], **kwargs: Any
