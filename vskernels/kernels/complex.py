@@ -196,7 +196,7 @@ class KeepArScaler(Scaler):
 
             kwargs, shift, out_sar = self._handle_crop_resize_kwargs(clip, width, height, shift, **kwargs)
 
-            kwargs, shift = sample_grid_model.for_scale(clip, width, height, shift, **kwargs)
+            kwargs, shift = sample_grid_model.for_dst(clip, width, height, shift, **kwargs)
 
             padded = border_handling.prepare_clip(clip, self.kernel_radius)
 

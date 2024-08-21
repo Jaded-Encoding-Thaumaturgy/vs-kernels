@@ -59,7 +59,7 @@ class SampleGridModel(CustomIntEnum):
 
         return kwargs, shift
 
-    def for_scale(
+    def for_dst(
         self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float], **kwargs: Any
     ) -> tuple[KwargsT, tuple[float, float]]:
         src_width = kwargs.get('src_width', width)
@@ -67,7 +67,7 @@ class SampleGridModel(CustomIntEnum):
 
         return self(src_width, src_height, width, height, shift, kwargs)
 
-    def for_descale(
+    def for_src(
         self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float], **kwargs: Any
     ) -> tuple[KwargsT, tuple[float, float]]:
         src_width = kwargs.get('src_width', clip.width)
