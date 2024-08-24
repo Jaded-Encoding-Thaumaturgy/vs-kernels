@@ -90,7 +90,7 @@ class NoScaleBase(Scaler):
     ) -> vs.VideoNode:
         try:
             width, height = Scaler._wh_norm(clip, width, height)
-            return super().scale(clip, clip.width, clip.height, shift, **kwargs)  # type: ignore
+            return super().scale(clip, clip.width, clip.height, shift, **kwargs)
         except Exception:
             return clip
 
@@ -205,7 +205,7 @@ class LinearLight:
     def __enter__(self) -> LinearLightProcessing:
         self.linear = self.linear or not not self.sigmoid
 
-        if self.sigmoid:
+        if self.sigmoid is not False:
             if self.sigmoid is True:
                 self.sigmoid = (6.5, 0.75)
 

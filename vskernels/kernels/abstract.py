@@ -108,11 +108,11 @@ def _base_ensure_obj(
     elif isinstance(value, cls) or isinstance(value, basecls):
         new_scaler = value
     else:
-        new_scaler = cls.from_param(value, func_except)()  # type: ignore
+        new_scaler = cls.from_param(value, func_except)()
 
     if new_scaler.__class__ in excluded:
         raise exception_cls(
-            func_except or cls.ensure_obj, new_scaler.__class__,  # type: ignore
+            func_except or cls.ensure_obj, new_scaler.__class__,
             'This {cls_name} can\'t be instantiated to be used!',
             cls_name=new_scaler.__class__
         )
@@ -215,7 +215,7 @@ class Scaler(BaseScaler):
 
     @inject_self.cached
     @inject_kwargs_params
-    def scale(  # type: ignore[override]
+    def scale(
         self, clip: vs.VideoNode, width: int | None = None, height: int | None = None,
         shift: tuple[TopShift, LeftShift] = (0, 0), **kwargs: Any
     ) -> vs.VideoNode:
@@ -254,8 +254,8 @@ class Scaler(BaseScaler):
             | kwargs
         )
 
-    def get_implemented_funcs(self) -> tuple[Callable[..., Any]]:
-        return (self.scale, self.multi)  # type: ignore
+    def get_implemented_funcs(self) -> tuple[Callable[..., Any], ...]:
+        return (self.scale, self.multi)
 
 
 class Descaler(BaseScaler):
@@ -270,7 +270,7 @@ class Descaler(BaseScaler):
 
     @inject_self.cached
     @inject_kwargs_params
-    def descale(  # type: ignore[override]
+    def descale(
         self, clip: vs.VideoNode, width: int | None, height: int | None,
         shift: tuple[TopShift, LeftShift] | tuple[
             TopShift | tuple[TopFieldTopShift, BotFieldTopShift],
@@ -324,7 +324,7 @@ class Descaler(BaseScaler):
 
             kwargs, shift = sample_grid_model.for_src(clip, width, height, shift, **kwargs)  # type: ignore
 
-            de_kwargs = self.get_descale_args(clip, shift, *de_base_args, **kwargs)  # type: ignore
+            de_kwargs = self.get_descale_args(clip, shift, *de_base_args, **kwargs)
 
             descaled = self.descale_function(clip, **_norm_props_enums(de_kwargs))
 
@@ -346,7 +346,7 @@ class Descaler(BaseScaler):
             | kwargs
         )
 
-    def get_implemented_funcs(self) -> tuple[Callable[..., Any]]:
+    def get_implemented_funcs(self) -> tuple[Callable[..., Any], ...]:
         return (self.descale, )
 
 
@@ -385,24 +385,24 @@ class Resampler(BaseScaler):
             | kwargs
         )
 
-    def get_implemented_funcs(self) -> tuple[Callable[..., Any]]:
+    def get_implemented_funcs(self) -> tuple[Callable[..., Any], ...]:
         return (self.resample, )
 
 
-class Kernel(Scaler, Descaler, Resampler):  # type: ignore
+class Kernel(Scaler, Descaler, Resampler):
     """
     Abstract kernel interface.
     """
 
     _err_class = UnknownKernelError  # type: ignore
 
-    @overload  # type: ignore
+    @overload
     @inject_self.cached
     @inject_kwargs_params
     def shift(self, clip: vs.VideoNode, shift: tuple[TopShift, LeftShift] = (0, 0), **kwargs: Any) -> vs.VideoNode:
         ...
 
-    @overload  # type: ignore
+    @overload
     @inject_self.cached
     @inject_kwargs_params
     def shift(
@@ -475,14 +475,14 @@ class Kernel(Scaler, Descaler, Resampler):  # type: ignore
 
     @overload
     @classmethod
-    def from_param(  # type: ignore
+    def from_param(
         cls: type[Kernel], kernel: ScalerT | KernelT | None = None, func_except: FuncExceptT | None = None
     ) -> type[Scaler]:
         ...
 
     @overload
     @classmethod
-    def from_param(  # type: ignore
+    def from_param(
         cls: type[Kernel], kernel: DescalerT | KernelT | None = None, func_except: FuncExceptT | None = None
     ) -> type[Descaler]:
         ...
@@ -513,14 +513,14 @@ class Kernel(Scaler, Descaler, Resampler):  # type: ignore
 
     @overload
     @classmethod
-    def ensure_obj(  # type: ignore
+    def ensure_obj(
         cls: type[Kernel], kernel: ScalerT | KernelT | None = None, func_except: FuncExceptT | None = None
     ) -> Scaler:
         ...
 
     @overload
     @classmethod
-    def ensure_obj(  # type: ignore
+    def ensure_obj(
         cls: type[Kernel], kernel: DescalerT | KernelT | None = None, func_except: FuncExceptT | None = None
     ) -> Descaler:
         ...
@@ -587,7 +587,7 @@ class Kernel(Scaler, Descaler, Resampler):  # type: ignore
             | self.get_params_args(False, clip, **kwargs)
         )
 
-    def get_implemented_funcs(self) -> tuple[Callable[..., Any]]:
+    def get_implemented_funcs(self) -> tuple[Callable[..., Any], ...]:
         return (self.shift, )  # type: ignore
 
 

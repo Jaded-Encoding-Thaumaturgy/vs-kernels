@@ -53,7 +53,7 @@ class Point(CustomComplexKernel):
     _static_kernel_radius = 1
 
     @inject_self.cached
-    def kernel(self, *, x: float) -> float:  # type: ignore
+    def kernel(self, *, x: float) -> float:
         return 1.0
 
 
@@ -63,7 +63,7 @@ class Bilinear(CustomComplexKernel):
     _static_kernel_radius = 1
 
     @inject_self.cached
-    def kernel(self, *, x: float) -> float:  # type: ignore
+    def kernel(self, *, x: float) -> float:
         return max(1.0 - abs(x), 0.0)
 
 
@@ -78,7 +78,7 @@ class Lanczos(CustomComplexTapsKernel):
         super().__init__(taps, **kwargs)
 
     @inject_self.cached
-    def kernel(self, *, x: float) -> float:  # type: ignore
+    def kernel(self, *, x: float) -> float:
         x, taps = abs(x), self.kernel_radius
 
         return sinc(x) * sinc(x / taps) if x < taps else 0.0
@@ -99,7 +99,7 @@ class Gaussian(CustomComplexTapsKernel):
         return gauss_sigma(self._sigma)
 
     @inject_self.cached
-    def kernel(self, *, x: float) -> float:  # type: ignore
+    def kernel(self, *, x: float) -> float:
         return 1 / (self._sigma * sqrt(2 * pi)) * exp(-x ** 2 / (2 * self._sigma ** 2))
 
 
@@ -109,7 +109,7 @@ class Box(CustomComplexKernel):
     _static_kernel_radius = 1
 
     @inject_self.cached
-    def kernel(self, *, x: float) -> float:  # type: ignore
+    def kernel(self, *, x: float) -> float:
         return 1.0 if x >= -0.5 and x < 0.5 else 0.0
 
 
@@ -125,7 +125,7 @@ class BlackMan(CustomComplexTapsKernel):
         return 0.42 + 0.50 * cos(w_x) + 0.08 * cos(w_x * 2)
 
     @inject_self.cached
-    def kernel(self, *, x: float) -> float:  # type: ignore
+    def kernel(self, *, x: float) -> float:
         if x >= self.kernel_radius:
             return 0.0
 
@@ -148,7 +148,7 @@ class Sinc(CustomComplexTapsKernel):
         super().__init__(taps, **kwargs)
 
     @inject_self.cached
-    def kernel(self, *, x: float) -> float:  # type: ignore
+    def kernel(self, *, x: float) -> float:
         if x >= self.kernel_radius:
             return 0.0
 
@@ -159,7 +159,7 @@ class Hann(CustomComplexTapsKernel):
     """Hann kernel."""
 
     @inject_self.cached
-    def kernel(self, *, x: float) -> float:  # type: ignore
+    def kernel(self, *, x: float) -> float:
         if x >= self.kernel_radius:
             return 0.0
 
@@ -170,7 +170,7 @@ class Hamming(CustomComplexTapsKernel):
     """Hamming kernel."""
 
     @inject_self.cached
-    def kernel(self, *, x: float) -> float:  # type: ignore
+    def kernel(self, *, x: float) -> float:
         if x >= self.kernel_radius:
             return 0.0
 
@@ -181,7 +181,7 @@ class Welch(CustomComplexTapsKernel):
     """Welch kernel."""
 
     @inject_self.cached
-    def kernel(self, *, x: float) -> float:  # type: ignore
+    def kernel(self, *, x: float) -> float:
         if abs(x) >= 1.0:
             return 0.0
 
@@ -192,7 +192,7 @@ class Cosine(CustomComplexTapsKernel):
     """Cosine kernel."""
 
     @inject_self.cached
-    def kernel(self, *, x: float) -> float:  # type: ignore
+    def kernel(self, *, x: float) -> float:
         if x >= self.kernel_radius:
             return 0.0
 
@@ -205,7 +205,7 @@ class Bohman(CustomComplexTapsKernel):
     """Bohman kernel."""
 
     @inject_self.cached
-    def kernel(self, *, x: float) -> float:  # type: ignore
+    def kernel(self, *, x: float) -> float:
         if x >= self.kernel_radius:
             return 0.0
 
