@@ -56,8 +56,9 @@ class SampleGridModel(CustomIntEnum):
             shift_x, shift_y, *_ = tuple(
                 (x / 2 + y for x, y in zip(((height - src_height), (width - src_width)), shift))
             )
+            shift = shift_x, shift_y
 
-        return kwargs, (shift_x, shift_y)
+        return kwargs, shift
 
     def for_dst(
         self, clip: vs.VideoNode, width: int, height: int, shift: tuple[float, float], **kwargs: Any
