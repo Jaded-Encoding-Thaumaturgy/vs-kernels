@@ -46,16 +46,17 @@ class SampleGridModel(CustomIntEnum):
     MATCH_CENTERS = 1
 
     def __call__(
-        self, width: int, height: int, src_width: int, src_height: int, shift: tuple[float, float], kwargs: KwargsT
+        self, width: int, height: int, src_width: float, src_height: float, shift: tuple[float, float], kwargs: KwargsT
     ) -> tuple[KwargsT, tuple[float, float]]:
         if self is SampleGridModel.MATCH_CENTERS:
             src_width = src_width * (width - 1) / (src_width - 1)
             src_height = src_height * (height - 1) / (src_height - 1)
 
             kwargs |= dict(src_width=src_width, src_height=src_height)
-            shift = tuple[float, float](
+            shift_x, shift_y, *_ = tuple(
                 (x / 2 + y for x, y in zip(((height - src_height), (width - src_width)), shift))
             )
+            shift = shift_x, shift_y
 
         return kwargs, shift
 

@@ -28,7 +28,7 @@ class Spline(CustomComplexTapsKernel):
             self._coefs = self._splineKernelCoeff()
 
     def _naturalCubicSpline(self, values: list[int]) -> list[float]:
-        import numpy as np  # type: ignore
+        import numpy as np
 
         n = len(values) - 1
 
@@ -85,7 +85,7 @@ class Spline(CustomComplexTapsKernel):
         return coeffs
 
     @inject_self.cached
-    def kernel(self, x: float) -> float:  # type: ignore
+    def kernel(self, *, x: float) -> float:
         x, taps = abs(x), self.kernel_radius
 
         if x >= taps:

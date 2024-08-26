@@ -42,7 +42,7 @@ class Bicubic(CustomComplexKernel):
         super().__init__(**kwargs)
 
     @inject_self.cached
-    def kernel(self, *, x: float) -> float:  # type: ignore
+    def kernel(self, *, x: float) -> float:
         x, b, c = abs(x), self.b, self.c
 
         if (x < 1.0):
