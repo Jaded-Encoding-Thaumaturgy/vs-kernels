@@ -10,7 +10,7 @@ A common descaling function will most likely have a signature not unlike this:
 
     def descale(clip: vs.VideoNode, kernel: str = 'bicubic',
                 width: int = 1280, height: int = 720,
-                b: float = 1/3, c: float = 1/3, taps: 3) -> vs.VideoNode:
+                b: float = 1/3, c: float = 1/3, taps: float = 3) -> vs.VideoNode:
         if kernel is 'bicubic':
             return core.descale.Debicubic(clip, width, height, b=b, c=c)
         elif kernel is 'bilinear':
