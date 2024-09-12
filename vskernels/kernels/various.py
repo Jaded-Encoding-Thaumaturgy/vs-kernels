@@ -74,7 +74,7 @@ class Lanczos(CustomComplexTapsKernel):
     :param taps: taps param for lanczos kernel
     """
 
-    def __init__(self, taps: int = 3, **kwargs: Any) -> None:
+    def __init__(self, taps: float = 3, **kwargs: Any) -> None:
         super().__init__(taps, **kwargs)
 
     @inject_self.cached
@@ -87,7 +87,7 @@ class Lanczos(CustomComplexTapsKernel):
 class Gaussian(CustomComplexTapsKernel):
     """Gaussian resizer."""
 
-    def __init__(self, sigma: float = 0.5, taps: int = 2, **kwargs: Any) -> None:
+    def __init__(self, sigma: float = 0.5, taps: float = 2, **kwargs: Any) -> None:
         """Sigma is the same as imagemagick's sigma scaling."""
 
         self._sigma = sigma
@@ -116,7 +116,7 @@ class Box(CustomComplexKernel):
 class BlackMan(CustomComplexTapsKernel):
     """Blackman resizer."""
 
-    def __init__(self, taps: int = 4, **kwargs: Any) -> None:
+    def __init__(self, taps: float = 4, **kwargs: Any) -> None:
         super().__init__(taps, **kwargs)
 
     def _win_coef(self, x: float) -> float:
@@ -144,7 +144,7 @@ class BlackManMinLobe(BlackMan):
 class Sinc(CustomComplexTapsKernel):
     """Sinc resizer."""
 
-    def __init__(self, taps: int = 4, **kwargs: Any) -> None:
+    def __init__(self, taps: float = 4, **kwargs: Any) -> None:
         super().__init__(taps, **kwargs)
 
     @inject_self.cached
