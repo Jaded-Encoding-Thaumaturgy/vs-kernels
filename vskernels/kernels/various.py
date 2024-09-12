@@ -50,7 +50,7 @@ class gauss_sigma(float):
 class Point(CustomComplexKernel):
     """Point resizer."""
 
-    _static_kernel_radius = 1
+    _static_kernel_radius = 0
 
     @inject_self.cached
     def kernel(self, *, x: float) -> float:
