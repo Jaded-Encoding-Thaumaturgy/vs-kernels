@@ -201,7 +201,7 @@ class KeepArScaler(Scaler):
             padded = border_handling.prepare_clip(clip, self.kernel_radius)
 
             shift, clip = tuple(
-                s + ((p - c) // 2) for s, c, p in zip(shift, *((x.width, x.height) for x in (clip, padded)))
+                s + ((p - c) // 2) for s, c, p in zip(shift, *((x.height, x.width) for x in (clip, padded)))
             ), padded
 
         clip = Scaler.scale(self, clip, width, height, shift, **kwargs)

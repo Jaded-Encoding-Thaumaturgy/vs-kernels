@@ -29,7 +29,7 @@ class BorderHandling(CustomIntEnum):
             case BorderHandling.MIRROR:
                 return padder.MIRROR(*args)
             case BorderHandling.ZERO:
-                return padder.COLOR(*args)
+                return padder.COLOR(color=False if clip.format.color_family is vs.RGB else (False, None), *args)
             case BorderHandling.REPEAT:
                 return padder.REPEAT(*args)
 
