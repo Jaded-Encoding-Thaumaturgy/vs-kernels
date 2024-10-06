@@ -56,6 +56,8 @@ class Point(CustomComplexKernel):
     def kernel(self, *, x: float) -> float:
         return 1.0
 
+    descale = CustomComplexKernel.scale
+
 
 class Bilinear(CustomComplexKernel):
     """Bilinear resizer."""
