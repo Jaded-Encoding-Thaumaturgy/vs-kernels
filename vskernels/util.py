@@ -6,8 +6,8 @@ from typing import Any, ClassVar, cast
 
 from stgpytools import inject_kwargs_params
 from vstools import (
-    ConstantFormatVideoNode, CustomRuntimeError, CustomValueError, HoldsVideoFormatT, Matrix, MatrixT, Transfer,
-    cachedproperty, depth, get_video_format, inject_self, to_singleton, vs
+    ConstantFormatVideoNode, CustomRuntimeError, CustomValueError, HoldsVideoFormatT, InvalidTransferError, Matrix,
+    MatrixT, Transfer, cachedproperty, depth, get_video_format, inject_self, to_singleton, vs
 )
 
 from .kernels import (
@@ -168,6 +168,12 @@ class LinearLight:
                 wclip = Point.scale_function(wclip, transfer_in=self.ll._curve, transfer=Transfer.LINEAR)
 
             if self.ll.sigmoid:
+                if Transfer.from_video(wclip, func=self.__class__) in (Transfer.ST2084, Transfer.STD_B67):
+                    raise InvalidTransferError(
+                        'Sigmoid scaling is not supported with HDR!', self.__class__,
+                        Transfer.from_video(wclip, self.__class__)
+                    )
+
                 wclip = wclip.std.Expr(
                     f'{self.ll._scenter} 1 {self.ll._sslope} / 1 x 0 max 1 min {self.ll._sscale} * '
                     f'{self.ll._soffset} + / 1 - log * -'
