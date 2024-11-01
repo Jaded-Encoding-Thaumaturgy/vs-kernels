@@ -199,6 +199,19 @@ class BaseScaler(vs_object):
     def get_clean_kwargs(self, *funcs: Callable[..., Any] | None) -> KwargsT:
         return _clean_self_kwargs(funcs, self)
 
+    @inject_self.cached.property
+    def pretty_string(self) -> str:
+        attrs = {}
+
+        if hasattr(self, 'b'):
+            attrs.update(b=self.b, c=self.c)
+        elif hasattr(self, 'taps'):
+            attrs['taps'] = self.taps
+
+        if hasattr(self, 'kwargs'):
+            attrs.update(self.kwargs)
+
+        return f"{self.__class__.__name__}{' (' + ', '.join(f'{k}={v}' for k, v in attrs.items()) + ')' if attrs else ''}"
 
 BaseScalerT = TypeVar('BaseScalerT', bound=BaseScaler)
 
