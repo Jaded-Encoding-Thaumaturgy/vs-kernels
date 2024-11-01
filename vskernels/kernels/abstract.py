@@ -290,7 +290,7 @@ class Descaler(BaseScaler):
         clip, bits = expect_bits(clip, 32)
 
         de_base_args = (width, height // (1 + field_based.is_inter))
-        kwargs |= dict(border_handling=border_handling)
+        kwargs |= dict(border_handling=BorderHandling.from_param(border_handling, self.descale))
 
         if field_based.is_inter:
             shift_y, shift_x = tuple[tuple[float, float], ...](
