@@ -1,5 +1,5 @@
 from __future__ import annotations
-from stgpytools import KwargsT, inject_self
+from stgpytools import CustomValueError, KwargsT, inject_self
 from inspect import Signature
 
 from vstools import vs, core
@@ -62,7 +62,16 @@ class CustomKernel(Kernel):
             if k not in Signature.from_callable(self._modify_kernel_func).parameters.keys()
         }
 
-        return core.descale.Decustom(clip, width, height, kernel, int(support), *args, **clean_kwargs)
+        try:
+            return core.descale.Decustom(clip, width, height, kernel, int(support), *args, **clean_kwargs)
+        except vs.Error as e:
+            if 'Output dimension must be' in str(e):
+                raise CustomValueError(
+                    f'Output dimension ({width}x{height}) must be less than or equal to '
+                    f'input dimension ({clip.width}x{clip.height}).', self.__class__
+                )
+
+            raise CustomValueError(e, self.__class__)
 
     def get_params_args(
         self, is_descale: bool, clip: vs.VideoNode, width: int | None = None, height: int | None = None, **kwargs: Any
