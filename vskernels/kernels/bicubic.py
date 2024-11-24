@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 from math import sqrt
-from typing import Any
+from typing import Any, override
 
-from vstools import CustomValueError, inject_self
+from vstools import CustomValueError, core, inject_self, vs
 
 from .complex import CustomComplexKernel
 from .helpers import bic_vals, poly3
@@ -36,12 +36,16 @@ class Bicubic(CustomComplexKernel):
     :param c: C-param for bicubic kernel
     """
 
+    descale_function = core.lazy.descale.Debicubic  # type: ignore[assignment]
+    _no_blur_scale_function = core.lazy.resize2.Bicubic
+
     def __init__(self, b: float = 0, c: float = 1 / 2, **kwargs: Any) -> None:
         self.b = b
         self.c = c
         super().__init__(**kwargs)
 
     @inject_self.cached
+    @override
     def kernel(self, *, x: float) -> float:
         x, b, c = abs(x), self.b, self.c
 
@@ -54,10 +58,22 @@ class Bicubic(CustomComplexKernel):
         return 0.0
 
     @inject_self.cached.property
-    def kernel_radius(self) -> int:  # type: ignore
+    @override
+    def kernel_radius(self) -> int:  # type: ignore[override]
         if (self.b, self.c) == (0, 0):
             return 1
         return 2
+
+    @override
+    def get_params_args(
+        self, is_descale: bool, clip: vs.VideoNode, width: int | None = None, height: int | None = None, **kwargs: Any
+    ) -> dict[str, Any]:
+        args = super().get_params_args(is_descale, clip, width, height, **kwargs)
+        return (
+            args | {"b": self.b, "c": self.c}
+            if is_descale
+            else args | {"filter_param_a": self.b, "filter_param_b": self.c}
+        )
 
 
 class BSpline(Bicubic):

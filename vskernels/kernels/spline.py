@@ -3,7 +3,7 @@ from __future__ import annotations
 from math import comb
 from typing import Any
 
-from vstools import inject_self
+from vstools import core, inject_self
 
 from .complex import CustomComplexTapsKernel
 from .helpers import poly3
@@ -106,6 +106,8 @@ class NaturalSpline(Spline):
 class Spline16(NaturalSpline):
     """Spline16 resizer."""
 
+    descale_function = core.lazy.descale.Despline16
+    _no_blur_scale_function = core.lazy.resize2.Spline16
     _static_kernel_radius = 2
 
     _static_coeffs = [
@@ -117,6 +119,8 @@ class Spline16(NaturalSpline):
 class Spline36(NaturalSpline):
     """Spline36 resizer."""
 
+    descale_function = core.lazy.descale.Despline36
+    _no_blur_scale_function = core.lazy.resize2.Spline36
     _static_kernel_radius = 3
 
     _static_coeffs = [
@@ -129,6 +133,8 @@ class Spline36(NaturalSpline):
 class Spline64(NaturalSpline):
     """Spline64 resizer."""
 
+    descale_function = core.lazy.descale.Despline64
+    _no_blur_scale_function = core.lazy.resize2.Spline64
     _static_kernel_radius = 4
 
     _static_coeffs = [

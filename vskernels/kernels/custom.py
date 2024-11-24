@@ -2,8 +2,8 @@ from __future__ import annotations
 from stgpytools import CustomValueError, KwargsT, inject_self
 from inspect import Signature
 
-from vstools import vs, core
-from typing import Any, Protocol
+from vstools import GenericVSFunction, vs, core
+from typing import Any, Protocol, override
 from .abstract import Kernel
 
 from typing import TypeVar
@@ -20,6 +20,13 @@ class _kernel_func(Protocol):
 
 
 class CustomKernel(Kernel):
+    _no_blur_scale_function: GenericVSFunction | None = None
+    """
+    Optional scale function that will be used when scaling without blur. This is
+    useful for cases where this function is more performant than the custom
+    kernel.
+    """
+
     def kernel(self, *, x: float) -> float:
         raise NotImplementedError
 
@@ -37,14 +44,25 @@ class CustomKernel(Kernel):
         return self.kernel, support
 
     @inject_self
+    @override
     def scale_function(  # type: ignore[override]
         self, clip: vs.VideoNode, width: int | None = None, height: int | None = None, *args: Any, **kwargs: Any
     ) -> vs.VideoNode:
+        # If a no-blur scale function is defined and the default blur is being
+        # used, then remove the parameter and use the given scale function.
+        if self._no_blur_scale_function and kwargs.get("blur", 1.0) == 1.0:
+            kwargs.pop("blur", None)
+            return self._no_blur_scale_function(clip, width, height, *args, **kwargs)
+
+        # Otherwise, fall back to the slower custom kernel implementation.
+
         kernel, support = self._modify_kernel_func(kwargs)
 
         clean_kwargs = {
             k: v for k, v in kwargs.items()
             if k not in Signature.from_callable(self._modify_kernel_func).parameters.keys()
+            # Remove params that won't be recognized by `resize2.Custom`.
+            and k not in ('filter_param_a', 'filter_param_b')
         }
 
         return core.resize2.Custom(clip, kernel, int(support), width, height, *args, **clean_kwargs)

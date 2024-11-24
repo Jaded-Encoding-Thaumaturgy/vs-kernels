@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 from math import cos, exp, log, pi, sqrt
-from typing import Any
+from typing import Any, override
 
-from vstools import inject_self
+from vstools import core, inject_self
 
 from .complex import CustomComplexKernel, CustomComplexTapsKernel
 from .helpers import sinc
@@ -62,9 +62,12 @@ class Point(CustomComplexKernel):
 class Bilinear(CustomComplexKernel):
     """Bilinear resizer."""
 
+    descale_function = core.lazy.descale.Debilinear  # type: ignore[assignment]
+    _no_blur_scale_function = core.lazy.resize2.Bilinear
     _static_kernel_radius = 1
 
     @inject_self.cached
+    @override
     def kernel(self, *, x: float) -> float:
         return max(1.0 - abs(x), 0.0)
 
@@ -76,10 +79,14 @@ class Lanczos(CustomComplexTapsKernel):
     :param taps: taps param for lanczos kernel
     """
 
+    descale_function = core.lazy.descale.Delanczos  # type: ignore[assignment]
+    _no_blur_scale_function = core.lazy.resize2.Lanczos
+
     def __init__(self, taps: float = 3, **kwargs: Any) -> None:
         super().__init__(taps, **kwargs)
 
     @inject_self.cached
+    @override
     def kernel(self, *, x: float) -> float:
         x, taps = abs(x), self.kernel_radius
 

@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from math import ceil
-from typing import TYPE_CHECKING, Any, SupportsFloat, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Any, SupportsFloat, TypeVar, Union, cast, override
 
 from stgpytools import inject_kwargs_params
 from vstools import (
@@ -260,6 +260,13 @@ class CustomComplexTapsKernel(CustomComplexKernel):
     @inject_self.cached.property
     def kernel_radius(self) -> int:  # type: ignore
         return ceil(self.taps)
+
+    @override
+    def get_params_args(
+        self, is_descale: bool, clip: vs.VideoNode, width: int | None = None, height: int | None = None, **kwargs: Any
+    ) -> dict[str, Any]:
+        args = super().get_params_args(is_descale, clip, width, height, **kwargs)
+        return args | {'taps': self.taps} if is_descale else args | {'filter_param_a': self.taps}
 
 
 ComplexScalerT = Union[str, type[ComplexScaler], ComplexScaler]
