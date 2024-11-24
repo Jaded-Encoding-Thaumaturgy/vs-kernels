@@ -11,7 +11,6 @@ from .complex import LinearScaler
 
 __all__ = [
     'Placebo',
-    'EwaBicubic',
     'EwaJinc',
     'EwaLanczos',
     'EwaGinseng',
@@ -98,20 +97,6 @@ class Placebo(LinearScaler):
             return Bicubic(fallback(self.b, 0), fallback(self.c, 0.5)).kernel_radius
 
         return 2
-
-
-class EwaBicubic(Placebo):
-    _kernel = 'ewa_robidoux'
-
-    def __init__(self, b: float = 0.0, c: float = 0.5, radius: int | None = None, **kwargs: Any) -> None:
-        radius = kwargs.pop('taps', radius)
-
-        if radius is None:
-            from .bicubic import Bicubic
-
-            radius = Bicubic(b, c).kernel_radius
-
-        super().__init__(radius, b, c, **kwargs)
 
 
 class EwaLanczos(Placebo):
