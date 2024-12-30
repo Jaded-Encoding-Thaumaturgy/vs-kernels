@@ -1,5 +1,5 @@
 from __future__ import annotations
-from stgpytools import CustomValueError, KwargsT, inject_self
+from stgpytools import CustomValueError, DependencyNotFoundError, KwargsT, inject_self
 from inspect import Signature
 
 from vstools import vs, core
@@ -40,6 +40,13 @@ class CustomKernel(Kernel):
     def scale_function(  # type: ignore[override]
         self, clip: vs.VideoNode, width: int | None = None, height: int | None = None, *args: Any, **kwargs: Any
     ) -> vs.VideoNode:
+
+        if not hasattr(core, 'resize2'):
+            raise DependencyNotFoundError(
+                self.__class__, 'resize2', 'Missing dependency \'resize2\'! '
+                'You can find it here: https://github.com/Jaded-Encoding-Thaumaturgy/vapoursynth-resize2'
+            )
+
         kernel, support = self._modify_kernel_func(kwargs)
 
         clean_kwargs = {
