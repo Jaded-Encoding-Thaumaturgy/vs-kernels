@@ -1,6 +1,7 @@
 from __future__ import annotations
 from stgpytools import CustomValueError, DependencyNotFoundError, KwargsT, inject_self
 from inspect import Signature
+from math import ceil
 
 from vstools import vs, core
 from typing import Any, Protocol
@@ -54,7 +55,7 @@ class CustomKernel(Kernel):
             if k not in Signature.from_callable(self._modify_kernel_func).parameters.keys()
         }
 
-        return core.resize2.Custom(clip, kernel, int(support), width, height, *args, **clean_kwargs)
+        return core.resize2.Custom(clip, kernel, ceil(support), width, height, *args, **clean_kwargs)
 
     resample_function = scale_function
 
@@ -70,7 +71,7 @@ class CustomKernel(Kernel):
         }
 
         try:
-            return core.descale.Decustom(clip, width, height, kernel, int(support), *args, **clean_kwargs)
+            return core.descale.Decustom(clip, width, height, kernel, ceil(support), *args, **clean_kwargs)
         except vs.Error as e:
             if 'Output dimension must be' in str(e):
                 raise CustomValueError(
