@@ -174,10 +174,13 @@ class LinearLight:
                         Transfer.from_video(wclip, self.__class__)
                     )
 
-                wclip = wclip.std.Expr(
-                    f'{self.ll._scenter} 1 {self.ll._sslope} / 1 x 0 max 1 min {self.ll._sscale} * '
-                    f'{self.ll._soffset} + / 1 - log * -'
-                )
+                if hasattr(vs.core, 'fmtc'):
+                    wclip = vs.core.fmtc.transfer(wclip, transs='sigmoid', sig_c=self.ll._scenter, sig_t=self.ll._sslope)
+                else:
+                    wclip = wclip.std.Expr(
+                        f'{self.ll._scenter} 1 {self.ll._sslope} / 1 x 0 max 1 min {self.ll._sscale} * '
+                        f'{self.ll._soffset} + / 1 - log * -'
+                    )
 
             return wclip
 
@@ -198,10 +201,15 @@ class LinearLight:
             processed = self._linear  # type: ignore
 
             if self.ll.sigmoid:
-                processed = processed.std.Expr(
-                    f'1 1 {self.ll._sslope} {self.ll._scenter} x 0 max 1 min - * exp + /'
-                    f' {self.ll._soffset} - {self.ll._sscale} /'
-                )
+                if hasattr(vs.core, 'fmtc'):
+                    processed = vs.core.fmtc.transfer(
+                        processed, transs='sigmoid', sig_c=self.ll._scenter, sig_t=self.ll._sslope
+                    )
+                else:
+                    processed = processed.std.Expr(
+                        f'1 1 {self.ll._sslope} {self.ll._scenter} x 0 max 1 min - * exp + /'
+                        f' {self.ll._soffset} - {self.ll._sscale} /'
+                    )
 
             if self.ll.linear:
                 processed = Point.scale_function(processed, transfer_in=Transfer.LINEAR, transfer=self.ll._curve)
