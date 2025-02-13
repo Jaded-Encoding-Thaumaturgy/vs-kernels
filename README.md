@@ -1,5 +1,9 @@
 # vs-kernels
 
+> [!CAUTION]
+> This package is deprecated!
+> Please use https://github.com/Jaded-Encoding-Thaumaturgy/vs-jetpack instead.
+
 <p align="center">
     <a href="https://vskernels.encode.moe"><img alt="Read the Docs" src="https://img.shields.io/readthedocs/vs-kernels"></a>
     <img alt="PyPI - Python Version" src="https://img.shields.io/pypi/pyversions/vskernels">
@@ -16,15 +20,6 @@ You can create presets for common scaling algorithms or settings, while ensuring
 For support you can check out the [JET Discord server](https://discord.gg/XTpc6Fa9eB). <br><br>
 
 ## How to install
+**This package is deprecated!**
 
-Install `vskernels` with the following command:
-
-```sh
-pip install vskernels --no-cache-dir -U
-```
-
-Or if you want the latest git version, install it with this command:
-
-```sh
-pip install git+https://github.com/Jaded-Encoding-Thaumaturgy/vs-kernels.git --no-cache-dir -U
-```
+Please install https://pypi.org/p/vsjetpack instead.
